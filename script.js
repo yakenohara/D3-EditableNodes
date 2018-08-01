@@ -136,6 +136,7 @@ function dblClicked(d){
         .style("font-family", fntFam)
         .style("font-size", fntSiz)
         .style("color", col)
+        .style("background-clip", "padding-box")
         .style("background-color", bkgrndcol)
         .style("border", padding + "px solid " + bkgrndcol)
         .style("border-radius", rounding + "px")
