@@ -13,12 +13,20 @@ var dataset = [
         fontSize: "16px", //caution 書式チェックなし
         fontColor: "rgb(255, 5, 130)", //caution 書式チェックなし
         backGroundColor: "rgb(120,120,210)" //caution 書式チェックなし
+    },
+    {
+        key: 1,
+        caption: "untitled node 2",
+        fontFamily: "helvetica, arial, 'hiragino kaku gothic pro', meiryo, 'ms pgothic', sans-serif", //caution 書式チェックなし
+        fontSize: "16px", //caution 書式チェックなし
+        fontColor: "rgb(251, 255, 14)", //caution 書式チェックなし
+        backGroundColor: "rgba(34, 172, 41, 0.74)" //caution 書式チェックなし
     }
 ];
 
 var $3nodes = d3.select("#editableNode")
     .append("svg")
-    .attr("width", 900)
+    .attr("width", "100%")
     .attr("height", 600)
     .selectAll("g")
     .data(dataset)
@@ -26,20 +34,21 @@ var $3nodes = d3.select("#editableNode")
     .append("g")
     .attr("class", "node")
     .each(function(d){
-        d.$3bindedElement = this;
+        d.bindedElement = this;
     });
 
-var rounding = 5;
+var rounding = 4;
 var padding = 5;
 
 var $3txtContainer = $3nodes.append("rect")
     .attr("class", "txtContainer")
-    .attr("rx",rounding);
+    .attr("rx",rounding)
+    .attr("ry",rounding);
 
 var $3txtCntnt = $3nodes.append("text")
     .attr("class", "caption")
-    .attr("x", 100)
-    .attr("y", 200)
+    .attr("x", 25)
+    .attr("y", function(d, i){return 100*(i+1);})
     .text(function(d){return d.caption;})
     .each(function(d){
         //指定されている場合だけ指定する
@@ -52,24 +61,33 @@ var $3txtCntnt = $3nodes.append("text")
         if(d.fontColor){
             this.setAttribute("fill", d.fontColor);
         }
-    });
 
-$3txtContainer.attr("x", $3txtCntnt.node().getBBox().x - padding)
-    .attr("y", $3txtCntnt.node().getBBox().y - padding)
-    .attr("width", $3txtCntnt.node().getBBox().width + padding * 2)
-    .attr("height", $3txtCntnt.node().getBBox().height + padding * 2)
-    .each(function(d){
-        //指定されている場合だけ指定する
-        if(d.backGroundColor){
-            this.setAttribute("fill", d.backGroundColor);
+        //txtContainerを探して サイズ & 位置調整
+        var prevElem = this.previousSibling;
+        while(prevElem != null){
+            var $3txtFinder = d3.select(prevElem);
+            if($3txtFinder.classed("txtContainer")){ //検索ヒット
+                $3txtFinder.attr("x", this.getBBox().x - padding)
+                    .attr("y", this.getBBox().y - padding)
+                    .attr("width", this.getBBox().width + padding * 2)
+                    .attr("height", this.getBBox().height + padding * 2)
+                    .each(function(d){
+                        //指定されている場合だけ指定する
+                        if(d.backGroundColor){
+                            this.setAttribute("fill", d.backGroundColor);
+                        }
+                    });
+                break;
+            }
+            prevElem = this.previousSibling;
         }
-    })
+    });
 
 $3nodes.on("dblclick",function(d){dblClicked(d);})
 
 function dblClicked(d){
 
-    var childNode = d.$3bindedElement.childNodes;
+    var childNode = d.bindedElement.childNodes;
     
     //caption検索ループ
     var $3captionElem;
@@ -107,7 +125,9 @@ function dblClicked(d){
     if(!bkgrndcol){
         bkgrndcol = window.getComputedStyle($3txtContainerElem.node()).backgroundColor; //ブラウザが計算したbackground-colorを取得
     }
-    
+
+    d3.select(d.bindedElement).style("visibility", "hidden");
+
     //textareaの表示
     var $3txtArea = d3.select("#editableNode").append("textarea")
         .style("position", "absolute")
