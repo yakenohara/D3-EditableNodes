@@ -1,10 +1,3 @@
-//load css
-var link = document.createElement('link');
-link.href = 'style.css';
-link.rel = 'stylesheet';
-link.type = 'text/css';
-document.getElementsByTagName('head')[0].appendChild(link);
-
 var dataset = [
     {
         key: 0, //todo 未指定時のハンドリング
