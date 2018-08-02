@@ -1,19 +1,23 @@
 var dataset = [
     {
         key: 0, //todo 未指定時のハンドリング
-        caption: "untitled yg あいうa", //todo 必須指定によるエラーハンドリング
-        fontFamily: "helvetica, arial, 'hiragino kaku gothic pro', meiryo, 'ms pgothic', sans-serif", //caution 書式チェックなし
+        caption: "untitled node", //todo 必須指定によるエラーハンドリング
+        fontFamily: "arial, sans-serif;", //google style //caution 書式チェックなし
         fontSize: "16px", //caution 書式チェックなし
         fontColor: "rgb(255, 5, 130)", //caution 書式チェックなし
         backGroundColor: "rgb(120,120,210)" //caution 書式チェックなし
     },
     {
         key: 1,
-        caption: "untitled node 2",
-        fontFamily: "helvetica, arial, 'hiragino kaku gothic pro', meiryo, 'ms pgothic', sans-serif", //caution 書式チェックなし
+        caption: "untitled node - 2",
+        fontFamily: "helvetica, arial, 'hiragino kaku gothic pro', meiryo, 'ms pgothic', sans-serif", //Facebook style //caution 書式チェックなし
         fontSize: "16px", //caution 書式チェックなし
         fontColor: "rgb(251, 255, 14)", //caution 書式チェックなし
         backGroundColor: "rgba(34, 172, 41, 0.74)" //caution 書式チェックなし
+    },
+    {
+        key: 2,
+        caption: "untitled node - 3",
     }
 ];
 
