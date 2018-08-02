@@ -133,27 +133,57 @@ function dblClicked(d){
         .style("background-color", bkgrndcol)
         .style("border", padding + "px solid " + bkgrndcol)
         .style("border-radius", rounding + "px")
+        .classed("mousetrap",true)
         .property("value", $3captionElem.text())
         .attr("wrap","off");
         
     $3txtArea.node().focus();
 
     //textareaのサイズ自動調整
-    var tmpNode = $3txtArea.node();
-    $3txtArea.attr("data-scrollWidthBefore", tmpNode.scrollWidth)
-        .attr("data-scrollHeightBefore", tmpNode.scrollHeight)
-        .node().oninput = function(){
-            
-            //サイズ調整
-            if( tmpNode.scrollWidth > $3txtArea.attr('data-scrollWidthBefore')){ //width不足の場合
-                $3txtArea.style("width", (tmpNode.scrollWidth + 15) + "px");
-                $3txtArea.attr('data-scrollWidthBefore', tmpNode.scrollWidth);
-            }
+    var txtArea = $3txtArea.node();
+    $3txtArea.attr("data-scrollWidthBefore", txtArea.scrollWidth)
+        .attr("data-scrollHeightBefore", txtArea.scrollHeight)
+        .node().oninput = function(){resizeTxtArea($3txtArea);};
 
-            if( tmpNode.scrollHeight > $3txtArea.attr('data-scrollHeightBefore')){ //height不足の場合
-                $3txtArea.style("height", (tmpNode.scrollHeight + 15) + "px");
-                $3txtArea.attr('data-scrollHeightBefore', tmpNode.scrollHeight);
-            }
+    Mousetrap(txtArea).bind('enter', function(e){
+        disablingKeyEvent(e);
+    });
 
-        };
+    Mousetrap(txtArea).bind('alt+enter', function(e){
+        //insert \n
+        var txt = txtArea.value;
+        var toSelect = txtArea.selectionStart + 1;
+        var beforeTxt = txt.substr(0, txtArea.selectionStart);
+        var afterTxt = txt.substr(txtArea.selectionEnd);
+        txtArea.value = beforeTxt + '\n' + afterTxt;
+        txtArea.selectionStart = toSelect;
+        txtArea.selectionEnd = toSelect;
+
+        resizeTxtArea($3txtArea);
+        disablingKeyEvent(e);
+    });
+}
+
+function resizeTxtArea($3txtArea){
+    var txtArea = $3txtArea.node();
+
+    //サイズ調整
+    if( txtArea.scrollWidth > $3txtArea.attr('data-scrollWidthBefore')){ //width不足の場合
+        $3txtArea.style("width", (txtArea.scrollWidth + 15) + "px");
+        $3txtArea.attr('data-scrollWidthBefore', txtArea.scrollWidth);
+    }
+
+    if( txtArea.scrollHeight > $3txtArea.attr('data-scrollHeightBefore')){ //height不足の場合
+        $3txtArea.style("height", (txtArea.scrollHeight + 15) + "px");
+        $3txtArea.attr('data-scrollHeightBefore', txtArea.scrollHeight);
+    }
+}
+
+function disablingKeyEvent(e){
+    if (e.preventDefault) {
+        e.preventDefault();
+    } else {
+        // internet explorer
+        e.returnValue = false;
+    }
 }
