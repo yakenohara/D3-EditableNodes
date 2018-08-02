@@ -2,14 +2,14 @@ var dataset = [
     {
         key: 0, //todo 未指定時のハンドリング
         caption: "untitled node", //todo 必須指定によるエラーハンドリング
-        fontFamily: "arial, sans-serif;", //google style //caution 書式チェックなし
+        fontFamily: "arial, sans-serif", //google style //caution 書式チェックなし
         fontSize: "16px", //caution 書式チェックなし
         fontColor: "rgb(255, 5, 130)", //caution 書式チェックなし
         backGroundColor: "rgb(120,120,210)" //caution 書式チェックなし
     },
     {
         key: 1,
-        caption: "untitled node - 2",
+        caption: "untitled node-2",
         fontFamily: "helvetica, arial, 'hiragino kaku gothic pro', meiryo, 'ms pgothic', sans-serif", //Facebook style //caution 書式チェックなし
         fontSize: "16px", //caution 書式チェックなし
         fontColor: "rgb(251, 255, 14)", //caution 書式チェックなし
@@ -17,7 +17,7 @@ var dataset = [
     },
     {
         key: 2,
-        caption: "untitled node - 3",
+        caption: "untitled node-3",
     }
 ];
 
@@ -70,8 +70,30 @@ function updateNode(bindedData, toUpdateObj){
         }
     }
 
+    //todo datasetに対する更新
+
     //テキスト更新
-    $3captionElem.text(toUpdateObj.caption); //todo 改行が反映されない
+    var lfSeparatedStrings = toUpdateObj.caption.split(/\n/);
+    while($3captionElem.node().firstChild){ //tspan要素の全削除
+        $3captionElem.node().removeChild($3captionElem.node().firstChild);
+    }
+
+    //1行おきにtspan要素として追加
+    var numOfVacantLines = 0;
+    for(var i = 0 ; i < lfSeparatedStrings.length ; i++){
+        var str = lfSeparatedStrings[i];
+        var em;
+        if(str == ""){ //空行の場合
+            numOfVacantLines++;
+        }else{
+            em = ((numOfVacantLines + 1) * 1.3) + "em";
+            numOfVacantLines = 0;
+        }
+        $3captionElem.append("tspan")
+            .attr("x", $3captionElem.attr("x"))
+            .attr("dy", em)
+            .text(str);
+    }
 
     if(toUpdateObj.fontFamily){
         $3captionElem.attr("font-family", toUpdateObj.fontFamily);
@@ -82,6 +104,8 @@ function updateNode(bindedData, toUpdateObj){
     if(toUpdateObj.fontColor){
         $3captionElem.attr("fill", toUpdateObj.fontColor);
     }
+
+    //todo 最初の空行と最後の空行に合わせられない
 
     //背景更新
     var txtContainerElem = $3captionElem.node();
@@ -133,7 +157,7 @@ function dblClicked(d){
     if(!col){
         col = window.getComputedStyle($3captionElem.node()).color; //ブラウザが計算した文字色を取得
     }
-    //background-coloの取得
+    //background-colorの取得
     var bkgrndcol = $3txtContainerElem.attr("fill");
     if(!bkgrndcol){
         bkgrndcol = window.getComputedStyle($3txtContainerElem.node()).backgroundColor; //ブラウザが計算したbackground-colorを取得
@@ -142,6 +166,13 @@ function dblClicked(d){
     //編集先Nodeを非表示
     d3.select(d.bindedElement).style("visibility", "hidden");
 
+    var tspans = $3captionElem.node().childNodes;
+    var val = tspans[0].textContent;
+    for(var i = 1 ; i < tspans.length ; i++){
+        val += ("\n" + tspans[i].textContent);
+    }
+    //$3txtArea.property("value", val);
+
     //textareaの表示
     var $3txtArea = d3.select("#editableNode").append("textarea")
         .style("position", "absolute")
@@ -149,14 +180,17 @@ function dblClicked(d){
         .style("top", $3txtContainerElem.attr("y") + "px")
         .style("font-family", fntFam)
         .style("font-size", fntSiz)
+        .style("line-height","1.3em")
         .style("color", col)
         .style("background-clip", "padding-box")
         .style("background-color", bkgrndcol)
         .style("border", padding + "px solid " + bkgrndcol)
         .style("border-radius", rounding + "px")
         .classed("mousetrap",true)
-        .property("value", $3captionElem.text())
+        .property("value", val)
         .attr("wrap","off");
+
+    
         
     $3txtArea.node().focus();
 
