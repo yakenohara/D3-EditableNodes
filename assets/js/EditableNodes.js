@@ -42,39 +42,55 @@ var $3txtCntnt = $3nodes.append("text")
     .attr("class", "caption")
     .attr("x", 25)
     .attr("y", function(d, i){return 100*(i+1);})
-    .text(function(d){return d.caption;})
     .each(function(d){
-        //指定されている場合だけ指定する
-        if(d.fontFamily){
-            this.setAttribute("font-family", d.fontFamily);
-        }
-        if(d.fontSize){
-            this.setAttribute("font-size", d.fontSize);
-        }
-        if(d.fontColor){
-            this.setAttribute("fill", d.fontColor);
+        updateNode(d, d);
+    });
+
+function updateNode(bindedData, toUpdateObj){
+
+    var childNode = bindedData.bindedElement.childNodes;
+
+    //caption検索ループ
+    var $3captionElem;
+    var $3txtContainerElem;
+    for(var i = 0 ; i < childNode.length ; i++){
+        var $3tmp = d3.select(childNode[i]);
+        if($3tmp.classed("caption")){
+            $3captionElem = $3tmp;
+        }else if($3tmp.classed("txtContainer")){
+            $3txtContainerElem = $3tmp;
         }
 
-        //txtContainerを探して サイズ & 位置調整
-        var prevElem = this.previousSibling;
-        while(prevElem != null){
-            var $3txtFinder = d3.select(prevElem);
-            if($3txtFinder.classed("txtContainer")){ //検索ヒット
-                $3txtFinder.attr("x", this.getBBox().x - padding)
-                    .attr("y", this.getBBox().y - padding)
-                    .attr("width", this.getBBox().width + padding * 2)
-                    .attr("height", this.getBBox().height + padding * 2)
-                    .each(function(d){
-                        //指定されている場合だけ指定する
-                        if(d.backGroundColor){
-                            this.setAttribute("fill", d.backGroundColor);
-                        }
-                    });
-                break;
-            }
-            prevElem = this.previousSibling;
+        if((typeof $3captionElem != 'undefined') && (typeof $3captionElem != 'undefined')){
+            break;
         }
-    });
+    }
+
+    //テキスト更新
+    $3captionElem.text(toUpdateObj.caption); //todo 改行が反映されない
+
+    if(toUpdateObj.fontFamily){
+        $3captionElem.attr("font-family", toUpdateObj.fontFamily);
+    }
+    if(toUpdateObj.fontSize){
+        $3captionElem.attr("font-size", toUpdateObj.fontSize);
+    }
+    if(toUpdateObj.fontColor){
+        $3captionElem.attr("fill", toUpdateObj.fontColor);
+    }
+
+    //背景更新
+    var txtContainerElem = $3captionElem.node();
+    $3txtContainerElem.attr("x", txtContainerElem.getBBox().x - padding)
+        .attr("y", txtContainerElem.getBBox().y - padding)
+        .attr("width", txtContainerElem.getBBox().width + padding * 2)
+        .attr("height", txtContainerElem.getBBox().height + padding * 2);
+
+    if(toUpdateObj.backGroundColor){
+        $3txtContainerElem.attr("fill", toUpdateObj.backGroundColor);
+    }
+    
+}
 
 $3nodes.on("dblclick",function(d){dblClicked(d);})
 
@@ -119,6 +135,7 @@ function dblClicked(d){
         bkgrndcol = window.getComputedStyle($3txtContainerElem.node()).backgroundColor; //ブラウザが計算したbackground-colorを取得
     }
 
+    //編集先Nodeを非表示
     d3.select(d.bindedElement).style("visibility", "hidden");
 
     //textareaの表示
@@ -146,6 +163,27 @@ function dblClicked(d){
         .node().oninput = function(){resizeTxtArea($3txtArea);};
 
     Mousetrap(txtArea).bind('enter', function(e){
+
+        //todo
+        //enter / alt+enter イベントリスナーのunbind
+
+        //todo
+        //フォント・フォントサイズ・フォントカラー・background-colorを変えていなければ、
+        //オブジェクトに入れない
+
+        var toUpdateObj = {
+            caption: txtArea.value,
+            fontFamily:fntFam,
+            fontSize:fntSiz,
+            fontColor:col,
+            backGroundColor:bkgrndcol
+        };
+
+        txtArea.parentNode.removeChild(txtArea); //textareaの削除
+        d3.select(d.bindedElement).style("visibility", null); //編集先Nodeを復活
+
+        updateNode(d, toUpdateObj);
+        
         disablingKeyEvent(e);
     });
 
