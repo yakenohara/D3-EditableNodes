@@ -1,4 +1,17 @@
-#editableNode{
-    position: relative;
+#editableNode svg{
+    border: 1px solid black;
+    /* background-color: rgb(78, 78, 78); */
 }
 
+/* #editableNode .node .caption{
+    font-family: "Consolas, 'Courier New', monospace";
+    font-size: 16px;
+    fill: rgb(12, 104, 157);
+
+}
+
+#editableNode .node .txtContainer{
+    stroke: aqua;
+    stroke-width: 1px;
+    fill: black;
+} */

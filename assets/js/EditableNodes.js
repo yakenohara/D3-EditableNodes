@@ -23,14 +23,15 @@ var dataset = [
     }
 ];
 
+var $3editableNodesTAG = d3.select("#editableNode").style("position", "relative");
 var rounding = 4;
 var padding = 5;
 var valOfEm = 1.3;
 var dummyChar = 'D';
 var txtAreaMrgn = 15;
 
-var $3nodes = d3.select("#editableNode")
-    .append("svg")
+
+var $3nodes = $3editableNodesTAG.append("svg")
     .attr("width", "100%")
     .attr("height", 600)
     .selectAll("g")
@@ -232,20 +233,22 @@ function dblClicked(d){
         //todo 編集可能キャンセル時に、ダミー文字になってしまう
     }
     
+    var cmptdCaptionStyle = window.getComputedStyle($3captionElem.node());
+
     //フォントの取得
     var fntFam = $3captionElem.attr("font-family");
     if(!fntFam){ //フォントが指定されていない場合
-        fntFam = window.getComputedStyle($3captionElem.node()).fontFamily; //ブラウザが計算したフォントを取得
+        fntFam = cmptdCaptionStyle.getPropertyValue("font-family"); //ブラウザが計算したフォントを取得
     }
     //フォントサイズの取得
     var fntSiz = $3captionElem.attr("font-size");
     if(!fntSiz){ //フォントサイズが指定されていない場合
-        fntSiz = window.getComputedStyle($3captionElem.node()).fontSize; //ブラウザが計算したサイズを取得
+        fntSiz = cmptdCaptionStyle.getPropertyValue("font-size");
     }
     //文字色の取得
     var col = $3captionElem.attr("fill");
     if(!col){
-        col = window.getComputedStyle($3captionElem.node()).color; //ブラウザが計算した文字色を取得
+        col = cmptdCaptionStyle.getPropertyValue("fill"); //ブラウザが計算した文字色を取得
     }
     //strokeWidthの取得
     var strkWdth = ($3txtContainerElem.attr("stroke-width") || 0)*1; //存在しない場合は0
@@ -253,7 +256,7 @@ function dblClicked(d){
     //background-colorの取得
     var bkgrndcol = $3txtContainerElem.attr("fill");
     if(!bkgrndcol){
-        bkgrndcol = window.getComputedStyle($3txtContainerElem.node()).backgroundColor; //ブラウザが計算したbackground-colorを取得
+        bkgrndcol = window.getComputedStyle($3txtContainerElem.node()).fill; //ブラウザが計算したbackground-colorを取得
     }
 
     //strokeの取得
