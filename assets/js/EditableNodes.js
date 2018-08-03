@@ -2,24 +2,25 @@ var dataset = [
     {
         key: 0, //todo 未指定時のハンドリング
         caption: "untitled node",
-        fontFamily: "arial, sans-serif", //google style //caution 書式チェックなし
-        fontSize: "16px", //caution 書式チェックなし
-        fontColor: "rgb(255, 5, 130)", //caution 書式チェックなし
-        borderColor: "black", //caution 書式チェックなし
-        borderWidth: "1",  //caution 書式チェックなし
-        backGroundColor: "rgb(120,120,210)" //caution 書式チェックなし
-    },
-    {
-        key: 1,
-        caption: "untitled node-2",
-        fontFamily: "helvetica, arial, 'hiragino kaku gothic pro', meiryo, 'ms pgothic', sans-serif", //Facebook style //caution 書式チェックなし
+        fontFamily: "helvetica, arial, 'hiragino kaku gothic pro', meiryo, 'ms pgothic', sans-serif", //caution 書式チェックなし
         fontSize: "16px", //caution 書式チェックなし
         fontColor: "rgb(251, 255, 14)", //caution 書式チェックなし
+        borderColor: "black", //caution 書式チェックなし
+        borderWidth: "10px",  //caution 書式チェックなし
         backGroundColor: "rgba(34, 172, 41, 0.74)" //caution 書式チェックなし
     },
     {
+        key: 1,
+        caption: "default design",
+    },
+    {
         key: 2,
-        caption: "untitled node-3",
+        caption: "no border",
+        borderWidth: "0px",
+        backGroundColor: "rgb(22, 126, 19)"
+    },
+    {
+        key:3
     }
 ];
 
@@ -173,7 +174,7 @@ function updateNode(bindedData, toUpdateObj){
     if(haveToUpdateTxtCntnr){
         var chldNds = $3captionElem.node().childNodes;
         var captionElem = $3captionElem.node();
-        var brdrWdth = ($3txtContainerElem.attr("stroke-width") || 0)*1;
+        var brdrWdth = parseInt($3txtContainerElem.style("stroke-width") || "0px");
         if(chldNds.length == 1 && chldNds[0].textContent == ""){ //空文字の場合
             
             //最小サイズのRectを描画
@@ -252,8 +253,10 @@ function dblClicked(d){
     if(!col){
         col = cmptdCaptionStyle.getPropertyValue("fill"); //ブラウザが計算した文字色を取得
     }
+    
     //strokeWidthの取得
-    var strkWdth = ($3txtContainerElem.style("stroke-width") || 0)*1; //存在しない場合は0
+    //todo 
+    var strkWdth = parseInt($3txtContainerElem.style("stroke-width") || "0px"); //存在しない場合は0
     
     //background-colorの取得
     var bkgrndcol = $3txtContainerElem.style("fill");
