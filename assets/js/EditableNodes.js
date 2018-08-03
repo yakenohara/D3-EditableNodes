@@ -25,6 +25,7 @@ var rounding = 4;
 var padding = 5;
 var valOfEm = 1.3;
 var dummyChar = 'D';
+var txtAreaMrgn = 15;
 
 var $3nodes = d3.select("#editableNode")
     .append("svg")
@@ -241,6 +242,9 @@ function dblClicked(d){
         .style("position", "absolute")
         .style("left", $3txtContainerElem.attr("x") + "px")
         .style("top", $3txtContainerElem.attr("y") + "px")
+        .style("width",($3txtContainerElem.attr("width")*1 + txtAreaMrgn) + "px")
+        .style("height",($3txtContainerElem.attr("height")*1 + txtAreaMrgn) + "px")
+        .style("resize", "none")
         .style("font-family", fntFam)
         .style("font-size", fntSiz)
         .style("line-height", valOfEm + "em")
@@ -306,12 +310,12 @@ function resizeTxtArea($3txtArea){
 
     //サイズ調整
     if( txtArea.scrollWidth > $3txtArea.attr('data-scrollWidthBefore')){ //width不足の場合
-        $3txtArea.style("width", (txtArea.scrollWidth + 15) + "px");
+        $3txtArea.style("width", (txtArea.scrollWidth + txtAreaMrgn) + "px");
         $3txtArea.attr('data-scrollWidthBefore', txtArea.scrollWidth);
     }
 
     if( txtArea.scrollHeight > $3txtArea.attr('data-scrollHeightBefore')){ //height不足の場合
-        $3txtArea.style("height", (txtArea.scrollHeight + 15) + "px");
+        $3txtArea.style("height", (txtArea.scrollHeight + txtAreaMrgn) + "px");
         $3txtArea.attr('data-scrollHeightBefore', txtArea.scrollHeight);
     }
 }
