@@ -47,12 +47,17 @@ var $3txtCntnt = $3nodes.append("text")
     .attr("x", 25)
     .attr("y", function(d, i){return 100*(i+1);})
     .each(function(d){
+        if((typeof (d.caption)) == 'undefined'){ //定義していない場合
+            d.caption = "";
+        }
         updateNode(d, d);
     });
 
 function updateNode(bindedData, toUpdateObj){
 
     var childNode = bindedData.bindedElement.childNodes;
+
+    var haveToUpdateTxtCntnr = false;
 
     //caption検索ループ
     var $3captionElem;
@@ -73,51 +78,85 @@ function updateNode(bindedData, toUpdateObj){
     //todo datasetに対する更新
 
     //テキスト更新
-    var lfSeparatedStrings = toUpdateObj.caption.split(/\n/);
-    while($3captionElem.node().firstChild){ //tspan要素の全削除
-        $3captionElem.node().removeChild($3captionElem.node().firstChild);
-    }
+    if((typeof (toUpdateObj.caption)) != 'undefined'){ //更新文字列が定義されている場合のみ更新する
 
-    //1行おきにtspan要素として追加
-    var numOfVacantLines = 0;
-    for(var i = 0 ; i < lfSeparatedStrings.length ; i++){
-        var str = lfSeparatedStrings[i];
-        var em;
-        if(str == ""){ //空行の場合
-            numOfVacantLines++;
-        }else{
-            em = ((numOfVacantLines + 1) * 1.3) + "em";
-            numOfVacantLines = 0;
+        //定義済tspan要素の全削除
+        while($3captionElem.node().firstChild){
+            $3captionElem.node().removeChild($3captionElem.node().firstChild);
         }
-        $3captionElem.append("tspan")
-            .attr("x", $3captionElem.attr("x"))
-            .attr("dy", em)
-            .text(str);
+
+        if(toUpdateObj.caption == ""){ //空文字の場合
+            $3captionElem.append("tspan").text("");
+
+        }else{ //空文字ではない場合
+
+            var lfSeparatedStrings = toUpdateObj.caption.split(/\n/); //改行コードで分割
+            
+            //1行おきにtspan要素として追加
+            var numOfVacantLines = 0;
+            for(var i = 0 ; i < lfSeparatedStrings.length ; i++){
+                var str = lfSeparatedStrings[i];
+                var em;
+                if(str == ""){ //空行の場合
+                    numOfVacantLines++;
+                }else{
+                    em = ((numOfVacantLines + 1) * 1.3) + "em";
+                    numOfVacantLines = 0;
+                }
+                $3captionElem.append("tspan")
+                    .attr("x", $3captionElem.attr("x"))
+                    .attr("dy", em)
+                    .text(str);
+            }
+        }
+
+        haveToUpdateTxtCntnr = true;
     }
 
-    if(toUpdateObj.fontFamily){
+    //フォント更新
+    if((typeof toUpdateObj.fontFamily != 'undefined') && (toUpdateObj.fontFamily != "")){
         $3captionElem.attr("font-family", toUpdateObj.fontFamily);
+        haveToUpdateTxtCntnr = true;
     }
-    if(toUpdateObj.fontSize){
+    if((typeof toUpdateObj.fontSize != 'undefined') && (toUpdateObj.fontSize != "")){
         $3captionElem.attr("font-size", toUpdateObj.fontSize);
+        haveToUpdateTxtCntnr = true;
     }
-    if(toUpdateObj.fontColor){
+    if((typeof toUpdateObj.fontColor != 'undefined') && (toUpdateObj.fontColor != "")){
         $3captionElem.attr("fill", toUpdateObj.fontColor);
+        haveToUpdateTxtCntnr = true;
     }
 
     //todo 最初の空行と最後の空行に合わせられない
 
-    //背景更新
-    var txtContainerElem = $3captionElem.node();
-    $3txtContainerElem.attr("x", txtContainerElem.getBBox().x - padding)
-        .attr("y", txtContainerElem.getBBox().y - padding)
-        .attr("width", txtContainerElem.getBBox().width + padding * 2)
-        .attr("height", txtContainerElem.getBBox().height + padding * 2);
-
-    if(toUpdateObj.backGroundColor){
+    //背景色
+    if((typeof toUpdateObj.backGroundColor != 'undefined') && (toUpdateObj.backGroundColor != "")){
         $3txtContainerElem.attr("fill", toUpdateObj.backGroundColor);
+        //haveToUpdateTxtCntnr = true; //<- not needed
     }
-    
+
+    //背景のshape更新
+    if(haveToUpdateTxtCntnr){
+        var chldNds = $3captionElem.node().childNodes;
+        var txtContainerElem = $3captionElem.node();
+        if(chldNds.length == 1 && chldNds[0].textContent == ""){ //空文字の場合
+            //todo
+            console.log("node");
+            $3captionElem.attr("x")
+
+            $3txtContainerElem.attr("x", $3captionElem.attr("x")*1 - padding)
+                .attr("y", $3captionElem.attr("y")*1 - padding)
+                .attr("width", padding*2)
+                .attr("height", padding*2);
+
+        }else{ //caption指定有りの場合
+            
+            $3txtContainerElem.attr("x", txtContainerElem.getBBox().x - padding)
+                .attr("y", txtContainerElem.getBBox().y - padding)
+                .attr("width", txtContainerElem.getBBox().width + padding * 2)
+                .attr("height", txtContainerElem.getBBox().height + padding * 2);
+        }
+    }
 }
 
 $3nodes.on("dblclick",function(d){dblClicked(d);})
@@ -141,6 +180,14 @@ function dblClicked(d){
             break;
         }
     }
+
+    //captionを取得
+    var tspans = $3captionElem.node().childNodes;
+    var txtVal = tspans[0].textContent;
+    for(var i = 1 ; i < tspans.length ; i++){
+        txtVal += ("\n" + tspans[i].textContent);
+    }
+    //$3txtArea.property("value", txtVal);
 
     //フォントの取得
     var fntFam = $3captionElem.attr("font-family");
@@ -166,13 +213,6 @@ function dblClicked(d){
     //編集先Nodeを非表示
     d3.select(d.bindedElement).style("visibility", "hidden");
 
-    var tspans = $3captionElem.node().childNodes;
-    var val = tspans[0].textContent;
-    for(var i = 1 ; i < tspans.length ; i++){
-        val += ("\n" + tspans[i].textContent);
-    }
-    //$3txtArea.property("value", val);
-
     //textareaの表示
     var $3txtArea = d3.select("#editableNode").append("textarea")
         .style("position", "absolute")
@@ -187,7 +227,7 @@ function dblClicked(d){
         .style("border", padding + "px solid " + bkgrndcol)
         .style("border-radius", rounding + "px")
         .classed("mousetrap",true)
-        .property("value", val)
+        .property("value", txtVal)
         .attr("wrap","off");
 
     
