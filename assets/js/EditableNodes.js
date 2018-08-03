@@ -5,6 +5,8 @@ var dataset = [
         fontFamily: "arial, sans-serif", //google style //caution 書式チェックなし
         fontSize: "16px", //caution 書式チェックなし
         fontColor: "rgb(255, 5, 130)", //caution 書式チェックなし
+        borderColor: "black", //caution 書式チェックなし
+        borderWidth: "1",  //caution 書式チェックなし
         backGroundColor: "rgb(120,120,210)" //caution 書式チェックなし
     },
     {
@@ -82,7 +84,7 @@ function updateNode(bindedData, toUpdateObj){
 
     //todo data(dataset)されたオブジェクトに対する更新
 
-    //テキスト更新
+    //テキスト更新 //todo 複数のスペースが無視される
     if((typeof (toUpdateObj.caption)) != 'undefined'){ //更新文字列が定義されている場合のみ更新する
 
         //定義済tspan要素の全削除
@@ -146,6 +148,18 @@ function updateNode(bindedData, toUpdateObj){
         haveToUpdateTxtCntnr = true;
     }
 
+    //枠線の色
+    if((typeof toUpdateObj.borderColor != 'undefined') && (toUpdateObj.borderColor != "")){
+        $3txtContainerElem.attr("stroke", toUpdateObj.borderColor);
+        //haveToUpdateTxtCntnr = true; //<- not needed
+    }
+
+    //枠線の太さ
+    if((typeof toUpdateObj.borderWidth != 'undefined') && (toUpdateObj.borderWidth != "")){
+        $3txtContainerElem.attr("stroke-width", toUpdateObj.borderWidth);
+        haveToUpdateTxtCntnr = true;
+    }
+
     //背景色
     if((typeof toUpdateObj.backGroundColor != 'undefined') && (toUpdateObj.backGroundColor != "")){
         $3txtContainerElem.attr("fill", toUpdateObj.backGroundColor);
@@ -155,23 +169,24 @@ function updateNode(bindedData, toUpdateObj){
     //背景のshape更新
     if(haveToUpdateTxtCntnr){
         var chldNds = $3captionElem.node().childNodes;
-        var txtContainerElem = $3captionElem.node();
+        var captionElem = $3captionElem.node();
+        var brdrWdth = ($3txtContainerElem.attr("stroke-width") || 0)*1;
         if(chldNds.length == 1 && chldNds[0].textContent == ""){ //空文字の場合
             
             //最小サイズのRectを描画
-            $3txtContainerElem.attr("x", $3captionElem.attr("x")*1 - padding)
-                .attr("y", $3captionElem.attr("y")*1 - padding)
-                .attr("width", padding*2)
-                .attr("height", padding*2);
+            $3txtContainerElem.attr("x", $3captionElem.attr("x")*1 - padding - (brdrWdth/2))
+                .attr("y", $3captionElem.attr("y")*1 - padding - (brdrWdth/2))
+                .attr("width", padding*2 + brdrWdth)
+                .attr("height", padding*2 + brdrWdth);
 
         }else{ //caption指定有りの場合
             
             //caption占有サイズに合わせたRectを描画
-            $3txtContainerElem.attr("x", txtContainerElem.getBBox().x - padding)
-                .attr("y", txtContainerElem.getBBox().y - padding)
-                .attr("width", txtContainerElem.getBBox().width + padding * 2)
-                .attr("height", txtContainerElem.getBBox().height + padding * 2);
-
+            $3txtContainerElem.attr("x", captionElem.getBBox().x - padding - (brdrWdth/2))
+                .attr("y", captionElem.getBBox().y - padding - (brdrWdth/2))
+                .attr("width", captionElem.getBBox().width + padding * 2 + brdrWdth)
+                .attr("height", captionElem.getBBox().height + padding * 2 + brdrWdth);
+            
             //最初の行or最後の行が空文字の場合に挿入したダミー文字を削除する
             if(vacantStarted){ //最初の行にダミー文字を入れていた時
                 $3captionElem.node().firstChild.textContent = "";
@@ -228,22 +243,29 @@ function dblClicked(d){
     if(!col){
         col = window.getComputedStyle($3captionElem.node()).color; //ブラウザが計算した文字色を取得
     }
+    //strokeWidthの取得
+    var strkWdth = ($3txtContainerElem.attr("stroke-width") || 0)*1; //存在しない場合は0
+    
     //background-colorの取得
     var bkgrndcol = $3txtContainerElem.attr("fill");
     if(!bkgrndcol){
         bkgrndcol = window.getComputedStyle($3txtContainerElem.node()).backgroundColor; //ブラウザが計算したbackground-colorを取得
     }
 
+    //strokeの取得
+    var strkCol = ($3txtContainerElem.attr("stroke") || bkgrndcol); //存在しない場合は0
+
     //編集先Nodeを非表示
     d3.select(d.bindedElement).style("visibility", "hidden");
 
-    //textareaの表示
+    //textareaの表示 //todo 空文字だった場合に、位置が下がる
     var $3txtArea = d3.select("#editableNode").append("textarea")
         .style("position", "absolute")
-        .style("left", $3txtContainerElem.attr("x") + "px")
-        .style("top", $3txtContainerElem.attr("y") + "px")
+        .style("left", ($3txtContainerElem.attr("x")*1 - strkWdth/2) + "px")
+        .style("top", ($3txtContainerElem.attr("y")*1 - strkWdth/2) + "px")
         .style("width",($3txtContainerElem.attr("width")*1 + txtAreaMrgn) + "px")
         .style("height",($3txtContainerElem.attr("height")*1 + txtAreaMrgn) + "px")
+        .style("padding", padding + "px")
         .style("resize", "none")
         .style("font-family", fntFam)
         .style("font-size", fntSiz)
@@ -251,7 +273,7 @@ function dblClicked(d){
         .style("color", col)
         .style("background-clip", "padding-box")
         .style("background-color", bkgrndcol)
-        .style("border", padding + "px solid " + bkgrndcol)
+        .style("border", strkWdth + "px solid " + strkCol)
         .style("border-radius", rounding + "px")
         .classed("mousetrap",true)
         .property("value", txtVal)
@@ -279,6 +301,8 @@ function dblClicked(d){
             fontFamily:fntFam,
             fontSize:fntSiz,
             fontColor:col,
+            borderColor:strkCol,
+            borderWidth:strkWdth,
             backGroundColor:bkgrndcol
         };
 
