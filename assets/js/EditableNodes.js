@@ -1,7 +1,7 @@
 var dataset = [
     {
         key: 0, //todo 未指定時のハンドリング
-        caption: "untitled node", //todo 必須指定によるエラーハンドリング
+        caption: "untitled node",
         fontFamily: "arial, sans-serif", //google style //caution 書式チェックなし
         fontSize: "16px", //caution 書式チェックなし
         fontColor: "rgb(255, 5, 130)", //caution 書式チェックなし
@@ -21,6 +21,11 @@ var dataset = [
     }
 ];
 
+var rounding = 4;
+var padding = 5;
+var valOfEm = 1.3;
+var dummyChar = 'D';
+
 var $3nodes = d3.select("#editableNode")
     .append("svg")
     .attr("width", "100%")
@@ -33,9 +38,6 @@ var $3nodes = d3.select("#editableNode")
     .each(function(d){
         d.bindedElement = this;
     });
-
-var rounding = 4;
-var padding = 5;
 
 var $3txtContainer = $3nodes.append("rect")
     .attr("class", "txtContainer")
@@ -58,6 +60,8 @@ function updateNode(bindedData, toUpdateObj){
     var childNode = bindedData.bindedElement.childNodes;
 
     var haveToUpdateTxtCntnr = false;
+    var vacantStarted = false;
+    var vacantEnded = false;
 
     //caption検索ループ
     var $3captionElem;
@@ -75,7 +79,7 @@ function updateNode(bindedData, toUpdateObj){
         }
     }
 
-    //todo datasetに対する更新
+    //todo data(dataset)されたオブジェクトに対する更新
 
     //テキスト更新
     if((typeof (toUpdateObj.caption)) != 'undefined'){ //更新文字列が定義されている場合のみ更新する
@@ -96,13 +100,27 @@ function updateNode(bindedData, toUpdateObj){
             var numOfVacantLines = 0;
             for(var i = 0 ; i < lfSeparatedStrings.length ; i++){
                 var str = lfSeparatedStrings[i];
-                var em;
+                
+                //最初の行or最後の行が空文字の場合は
+                //背景Shape更新の為にダミー文字を追加する
+                if(i == 0 && str == ""){ //最初の行が空文字
+                    str = dummyChar;
+                    vacantStarted = true;
+                }
+                if(i == (lfSeparatedStrings.length - 1) && str == ""){ //最後の行が空文字
+                    str = dummyChar;
+                    vacantEnded = true;
+                }
+
+                //行に対する表示位置調整
+                var em = (valOfEm * numOfVacantLines + (i>0 ? valOfEm : 0)) + "em";
                 if(str == ""){ //空行の場合
                     numOfVacantLines++;
                 }else{
-                    em = ((numOfVacantLines + 1) * 1.3) + "em";
                     numOfVacantLines = 0;
                 }
+
+                //draw 1 line
                 $3captionElem.append("tspan")
                     .attr("x", $3captionElem.attr("x"))
                     .attr("dy", em)
@@ -127,8 +145,6 @@ function updateNode(bindedData, toUpdateObj){
         haveToUpdateTxtCntnr = true;
     }
 
-    //todo 最初の空行と最後の空行に合わせられない
-
     //背景色
     if((typeof toUpdateObj.backGroundColor != 'undefined') && (toUpdateObj.backGroundColor != "")){
         $3txtContainerElem.attr("fill", toUpdateObj.backGroundColor);
@@ -140,10 +156,8 @@ function updateNode(bindedData, toUpdateObj){
         var chldNds = $3captionElem.node().childNodes;
         var txtContainerElem = $3captionElem.node();
         if(chldNds.length == 1 && chldNds[0].textContent == ""){ //空文字の場合
-            //todo
-            console.log("node");
-            $3captionElem.attr("x")
-
+            
+            //最小サイズのRectを描画
             $3txtContainerElem.attr("x", $3captionElem.attr("x")*1 - padding)
                 .attr("y", $3captionElem.attr("y")*1 - padding)
                 .attr("width", padding*2)
@@ -151,10 +165,19 @@ function updateNode(bindedData, toUpdateObj){
 
         }else{ //caption指定有りの場合
             
+            //caption占有サイズに合わせたRectを描画
             $3txtContainerElem.attr("x", txtContainerElem.getBBox().x - padding)
                 .attr("y", txtContainerElem.getBBox().y - padding)
                 .attr("width", txtContainerElem.getBBox().width + padding * 2)
                 .attr("height", txtContainerElem.getBBox().height + padding * 2);
+
+            //最初の行or最後の行が空文字の場合に挿入したダミー文字を削除する
+            if(vacantStarted){ //最初の行にダミー文字を入れていた時
+                $3captionElem.node().firstChild.textContent = "";
+            }
+            if(vacantEnded){ //最後の行にダミー文字を入れていた時
+                $3captionElem.node().lastChild.textContent = "";
+            }
         }
     }
 }
@@ -220,7 +243,7 @@ function dblClicked(d){
         .style("top", $3txtContainerElem.attr("y") + "px")
         .style("font-family", fntFam)
         .style("font-size", fntSiz)
-        .style("line-height","1.3em")
+        .style("line-height", valOfEm + "em")
         .style("color", col)
         .style("background-clip", "padding-box")
         .style("background-color", bkgrndcol)
@@ -229,8 +252,6 @@ function dblClicked(d){
         .classed("mousetrap",true)
         .property("value", txtVal)
         .attr("wrap","off");
-
-    
         
     $3txtArea.node().focus();
 
