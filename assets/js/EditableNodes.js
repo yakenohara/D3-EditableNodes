@@ -226,8 +226,12 @@ function dblClicked(d){
     for(var i = 1 ; i < tspans.length ; i++){
         txtVal += ("\n" + tspans[i].textContent);
     }
-    //$3txtArea.property("value", txtVal);
 
+    if(txtVal == ""){
+        updateNode(d,{caption: dummyChar}); //ダミーNodeを作る
+        //todo 編集可能キャンセル時に、ダミー文字になってしまう
+    }
+    
     //フォントの取得
     var fntFam = $3captionElem.attr("font-family");
     if(!fntFam){ //フォントが指定されていない場合
@@ -258,7 +262,7 @@ function dblClicked(d){
     //編集先Nodeを非表示
     d3.select(d.bindedElement).style("visibility", "hidden");
 
-    //textareaの表示 //todo 空文字だった場合に、位置が下がる
+    //textareaの表示
     var $3txtArea = d3.select("#editableNode").append("textarea")
         .style("position", "absolute")
         .style("left", ($3txtContainerElem.attr("x")*1 - strkWdth/2) + "px")
