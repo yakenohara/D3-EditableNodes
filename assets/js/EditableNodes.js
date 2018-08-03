@@ -138,33 +138,34 @@ function updateNode(bindedData, toUpdateObj){
 
     //フォント更新
     if((typeof toUpdateObj.fontFamily != 'undefined') && (toUpdateObj.fontFamily != "")){
-        $3captionElem.attr("font-family", toUpdateObj.fontFamily);
+        $3captionElem.style("font-family", toUpdateObj.fontFamily);
         haveToUpdateTxtCntnr = true;
     }
     if((typeof toUpdateObj.fontSize != 'undefined') && (toUpdateObj.fontSize != "")){
-        $3captionElem.attr("font-size", toUpdateObj.fontSize);
+        $3captionElem.style("font-size", toUpdateObj.fontSize);
         haveToUpdateTxtCntnr = true;
     }
     if((typeof toUpdateObj.fontColor != 'undefined') && (toUpdateObj.fontColor != "")){
-        $3captionElem.attr("fill", toUpdateObj.fontColor);
+        $3captionElem.style("fill", toUpdateObj.fontColor);
         haveToUpdateTxtCntnr = true;
     }
 
     //枠線の色
     if((typeof toUpdateObj.borderColor != 'undefined') && (toUpdateObj.borderColor != "")){
-        $3txtContainerElem.attr("stroke", toUpdateObj.borderColor);
+        $3txtContainerElem.style("stroke", toUpdateObj.borderColor);
         //haveToUpdateTxtCntnr = true; //<- not needed
     }
 
     //枠線の太さ
     if((typeof toUpdateObj.borderWidth != 'undefined') && (toUpdateObj.borderWidth != "")){
-        $3txtContainerElem.attr("stroke-width", toUpdateObj.borderWidth);
+        $3txtContainerElem.style("stroke-width", toUpdateObj.borderWidth);
         haveToUpdateTxtCntnr = true;
     }
 
     //背景色
     if((typeof toUpdateObj.backGroundColor != 'undefined') && (toUpdateObj.backGroundColor != "")){
-        $3txtContainerElem.attr("fill", toUpdateObj.backGroundColor);
+        //$3txtContainerElem.attr("fill", toUpdateObj.backGroundColor);
+        $3txtContainerElem.style("fill", toUpdateObj.backGroundColor);
         //haveToUpdateTxtCntnr = true; //<- not needed
     }
 
@@ -237,31 +238,31 @@ function dblClicked(d){
     var cmptdCaptionStyle = window.getComputedStyle($3captionElem.node());
 
     //フォントの取得
-    var fntFam = $3captionElem.attr("font-family");
+    var fntFam = $3captionElem.style("font-family");
     if(!fntFam){ //フォントが指定されていない場合
         fntFam = cmptdCaptionStyle.getPropertyValue("font-family"); //ブラウザが計算したフォントを取得
     }
     //フォントサイズの取得
-    var fntSiz = $3captionElem.attr("font-size");
+    var fntSiz = $3captionElem.style("font-size");
     if(!fntSiz){ //フォントサイズが指定されていない場合
         fntSiz = cmptdCaptionStyle.getPropertyValue("font-size");
     }
     //文字色の取得
-    var col = $3captionElem.attr("fill");
+    var col = $3captionElem.style("fill");
     if(!col){
         col = cmptdCaptionStyle.getPropertyValue("fill"); //ブラウザが計算した文字色を取得
     }
     //strokeWidthの取得
-    var strkWdth = ($3txtContainerElem.attr("stroke-width") || 0)*1; //存在しない場合は0
+    var strkWdth = ($3txtContainerElem.style("stroke-width") || 0)*1; //存在しない場合は0
     
     //background-colorの取得
-    var bkgrndcol = $3txtContainerElem.attr("fill");
+    var bkgrndcol = $3txtContainerElem.style("fill");
     if(!bkgrndcol){
-        bkgrndcol = window.getComputedStyle($3txtContainerElem.node()).fill; //ブラウザが計算したbackground-colorを取得
+        bkgrndcol = window.getComputedStyle($3txtContainerElem.node()).getPropertyValue("fill"); //ブラウザが計算したbackground-colorを取得
     }
 
     //strokeの取得
-    var strkCol = ($3txtContainerElem.attr("stroke") || bkgrndcol); //存在しない場合は0
+    var strkCol = ($3txtContainerElem.style("stroke") || bkgrndcol); //存在しない場合は0
 
     //編集先Nodeを非表示
     d3.select(d.bindedElement).style("visibility", "hidden");
