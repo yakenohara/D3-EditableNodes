@@ -52,6 +52,7 @@ var $3txtCntnt = $3nodes.append("text")
     .attr("class", "caption")
     .attr("x", 25)
     .attr("y", function(d, i){return 100*(i+1);})
+    .style("white-space", "pre")
     .each(function(d){
         if((typeof (d.caption)) == 'undefined'){ //定義していない場合
             d.caption = "";
