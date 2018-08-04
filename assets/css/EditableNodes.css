@@ -16,3 +16,7 @@
     stroke-width: 2px;
     fill: rgb(44, 44, 44);
 }
+
+#editableNode .node .selectionLayer{
+    fill: rgba(40, 207, 96, 0.644);
+}

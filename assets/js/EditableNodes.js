@@ -69,7 +69,7 @@ function updateNode(bindedData, toUpdateObj){
     var vacantStarted = false;
     var vacantEnded = false;
 
-    //caption検索ループ
+    //elsement検索ループ
     var $3captionElem;
     var $3txtContainerElem;
     for(var i = 0 ; i < childNode.length ; i++){
@@ -165,7 +165,6 @@ function updateNode(bindedData, toUpdateObj){
 
     //背景色
     if((typeof toUpdateObj.backGroundColor != 'undefined') && (toUpdateObj.backGroundColor != "")){
-        //$3txtContainerElem.attr("fill", toUpdateObj.backGroundColor);
         $3txtContainerElem.style("fill", toUpdateObj.backGroundColor);
         //haveToUpdateTxtCntnr = true; //<- not needed
     }
@@ -202,9 +201,10 @@ function updateNode(bindedData, toUpdateObj){
     }
 }
 
-$3nodes.on("dblclick",function(d){dblClicked(d);})
+$3nodes.on("dblclick",function(d){editNode(d);});
+$3nodes.on("click",function(d){select(d);});
 
-function dblClicked(d){
+function editNode(d){
 
     var childNode = d.bindedElement.childNodes;
     
@@ -363,4 +363,51 @@ function disablingKeyEvent(e){
         // internet explorer
         e.returnValue = false;
     }
+}
+
+function select(d){
+    
+    //todo select状態の保持
+    //todo toggle動作
+
+    var childNode = d.bindedElement.childNodes;
+
+    //elsement検索ループ //todo updatenode()との共通処理化検討
+    var $3captionElem;
+    var $3txtContainerElem;
+    for(var i = 0 ; i < childNode.length ; i++){
+        var $3tmp = d3.select(childNode[i]);
+        if($3tmp.classed("caption")){
+            $3captionElem = $3tmp;
+        }else if($3tmp.classed("txtContainer")){
+            $3txtContainerElem = $3tmp;
+        }
+
+        if((typeof $3captionElem != 'undefined') && (typeof $3captionElem != 'undefined')){
+            break;
+        }
+    }
+    
+    var $3bindedElement = d3.select(d.bindedElement);
+
+    //rect描画
+    var $3selectionLayer = $3bindedElement.append("rect")
+        .attr("x", $3txtContainerElem.attr("x"))
+        .attr("y", $3txtContainerElem.attr("y"))
+        .attr("width", $3txtContainerElem.attr("width"))
+        .attr("height", $3txtContainerElem.attr("height"))
+        .attr("rx", rounding)
+        .attr("ry", rounding)
+        .classed("selectionLayer",true);
+
+    //stroke描画
+    var strkWdth = $3txtContainerElem.style("stroke-width");
+    if(strkWdth){ //stroke-widthが定義されている場合
+
+        $3selectionLayer.style("stroke-width", strkWdth)
+            .style("stroke", window.getComputedStyle($3selectionLayer.node()).getPropertyValue("fill"));
+
+    }
+    
+
 }
