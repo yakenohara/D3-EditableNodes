@@ -95,7 +95,7 @@ function updateNode(bindedData, toUpdateObj){
         }
 
         if((typeof $3captionElem != 'undefined') &&
-            (typeof $3captionElem != 'undefined') &&
+            (typeof $3txtContainerElem != 'undefined') &&
             (typeof $3slctnLyerElem != 'undefined')){
             break;
         }
@@ -414,7 +414,7 @@ function toggleSelection(d){
         }
 
         if((typeof $3captionElem != 'undefined') &&
-            (typeof $3captionElem != 'undefined') &&
+            (typeof $3txtContainerElem != 'undefined') &&
             (typeof $3slctnLyerElem != 'undefined')){
             break;
         }
