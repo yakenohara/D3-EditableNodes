@@ -44,17 +44,28 @@ var $3nodes = $3editableNodesTAG.append("svg")
         d.bindedElement = this;
     });
 
-var $3txtContainer = $3nodes.append("rect")
+//枠定義
+$3nodes.append("rect")
     .attr("class", "txtContainer")
     .attr("rx",rounding)
     .attr("ry",rounding);
 
-var $3txtCntnt = $3nodes.append("text")
+//caption定義
+$3nodes.append("text")
     .attr("class", "caption")
     .attr("x", 25)
     .attr("y", function(d, i){return 100*(i+1);})
-    .style("white-space", "pre")
-    .each(function(d){
+    .style("white-space", "pre");
+
+//selectionLayer定義
+$3nodes.append("rect")
+    .attr("rx", rounding)
+    .attr("ry", rounding)
+    .classed("selectionLayer", true)
+    .style("visibility", "hidden"); //noneでもいい
+
+//表示調整
+$3nodes.each(function(d){
         if((typeof (d.caption)) == 'undefined'){ //定義していない場合
             d.caption = "";
         }
@@ -72,15 +83,20 @@ function updateNode(bindedData, toUpdateObj){
     //elsement検索ループ
     var $3captionElem;
     var $3txtContainerElem;
+    var $3slctnLyerElem;
     for(var i = 0 ; i < childNode.length ; i++){
         var $3tmp = d3.select(childNode[i]);
-        if($3tmp.classed("caption")){
+        if($3tmp.classed("caption")){ //captionの場合
             $3captionElem = $3tmp;
-        }else if($3tmp.classed("txtContainer")){
+        }else if($3tmp.classed("txtContainer")){ //枠用rect要素の場合
             $3txtContainerElem = $3tmp;
+        }else if($3tmp.classed("selectionLayer")){ //selectionLayerの場合
+            $3slctnLyerElem = $3tmp;
         }
 
-        if((typeof $3captionElem != 'undefined') && (typeof $3captionElem != 'undefined')){
+        if((typeof $3captionElem != 'undefined') &&
+            (typeof $3captionElem != 'undefined') &&
+            (typeof $3slctnLyerElem != 'undefined')){
             break;
         }
     }
@@ -169,8 +185,10 @@ function updateNode(bindedData, toUpdateObj){
         //haveToUpdateTxtCntnr = true; //<- not needed
     }
 
-    //背景のshape更新
+    //Shape更新
     if(haveToUpdateTxtCntnr){
+
+        //背景
         var chldNds = $3captionElem.node().childNodes;
         var captionElem = $3captionElem.node();
         var brdrWdth = parseInt($3txtContainerElem.style("stroke-width") || "0px");
@@ -198,11 +216,23 @@ function updateNode(bindedData, toUpdateObj){
                 $3captionElem.node().lastChild.textContent = "";
             }
         }
+
+        //selectionLayer
+        $3slctnLyerElem.attr("x", $3txtContainerElem.attr("x"))
+            .attr("y", $3txtContainerElem.attr("y"))
+            .attr("width", $3txtContainerElem.attr("width"))
+            .attr("height", $3txtContainerElem.attr("height"));
+
+        var strkWdth = $3txtContainerElem.style("stroke-width");
+        if(strkWdth){ //stroke-widthが定義されている場合    
+            $3slctnLyerElem.style("stroke-width", strkWdth)
+                .style("stroke", window.getComputedStyle($3slctnLyerElem.node()).getPropertyValue("fill"));
+        }
     }
 }
 
 $3nodes.on("dblclick",function(d){editNode(d);});
-$3nodes.on("click",function(d){select(d);});
+$3nodes.on("click",function(d){toggleSelection(d);});
 
 function editNode(d){
 
@@ -365,49 +395,37 @@ function disablingKeyEvent(e){
     }
 }
 
-function select(d){
+function toggleSelection(d){
     
-    //todo select状態の保持
-    //todo toggle動作
-
     var childNode = d.bindedElement.childNodes;
 
     //elsement検索ループ //todo updatenode()との共通処理化検討
     var $3captionElem;
     var $3txtContainerElem;
+    var $3slctnLyerElem;
     for(var i = 0 ; i < childNode.length ; i++){
         var $3tmp = d3.select(childNode[i]);
-        if($3tmp.classed("caption")){
+        if($3tmp.classed("caption")){ //captionの場合
             $3captionElem = $3tmp;
-        }else if($3tmp.classed("txtContainer")){
+        }else if($3tmp.classed("txtContainer")){ //枠用rect要素の場合
             $3txtContainerElem = $3tmp;
+        }else if($3tmp.classed("selectionLayer")){ //selectionLayerの場合
+            $3slctnLyerElem = $3tmp;
         }
 
-        if((typeof $3captionElem != 'undefined') && (typeof $3captionElem != 'undefined')){
+        if((typeof $3captionElem != 'undefined') &&
+            (typeof $3captionElem != 'undefined') &&
+            (typeof $3slctnLyerElem != 'undefined')){
             break;
         }
     }
-    
-    var $3bindedElement = d3.select(d.bindedElement);
 
-    //rect描画
-    var $3selectionLayer = $3bindedElement.append("rect")
-        .attr("x", $3txtContainerElem.attr("x"))
-        .attr("y", $3txtContainerElem.attr("y"))
-        .attr("width", $3txtContainerElem.attr("width"))
-        .attr("height", $3txtContainerElem.attr("height"))
-        .attr("rx", rounding)
-        .attr("ry", rounding)
-        .classed("selectionLayer",true);
-
-    //stroke描画
-    var strkWdth = $3txtContainerElem.style("stroke-width");
-    if(strkWdth){ //stroke-widthが定義されている場合
-
-        $3selectionLayer.style("stroke-width", strkWdth)
-            .style("stroke", window.getComputedStyle($3selectionLayer.node()).getPropertyValue("fill"));
-
+    //selectionLayerの表示状態を変更
+    var ttt = $3slctnLyerElem.style("visibility");
+    if($3slctnLyerElem.style("visibility") == "hidden"){
+        $3slctnLyerElem.style("visibility", null); //表示状態にする
+    }else{
+        $3slctnLyerElem.style("visibility", "hidden"); //"非"表示状態にする
     }
     
-
 }
