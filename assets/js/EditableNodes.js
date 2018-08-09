@@ -500,3 +500,49 @@ function getDistanceOf_baseline_textAfterEdge(fntSiz, fntFam, onlyForCalcElem){
 
     return descenerHeight;
 }
+
+//
+//スクロールバーの幅を求める
+//
+//caution 小数点以下の値が拾えない
+var widthOfScrollBar;
+function getWidthOfScrollbar(onlyForCalcElem){
+    
+    var occupyingArea = 100;
+
+    //計算済みの場合はその数値を返すだけ
+    if(typeof widthOfScrollBar != 'undefined'){
+        return widthOfScrollBar;
+    }
+    
+    //計算用のdivを作る
+    var tmpElem = onlyForCalcElem.appendChild(document.createElement("div"));
+    tmpElem.setAttribute("class", "getWidthOfScrollbar");
+    tmpElem.setAttribute("style", "position: absolute; " +
+                                "display: inline-block; " +
+                                "top: 0; " + 
+                                "left: 0; " + 
+                                "margin: 0; " +
+                                "border: 0; " +
+                                "padding: 0;" +
+                                "width: " + occupyingArea + "px; " +
+                                "height: " + occupyingArea + "px; " +
+                                "overflow: scroll; ");
+    
+    //overflowするサイズの画像を挿入
+    var tmpElem_img = tmpElem.appendChild(document.createElement("img"));
+    tmpElem_img.setAttribute("src", "data:image/bmp;base64,Qk1CAAAAAAAAAD4AAAAoAAAAAQAAAAEAAAABAAEAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP///wAAAAAA"); //画像直接定義
+    tmpElem_img.setAttribute("style", "margin: 0; " +
+                                      "border: 0; " +
+                                      "padding: 0;" +
+                                      "width: " + (occupyingArea * 2 ) + "px; " +
+                                      "height: " + (occupyingArea * 2 ) + "px; ");
+    
+    var scrollbarwidth = tmpElem.offsetWidth - tmpElem.clientWidth;
+
+    //計算用divの削除
+    onlyForCalcElem.removeChild(tmpElem);
+
+    return scrollbarwidth;
+    
+}
