@@ -297,26 +297,32 @@ function editNode(d){
     //strokeの取得
     var strkCol = ($3txtContainerElem.style("stroke") || bkgrndcol); //存在しない場合は0
 
-    //編集先Nodeを非表示
-    d3.select(d.bindedElement).style("visibility", "hidden");
+    //編集先Nodeのキャプションのみ非表示
+    $3captionElem.style("visibility", "hidden");
+
+    //textAreaのtop表示位置
+    var halfLeading = (parseFloat(fntSiz) * (valOfEm - 1.0)) / 2;
+    var top = parseFloat($3captionElem.attr("y")) - getDistanceOf_textBeforeEdge_baseline(fntSiz, fntFam, $3editableNodesTAG.node()) - halfLeading;
+
+    //textAreaのleft表示位置
+    var left = parseFloat($3captionElem.attr("x"));
 
     //textareaの表示
     var $3txtArea = d3.select("#editableNode").append("textarea")
         .style("position", "absolute")
-        .style("left", ($3txtContainerElem.attr("x")*1 - strkWdth/2) + "px")
-        .style("top", ($3txtContainerElem.attr("y")*1 - strkWdth/2) + "px")
+        .style("left", left + "px")
+        .style("top", top + "px")
         .style("width",($3txtContainerElem.attr("width")*1 + txtAreaMrgn) + "px")
         .style("height",($3txtContainerElem.attr("height")*1 + txtAreaMrgn) + "px")
-        .style("padding", padding + "px")
-        .style("resize", "none")
+        .style("margin", 0)
+        .style("border", 0)
+        .style("padding", 0)
         .style("font-family", fntFam)
         .style("font-size", fntSiz)
         .style("line-height", valOfEm + "em")
         .style("color", col)
-        .style("background-clip", "padding-box")
-        .style("background-color", bkgrndcol)
-        .style("border", strkWdth + "px solid " + strkCol)
-        .style("border-radius", rounding + "px")
+        .style("resize", "none")
+        .style("background-color", "rgba(105, 105, 105, 0.5)") //<-only for testing
         .classed("mousetrap",true)
         .property("value", txtVal)
         .attr("wrap","off");
@@ -349,7 +355,7 @@ function editNode(d){
         };
 
         txtArea.parentNode.removeChild(txtArea); //textareaの削除
-        d3.select(d.bindedElement).style("visibility", null); //編集先Nodeを復活
+        $3captionElem.style("visibility", null); //編集先Nodeのキャプションを復活
 
         updateNode(d, toUpdateObj);
         
@@ -428,4 +434,69 @@ function toggleSelection(d){
         $3slctnLyerElem.style("visibility", "hidden"); //"非"表示状態にする
     }
     
+}
+
+//
+//指定フォントのbaselineからtext-before-edgeまでの高さを求める
+//
+function getDistanceOf_textBeforeEdge_baseline(fntSiz, fntFam, onlyForCalcElem){
+    
+    fntSiz = parseFloat(fntSiz); //"px"消去
+
+    var distanceOf_baseline_textAfterEdge = getDistanceOf_baseline_textAfterEdge(fntSiz, fntFam, onlyForCalcElem);
+
+    return fntSiz - distanceOf_baseline_textAfterEdge;
+
+}
+
+//
+//指定フォントのdecenderの高さを取得する
+//
+//フォントのメタデータ解析をするのではなく、
+//ダミー要素(フォントサイズ大のbmp画像と"y")を`vertical-align: baseline;`でレンダリングした結果を元に求める
+//
+//↓フォントのメタデータ解析は以下を理解する必要あり↓
+//https://nixeneko.hatenablog.com/category/%E3%83%95%E3%82%A9%E3%83%B3%E3%83%88?page=1476195275
+//
+function getDistanceOf_baseline_textAfterEdge(fntSiz, fntFam, onlyForCalcElem){
+
+    fntSiz = parseFloat(fntSiz); //"px"消去
+
+    //計算用のdivを作る
+    var tmpElem = onlyForCalcElem.appendChild(document.createElement("div"));
+    tmpElem.setAttribute("class", "getDistanceOf_baseline_textAfterEdge");
+    tmpElem.setAttribute("style", "position: absolute; " +
+                                  "display: inline-block; " +
+                                  "top: 0; " + 
+                                  "left: 0; " + 
+                                  "margin: 0; " +
+                                  "border: 0; " +
+                                  "padding: 0;");
+
+    var tmpElem_p = tmpElem.appendChild(document.createElement("p"));
+    tmpElem_p.setAttribute("style", "margin: 0; " +
+                                    "border: 0; " +
+                                    "padding: 0;" +
+                                    "font-family: " + fntFam + "; " +
+                                    "font-size: " + fntSiz + "px; " +
+                                    "line-height: " + fntSiz + "px;");
+    
+    //フォントサイズの画像を追加
+    var tmpElem_p_img = tmpElem_p.appendChild(document.createElement("img"));
+    tmpElem_p_img.setAttribute("src", "data:image/bmp;base64,Qk1CAAAAAAAAAD4AAAAoAAAAAQAAAAEAAAABAAEAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP///wAAAAAA"); //画像直接定義
+    tmpElem_p_img.setAttribute("width", fntSiz + "px");
+    tmpElem_p_img.setAttribute("height", fntSiz + "px");
+    
+    //文字列を追加
+    var tmpElem_p_span = tmpElem_p.appendChild(document.createElement("span"));
+    tmpElem_p_span.textContent = "y";
+    
+    //calc descender height
+    var styleOf_tmpElem_p = window.getComputedStyle(tmpElem_p);
+    var descenerHeight = parseFloat(styleOf_tmpElem_p.height) - fntSiz;
+
+    //計算用divの削除
+    onlyForCalcElem.removeChild(tmpElem);
+
+    return descenerHeight;
 }
