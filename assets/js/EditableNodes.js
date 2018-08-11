@@ -28,7 +28,7 @@ var $3editableNodesTAG = d3.select("#editableNode").style("position", "relative"
 var rounding = 4;
 var padding = 5;
 var valOfEm = 1.3;
-var dummyChar = 'D';
+var dummyChar = 'l'; //小さい幅の文字
 var txtAreaMrgn = 15;
 
 
@@ -41,7 +41,7 @@ var $3nodes = $3editableNodesTAG.append("svg")
     .append("g")
     .attr("class", "node")
     .each(function(d){
-        d.bindedElement = this;
+        d.bindedSVGElement = this;
     });
 
 //枠定義
@@ -69,12 +69,12 @@ $3nodes.each(function(d){
         if((typeof (d.caption)) == 'undefined'){ //定義していない場合
             d.caption = "";
         }
-        updateNode(d, d);
+        renderNode(d, d);
     });
 
-function updateNode(bindedData, toUpdateObj){
+function renderNode(bindedData, toUpdateObj){
 
-    var childNode = bindedData.bindedElement.childNodes;
+    var childNode = bindedData.bindedSVGElement.childNodes;
 
     var haveToUpdateTxtCntnr = false;
     var vacantStarted = false;
@@ -164,7 +164,7 @@ function updateNode(bindedData, toUpdateObj){
     }
     if((typeof toUpdateObj.fontColor != 'undefined') && (toUpdateObj.fontColor != "")){
         $3captionElem.style("fill", toUpdateObj.fontColor);
-        haveToUpdateTxtCntnr = true;
+        //haveToUpdateTxtCntnr = true; //<- not needed
     }
 
     //枠線の色
@@ -236,7 +236,7 @@ $3nodes.on("click",function(d){toggleSelection(d);});
 
 function editNode(d){
 
-    var childNode = d.bindedElement.childNodes;
+    var childNode = d.bindedSVGElement.childNodes;
     
     //caption検索ループ
     var $3captionElem;
@@ -262,7 +262,7 @@ function editNode(d){
     }
 
     if(txtVal == ""){
-        updateNode(d,{caption: dummyChar}); //ダミーNodeを作る
+        renderNode(d,{caption: dummyChar}); //ダミーNodeを作る
         //todo 編集可能キャンセル時に、ダミー文字になってしまう
     }
     
@@ -304,16 +304,10 @@ function editNode(d){
     var halfLeading = (parseFloat(fntSiz) * (valOfEm - 1.0)) / 2;
     var top = parseFloat($3captionElem.attr("y")) - getDistanceOf_textBeforeEdge_baseline(fntSiz, fntFam, $3editableNodesTAG.node()) - halfLeading;
 
-    //textAreaのleft表示位置
-    var left = parseFloat($3captionElem.attr("x"));
-
     //textareaの表示
     var $3txtArea = d3.select("#editableNode").append("textarea")
         .style("position", "absolute")
-        .style("left", left + "px")
         .style("top", top + "px")
-        .style("width",($3txtContainerElem.attr("width")*1 + txtAreaMrgn) + "px")
-        .style("height",($3txtContainerElem.attr("height")*1 + txtAreaMrgn) + "px")
         .style("margin", 0)
         .style("border", 0)
         .style("padding", 0)
@@ -322,10 +316,14 @@ function editNode(d){
         .style("line-height", valOfEm + "em")
         .style("color", col)
         .style("resize", "none")
+        .style("overflow", "hidden")
         .style("background-color", "rgba(105, 105, 105, 0.5)") //<-only for testing
         .classed("mousetrap",true)
         .property("value", txtVal)
         .attr("wrap","off");
+    
+    //width, height, x位置の調整
+    resizeTxtArea(d, $3txtArea);
         
     $3txtArea.node().focus();
 
@@ -333,7 +331,7 @@ function editNode(d){
     var txtArea = $3txtArea.node();
     $3txtArea.attr("data-scrollWidthBefore", txtArea.scrollWidth)
         .attr("data-scrollHeightBefore", txtArea.scrollHeight)
-        .node().oninput = function(){resizeTxtArea($3txtArea);};
+        .node().oninput = function(){resizeTxtArea(d, $3txtArea);};
 
     Mousetrap(txtArea).bind('enter', function(e){
 
@@ -357,7 +355,7 @@ function editNode(d){
         txtArea.parentNode.removeChild(txtArea); //textareaの削除
         $3captionElem.style("visibility", null); //編集先Nodeのキャプションを復活
 
-        updateNode(d, toUpdateObj);
+        renderNode(d, toUpdateObj);
         
         disablingKeyEvent(e);
     });
@@ -372,24 +370,73 @@ function editNode(d){
         txtArea.selectionStart = toSelect;
         txtArea.selectionEnd = toSelect;
 
-        resizeTxtArea($3txtArea);
+        resizeTxtArea(d, $3txtArea);
         disablingKeyEvent(e);
     });
 }
 
-function resizeTxtArea($3txtArea){
+function resizeTxtArea(bindedData, $3txtArea){
     var txtArea = $3txtArea.node();
 
-    //サイズ調整
-    if( txtArea.scrollWidth > $3txtArea.attr('data-scrollWidthBefore')){ //width不足の場合
-        $3txtArea.style("width", (txtArea.scrollWidth + txtAreaMrgn) + "px");
-        $3txtArea.attr('data-scrollWidthBefore', txtArea.scrollWidth);
+    var renderStr;
+    var dummyForBefore = "";
+    var dummyForAfter = "";
+    var isVacant = false;
+    var lfSeparatedStrings = txtArea.value.split(/\n/); //改行コードで分割
+    if(txtArea.value == ""){ //空文字の場合
+        renderStr = "";
+        isVacant = true;
+
+    }else{ //空文字ではない場合
+
+        if(lfSeparatedStrings[0] == ""){ //1行目が空文字の場合
+            dummyForBefore = dummyChar;
+        }
+
+        if((lfSeparatedStrings.length>1) && (lfSeparatedStrings[lfSeparatedStrings.length - 1] == "")){ //最終行が空文字の場合
+            dummyForAfter = dummyChar;
+        }
+
+        renderStr = dummyForBefore + txtArea.value + dummyForAfter;
     }
 
-    if( txtArea.scrollHeight > $3txtArea.attr('data-scrollHeightBefore')){ //height不足の場合
-        $3txtArea.style("height", (txtArea.scrollHeight + txtAreaMrgn) + "px");
-        $3txtArea.attr('data-scrollHeightBefore', txtArea.scrollHeight);
+    //ノードをリレンダリング
+    renderNode(bindedData, {caption:renderStr});
+
+    var childNode = bindedData.bindedSVGElement.childNodes;
+    //elsement検索ループ //todo renderNode()との共通処理化検討
+    var $3captionElem;
+    var $3txtContainerElem;
+    var $3slctnLyerElem;
+    for(var i = 0 ; i < childNode.length ; i++){
+        var $3tmp = d3.select(childNode[i]);
+        if($3tmp.classed("caption")){ //captionの場合
+            $3captionElem = $3tmp;
+        }else if($3tmp.classed("txtContainer")){ //枠用rect要素の場合
+            $3txtContainerElem = $3tmp;
+        }else if($3tmp.classed("selectionLayer")){ //selectionLayerの場合
+            $3slctnLyerElem = $3tmp;
+        }
+
+        if((typeof $3captionElem != 'undefined') &&
+            (typeof $3txtContainerElem != 'undefined') &&
+            (typeof $3slctnLyerElem != 'undefined')){
+            break;
+        }
     }
+
+    //サイズ調整
+    if(isVacant){ //空文字の場合
+        $3txtArea.style("width", (parseFloat($3txtArea.style("font-size")) / 2) + "px");
+        $3txtArea.style("height", (parseFloat($3txtArea.style("font-size")) * valOfEm) + "px");
+
+    }else{ //1文字以上存在する場合
+        $3txtArea.style("width", $3captionElem.node().getBBox().width + "px");
+        $3txtArea.style("height", (lfSeparatedStrings.length * (parseFloat($3txtArea.style("font-size")) * valOfEm)) + "px");
+    }
+
+    //x位置調整
+    $3txtArea.style("left", $3captionElem.node().getBBox().x + "px");
 }
 
 function disablingKeyEvent(e){
@@ -403,9 +450,9 @@ function disablingKeyEvent(e){
 
 function toggleSelection(d){
     
-    var childNode = d.bindedElement.childNodes;
+    var childNode = d.bindedSVGElement.childNodes;
 
-    //elsement検索ループ //todo updatenode()との共通処理化検討
+    //elsement検索ループ //todo renderNode()との共通処理化検討
     var $3captionElem;
     var $3txtContainerElem;
     var $3slctnLyerElem;
