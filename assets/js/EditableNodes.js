@@ -430,13 +430,18 @@ function resizeTxtArea(bindedData, $3txtArea){
         $3txtArea.style("width", (parseFloat($3txtArea.style("font-size")) / 2) + "px");
         $3txtArea.style("height", (parseFloat($3txtArea.style("font-size")) * valOfEm) + "px");
 
+        //x位置調整
+        $3txtArea.style("left", (parseFloat($3txtArea.attr("x"))) + "px");
+
     }else{ //1文字以上存在する場合
         $3txtArea.style("width", $3captionElem.node().getBBox().width + "px");
         $3txtArea.style("height", (lfSeparatedStrings.length * (parseFloat($3txtArea.style("font-size")) * valOfEm)) + "px");
+        
+        //x位置調整
+        $3txtArea.style("left", $3captionElem.node().getBBox().x + "px");
     }
 
-    //x位置調整
-    $3txtArea.style("left", $3captionElem.node().getBBox().x + "px");
+    
 }
 
 function disablingKeyEvent(e){
