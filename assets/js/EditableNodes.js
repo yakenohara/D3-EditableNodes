@@ -2,6 +2,7 @@ var dataset = [
     {
         key: 0, //todo 未指定時のハンドリング
         caption: "untitled node",
+        textAnchor: "middle", //caution 書式チェックなし
         fontFamily: "helvetica, arial, 'hiragino kaku gothic pro', meiryo, 'ms pgothic', sans-serif", //caution 書式チェックなし
         fontSize: "16px", //caution 書式チェックなし
         fontColor: "rgb(251, 255, 14)", //caution 書式チェックなし
@@ -51,9 +52,12 @@ $3nodes.append("rect")
     .attr("ry",rounding);
 
 //caption定義
+
+var ttt = $3nodes.node();
+
 $3nodes.append("text")
     .attr("class", "caption")
-    .attr("x", 25)
+    .attr("x", $3editableNodesTAG.node().offsetWidth / 2)
     .attr("y", function(d, i){return 100*(i+1);})
     .style("white-space", "pre");
 
@@ -150,6 +154,12 @@ function renderNode(bindedData, toUpdateObj){
             }
         }
 
+        haveToUpdateTxtCntnr = true;
+    }
+
+    //テキストの右寄せ・中央寄せ・左寄せ
+    if((typeof toUpdateObj.textAnchor != 'undefined') && (toUpdateObj.textAnchor != "")){
+        $3captionElem.attr("text-anchor", toUpdateObj.textAnchor);
         haveToUpdateTxtCntnr = true;
     }
 
@@ -268,6 +278,15 @@ function editNode(d){
     
     var cmptdCaptionStyle = window.getComputedStyle($3captionElem.node());
 
+    //text-anchorを取得
+    var txtAlign = $3captionElem.attr("text-anchor");
+    if(!txtAlign){
+        txtAlign = cmptdCaptionStyle.getPropertyValue("text-anchor"); //ブラウザが計算した寄せ設定を取得
+    }
+    if(txtAlign == "middle"){
+        txtAlign = "center";
+    }
+
     //フォントの取得
     var fntFam = $3captionElem.style("font-family");
     if(!fntFam){ //フォントが指定されていない場合
@@ -311,6 +330,7 @@ function editNode(d){
         .style("margin", 0)
         .style("border", 0)
         .style("padding", 0)
+        .style("text-align", txtAlign)
         .style("font-family", fntFam)
         .style("font-size", fntSiz)
         .style("line-height", valOfEm + "em")
