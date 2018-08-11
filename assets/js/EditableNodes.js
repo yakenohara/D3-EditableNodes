@@ -52,9 +52,6 @@ $3nodes.append("rect")
     .attr("ry",rounding);
 
 //caption定義
-
-var ttt = $3nodes.node();
-
 $3nodes.append("text")
     .attr("class", "caption")
     .attr("x", $3editableNodesTAG.node().offsetWidth / 2)
