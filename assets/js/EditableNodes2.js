@@ -10,7 +10,7 @@ var dataset = [
             text_fill: "rgb(251, 255, 14)",
             frame_shape: "rect",
             frame_stroke: "black",
-            frame_stroke_width: "10px",
+            frame_stroke_width: 10,
             frame_fill: "rgba(34, 172, 41, 0.74)"
         }
     },
@@ -26,7 +26,7 @@ var dataset = [
         type: "text",
         text: {
             text_content: "no border",
-            frame_stroke_width: "0px",
+            frame_stroke_width: 0,
             frame_fill: "rgb(22, 126, 19)",
         }
     },
@@ -363,12 +363,32 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     }
 
     //frame_stroke_width
-    if(typeof renderByThisObj.text.frame_stroke_width != 'undefined'){ //frame shape指定有り
+    if(typeof renderByThisObj.text.frame_stroke_width != 'undefined'){ //frame stroke-width指定有り
         haveToUpdateFrame = true;
     }
 
     //枠
     if(haveToUpdateFrame){
+
+        //stroke-width設定の抽出
+        var numOfStrokeWidth;
+        if(typeof renderByThisObj.text.frame_stroke_width != 'undefined'){ //frame stroke-width指定有り
+            if(typeof renderByThisObj.text.frame_stroke_width != 'number'){ //型がnumberでない場合
+                console.warn("Wrong type specified in \`renderByThisObj.text.frame_stroke_width\`. " +
+                             "specified type:\`" + (typeof (renderByThisObj.text.frame_stroke_width)) + "\`, expected type:\`number\`.");
+
+            }else{ //型はnumber
+                numOfStrokeWidth = parseFloat(renderByThisObj.text.frame_stroke_width);
+            }
+        }
+        if(typeof (numOfStrokeWidth) == 'undefined'){ //レンダー指定オブジェクト内に有効なstroke-widthがない
+            var appliedStrokeWidth = d3.select($3SVGnodeElem_DOTframe.node().firstChild).style("stroke-width");
+            //todo `0.0px`形式に設定できていない場合
+        }
+
+
+        var SVGnodeElem_text = $3SVGnodeElem_text.node();
+        var SVGnodeElem_text_tspans = SVGnodeElem_text.childNodes;
 
         var rerender = false;
         
@@ -380,27 +400,31 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             
             }else{ //型はstring
                 switch(renderByThisObj.text.frame_shape){
+                    
                     case "rect":
                     {
-                        renderThisShape = "rect";
                         //todo
                         //frame要素の削除&render
+                        $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
+
+                        //todo render
+                        $3SVGnodeElem_DOTframe.append("rect");
                     }
                     break;
     
                     case "circle":
                     {
-                        renderThisShape = "circle";
-                        //todo
-                        //frame要素の削除&render
+                        $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
+
+                        //todo render
                     }
                     break;
     
                     case "ellipse":
                     {
-                        renderThisShape = "ellipse";
-                        //todo
-                        //frame要素の削除&render
+                        $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
+
+                        //todo render
                     }
                     break;
     
@@ -417,11 +441,21 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         }else{ //frame shape指定無し
             rerender = true;
         }
-        
+
         if(rerender){
             //todo 古いframe要素を再調整
         }
     }
+
+    //最初の行or最後の行が空文字の場合に挿入したダミー文字を削除する
+    if(vacantStarted){ //最初の行にダミー文字を入れていた時
+        $3SVGnodeElem_text.node().firstChild.textContent = "";
+    }
+    if(vacantEnded){ //最後の行にダミー文字を入れていた時
+        $3SVGnodeElem_text.node().lastChild.textContent = "";
+    }
+
+    //stroke-widthのstyleはここで設定
 
     //枠線の色
     // if((typeof renderByThisObj.text.borderColor != 'undefined') && (renderByThisObj.text.borderColor != "")){
