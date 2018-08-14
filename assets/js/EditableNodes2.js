@@ -359,54 +359,48 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     
     //枠
     if(typeof renderByThisObj.text.frame_shape != 'undefined'){ //frame shape指定有り
-        if(typeof renderByThisObj.text.frame_shape != 'string'){ //型が
-            console.warn("Wrong type specified in \`renderByThisObj.text.frame_shape\`. " +
-                         "specified type:\`" + (typeof (renderByThisObj.text.frame_shape)) + "\`, expected type:\`string\`.");
-        
-        }else{ //型はstring
-            haveToUpdateFrame = true;
-        }
+        haveToUpdateFrame = true;
     }
 
     //frame_stroke_width
+    if(typeof renderByThisObj.text.frame_stroke_width != 'undefined'){ //frame shape指定有り
+        haveToUpdateFrame = true;
+    }
 
     //枠
     if(haveToUpdateFrame){
 
-        //以前のframを削除して
-        //描画しなおす
-
-
-
-
-        //描画frame typeの決定
-        if(typeof renderByThisObj.text.frame_shape != 'undefined'){
-
-
-
-        var renderThisShape;
+        var rerender = false;
+        
         if(typeof renderByThisObj.text.frame_shape != 'undefined'){ //frame shape指定有り
             if(typeof renderByThisObj.text.frame_shape != 'string'){ //型が
                 console.warn("Wrong type specified in \`renderByThisObj.text.frame_shape\`. " +
                              "specified type:\`" + (typeof (renderByThisObj.text.frame_shape)) + "\`, expected type:\`string\`.");
+                rerender = true;
             
             }else{ //型はstring
                 switch(renderByThisObj.text.frame_shape){
                     case "rect":
                     {
                         renderThisShape = "rect";
+                        //todo
+                        //frame要素の削除&render
                     }
                     break;
     
                     case "circle":
                     {
                         renderThisShape = "circle";
+                        //todo
+                        //frame要素の削除&render
                     }
                     break;
     
                     case "ellipse":
                     {
                         renderThisShape = "ellipse";
+                        //todo
+                        //frame要素の削除&render
                     }
                     break;
     
@@ -414,14 +408,18 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                     {
                         console.warn("Unknown shape specified in \`renderByThisObj.text.frame_shape\`. " +
                                      "specified type:\`" + (typeof (renderByThisObj.text.frame_shape)) + "\`.");
+                        rerender = true;
                     }
                     break;
                 }
             }
-        }
-        if(typeof (renderThisShape) == 'undefined'){ //frame shape指定がないか、有効なframeshapeではなかった場合
-            //定義済みshapeでさい
 
+        }else{ //frame shape指定無し
+            rerender = true;
+        }
+        
+        if(rerender){
+            //todo 古いframe要素を再調整
         }
     }
 
