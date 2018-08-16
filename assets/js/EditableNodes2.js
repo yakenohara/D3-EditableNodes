@@ -6,7 +6,7 @@ var dataset = [
             text_content: "untitled node",
             text_anchor: "middle",
             text_font_family: "helvetica, arial, 'hiragino kaku gothic pro', meiryo, 'ms pgothic', sans-serif",
-            text_font_size: 11,
+            text_font_size: 16,
             text_fill: "rgb(251, 255, 14)",
             frame_shape: "rect",
             frame_stroke: "black",
@@ -371,24 +371,62 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     if(haveToUpdateFrame){
 
         //stroke-width設定の抽出
-        var numOfStrokeWidth;
+        var pxNumOfStrokeWidth;
         if(typeof renderByThisObj.text.frame_stroke_width != 'undefined'){ //frame stroke-width指定有り
             if(typeof renderByThisObj.text.frame_stroke_width != 'number'){ //型がnumberでない場合
                 console.warn("Wrong type specified in \`renderByThisObj.text.frame_stroke_width\`. " +
                              "specified type:\`" + (typeof (renderByThisObj.text.frame_stroke_width)) + "\`, expected type:\`number\`.");
 
             }else{ //型はnumber
-                numOfStrokeWidth = parseFloat(renderByThisObj.text.frame_stroke_width);
+                pxNumOfStrokeWidth = parseFloat(renderByThisObj.text.frame_stroke_width);
             }
         }
-        if(typeof (numOfStrokeWidth) == 'undefined'){ //レンダー指定オブジェクト内に有効なstroke-widthがない
-            var appliedStrokeWidth = d3.select($3SVGnodeElem_DOTframe.node().firstChild).style("stroke-width");
-            //todo `0.0px`形式に設定できていない場合
-        }
+        if(typeof (pxNumOfStrokeWidth) == 'undefined'){ //レンダー指定オブジェクト内に有効なstroke-widthがない
 
+            //ブラウザ適用済みスタイルからstroke-widthを抽出する
+            var appliedStrokeWidth = d3.select($3SVGnodeElem_DOTframe.node().firstChild).style("stroke-width");
+            
+            // `0.0px`形式に設定できていない場合
+            var pixcelNumberRegex = new RegExp(/^[-]?[0-9]+(\.[0-9]+)?px$/);
+            if(!(pixcelNumberRegex.test(appliedStrokeWidth))){ // `0.0px`形式に設定できていない場合
+                                                               // 指数表記になるような極端な数値も、このルートに入る
+                                                                
+                console.warn("Unable to detect pxcel size from applied \'stroke-width\`. " +
+                             "applied style:\`" + appliedStrokeWidth + "\`, browser applied style:\`" + appliedFontSize + "\`.");
+                
+                pxNumOfStrokeWidth = 0; //0pxとして扱う
+            
+            }else{ // `0.0px`形式の場合場合
+                pxNumOfStrokeWidth = parseFloat(appliedStrokeWidth);
+            }
+        }
+        var halfOf_pxNumOfStrokeWidth = pxNumOfStrokeWidth / 2;
 
         var SVGnodeElem_text = $3SVGnodeElem_text.node();
         var SVGnodeElem_text_tspans = SVGnodeElem_text.childNodes;
+
+        var xOf_textRectArea;
+        var yOf_textRectArea;
+        var widthOf_textRectArea;
+        var heightOf_textRectArea;
+
+        //<text>の占有矩形エリアの算出
+        if(SVGnodeElem_text_tspans.length == 1 &&
+           SVGnodeElem_text_tspans[0].textContent == ""){ //空文字の場合
+        
+            xOf_textRectArea = parseFloat($3SVGnodeElem_text.attr("x"));
+            yOf_textRectArea = parseFloat($3SVGnodeElem_text.attr("y"));
+            widthOf_textRectArea = 0;
+            heightOf_textRectArea = 0;
+
+        }else{ //<text>が空ではない場合
+
+            xOf_textRectArea = SVGnodeElem_text.getBBox().x;
+            yOf_textRectArea = SVGnodeElem_text.getBBox().y;
+            widthOf_textRectArea = SVGnodeElem_text.getBBox().width;
+            heightOf_textRectArea = SVGnodeElem_text.getBBox().height;
+            
+        }
 
         var rerender = false;
         
@@ -403,17 +441,28 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                     
                     case "rect":
                     {
-                        //todo
-                        //frame要素の削除&render
+                        //表示する<rect>の位置・サイズ算出
+                        var x = xOf_textRectArea - padding - halfOf_pxNumOfStrokeWidth;
+                        var y = yOf_textRectArea - padding - halfOf_pxNumOfStrokeWidth;
+                        var width = widthOf_textRectArea + 2*padding + pxNumOfStrokeWidth;
+                        var height = heightOf_textRectArea + 2*padding + pxNumOfStrokeWidth;
+
+                        //古いframeオブジェクトを削除
                         $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
 
-                        //todo render
-                        $3SVGnodeElem_DOTframe.append("rect");
+                        //rect描画
+                        $3SVGnodeElem_DOTframe.append("rect")
+                            .attr("x", x)
+                            .attr("y", y)
+                            .attr("width", width)
+                            .attr("height", height);
+
                     }
                     break;
     
                     case "circle":
                     {
+                        //古いframeオブジェクトを削除
                         $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
 
                         //todo render
@@ -422,6 +471,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     
                     case "ellipse":
                     {
+                        //古いframeオブジェクトを削除
                         $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
 
                         //todo render
