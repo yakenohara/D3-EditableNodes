@@ -4,7 +4,7 @@ var dataset = [
         type: "text",
         text: {
             text_content: "untitled node",
-            text_anchor: "middle",
+            text_anchor: "start",
             text_font_family: "helvetica, arial, 'hiragino kaku gothic pro', meiryo, 'ms pgothic', sans-serif",
             text_font_size: 16,
             text_fill: "rgb(251, 255, 14)",
@@ -32,6 +32,45 @@ var dataset = [
     },
     {
         key:3
+    },
+    {
+        key:4,
+        type:"text",
+        text:{
+            text_content:"circle frame",
+            frame_shape:"circle"
+        }
+    },
+    {
+        key:5,
+        type:"text",
+        text:{
+            text_content:"ellipse frame",
+            frame_shape:"ellipse"
+        }
+    },
+    {
+        key:6,
+        type:"text",
+        text:{
+            text_content:"text\nanchor\n\`start\`"
+        }
+    },
+    {
+        key:7,
+        type:"text",
+        text:{
+            text_content:"text\nanchor\n\`middle\`",
+            text_anchor: "middle"
+        }
+    },
+    {
+        key:8,
+        type:"text",
+        text:{
+            text_content:"text\nanchor\n\`end\`",
+            text_anchor: "end"
+        }
     }
 ];
 
@@ -44,7 +83,7 @@ var dummyChar = 'l'; //小さい幅の文字
 //ノードの追加
 var $3nodes = $3editableNodesTAG.append("svg")
     .attr("width", "100%") //<-テスト用の仮数値
-    .attr("height", 600) //<-テスト用の仮数値
+    .attr("height", 800) //<-テスト用の仮数値
     .selectAll("g")
     .data(dataset)
     .enter()
@@ -62,7 +101,7 @@ var $3nodes = $3editableNodesTAG.append("svg")
         //座標追加
         d.coordinate = {
             x: ($3editableNodesTAG.node().offsetWidth / 2), //<-仮の処理
-            y: (100*(i+1)) //<-仮の処理
+            y: (70*(i+1)) //<-仮の処理
         };
 
         makeSVGNodeStructure(d, d);
@@ -345,8 +384,6 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         }
     }
 
-    //todo
-
     //frame存在チェック
     if(!($3SVGnodeElem_DOTframe.node().firstChild)){ //frameの描画要素が存在しない場合
         
@@ -410,21 +447,23 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         var widthOf_textRectArea;
         var heightOf_textRectArea;
 
+        var textRectArea = {};
+
         //<text>の占有矩形エリアの算出
         if(SVGnodeElem_text_tspans.length == 1 &&
            SVGnodeElem_text_tspans[0].textContent == ""){ //空文字の場合
         
-            xOf_textRectArea = parseFloat($3SVGnodeElem_text.attr("x"));
-            yOf_textRectArea = parseFloat($3SVGnodeElem_text.attr("y"));
-            widthOf_textRectArea = 0;
-            heightOf_textRectArea = 0;
+            textRectArea.x = parseFloat($3SVGnodeElem_text.attr("x"));
+            textRectArea.y = parseFloat($3SVGnodeElem_text.attr("y"));
+            textRectArea.width = 0;
+            textRectArea.height = 0;
 
         }else{ //<text>が空ではない場合
 
-            xOf_textRectArea = SVGnodeElem_text.getBBox().x;
-            yOf_textRectArea = SVGnodeElem_text.getBBox().y;
-            widthOf_textRectArea = SVGnodeElem_text.getBBox().width;
-            heightOf_textRectArea = SVGnodeElem_text.getBBox().height;
+            textRectArea.x = SVGnodeElem_text.getBBox().x;
+            textRectArea.y = SVGnodeElem_text.getBBox().y;
+            textRectArea.width = SVGnodeElem_text.getBBox().width;
+            textRectArea.height = SVGnodeElem_text.getBBox().height;
             
         }
 
@@ -441,21 +480,14 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                     
                     case "rect":
                     {
-                        //表示する<rect>の位置・サイズ算出
-                        var x = xOf_textRectArea - padding - halfOf_pxNumOfStrokeWidth;
-                        var y = yOf_textRectArea - padding - halfOf_pxNumOfStrokeWidth;
-                        var width = widthOf_textRectArea + 2*padding + pxNumOfStrokeWidth;
-                        var height = heightOf_textRectArea + 2*padding + pxNumOfStrokeWidth;
-
                         //古いframeオブジェクトを削除
                         $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
 
                         //rect描画
-                        $3SVGnodeElem_DOTframe.append("rect")
-                            .attr("x", x)
-                            .attr("y", y)
-                            .attr("width", width)
-                            .attr("height", height);
+                        resizeTextTypeSVGNode_rectFrame($3SVGnodeElem_DOTframe.append("rect"),
+                                                        textRectArea,
+                                                        padding,
+                                                        pxNumOfStrokeWidth);
 
                     }
                     break;
@@ -465,7 +497,11 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                         //古いframeオブジェクトを削除
                         $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
 
-                        //todo render
+                        //circle描画
+                        resizeTextTypeSVGNode_circleFrame($3SVGnodeElem_DOTframe.append("circle"),
+                                                          textRectArea,
+                                                          padding,
+                                                          pxNumOfStrokeWidth);
                     }
                     break;
     
@@ -474,14 +510,17 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                         //古いframeオブジェクトを削除
                         $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
 
-                        //todo render
+                        //ellipse描画
+                        resizeTextTypeSVGNode_ellipseFrame($3SVGnodeElem_DOTframe.append("ellipse"),
+                                                           textRectArea,
+                                                           padding,
+                                                           pxNumOfStrokeWidth);
                     }
                     break;
     
                     default:
                     {
-                        console.warn("Unknown shape specified in \`renderByThisObj.text.frame_shape\`. " +
-                                     "specified type:\`" + (typeof (renderByThisObj.text.frame_shape)) + "\`.");
+                        console.warn("Unknown shape \`" + renderByThisObj.text.frame_shape + "\` specified in \`renderByThisObj.text.frame_shape\`. ");
                         rerender = true;
                     }
                     break;
@@ -493,7 +532,46 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         }
 
         if(rerender){
-            //todo 古いframe要素を再調整
+            
+            //古いframe要素を再調整
+            SVGnodeElem_DOTframe_frame = $3SVGnodeElem_DOTframe.node().firstChild;
+            switch(SVGnodeElem_DOTframe_frame.tagName.toLowerCase()){
+                case "rect":
+                {
+                    //リサイズ
+                    resizeTextTypeSVGNode_rectFrame(d3.select(SVGnodeElem_DOTframe_frame),
+                                                    textRectArea,
+                                                    padding,
+                                                    pxNumOfStrokeWidth);
+                }
+                break;
+
+                case "circle":
+                {
+                    //リサイズ
+                    resizeTextTypeSVGNode_circleFrame(d3.select(SVGnodeElem_DOTframe_frame),
+                                                      textRectArea,
+                                                      padding,
+                                                      pxNumOfStrokeWidth);
+                }
+                break;
+
+                case "ellipse":
+                {
+                    resizeTextTypeSVGNode_ellipseFrame(d3.select(SVGnodeElem_DOTframe_frame),
+                                                       textRectArea,
+                                                       padding,
+                                                       pxNumOfStrokeWidth);
+                }
+                break;
+
+                default:
+                {
+                    console.warn("Unknown shape \`" + SVGnodeElem_DOTframe_frame.tagName.toLowerCase() + "\` found in \`" + (getDomPath($3SVGnodeElem_DOTframe.node())).join('/') + "\`. ");
+                    rerender = true;
+                }
+                break;
+            }
         }
     }
 
@@ -527,3 +605,91 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     // }
 }
 
+//
+//<text>要素の占有領域サイズに合わせて<rect>を再調整する
+//
+function resizeTextTypeSVGNode_rectFrame($3rectFrame, textRectArea, pdng, strkWdth){
+    
+    var halfOf_strkWdth = strkWdth / 2;
+
+    //位置・サイズ算出
+    var x = textRectArea.x - pdng - halfOf_strkWdth;
+    var y = textRectArea.y - pdng - halfOf_strkWdth;
+    var width = textRectArea.width + 2*pdng + strkWdth;
+    var height = textRectArea.height + 2*pdng + strkWdth;
+
+    //resize
+    $3rectFrame.attr("x", x)
+        .attr("y", y)
+        .attr("width", width)
+        .attr("height", height);
+}
+
+//
+//<text>要素の占有領域サイズに合わせて<circle>を再調整する
+//
+function resizeTextTypeSVGNode_circleFrame($3circleFrame, textRectArea, pdng, strkWdth){
+
+    //位置・サイズ算出
+    var cx = textRectArea.x + (textRectArea.width / 2);
+    var cy = textRectArea.y + (textRectArea.height / 2);
+    var r = Math.sqrt(Math.pow(textRectArea.width,2) + Math.pow(textRectArea.height, 2)) / 2;
+    r += pdng + (strkWdth / 2); //paddingとstroke-width分を加算
+
+    //resize
+    $3circleFrame.attr("cx", cx)
+        .attr("cy", cy)
+        .attr("r", r);
+}
+
+//
+//<text>要素の占有領域サイズに合わせて<ellipse>を再調整する
+//
+function resizeTextTypeSVGNode_ellipseFrame($3ellipseFrame, textRectArea, pdng, strkWdth){
+
+    //位置・サイズ算出
+    var cx = textRectArea.x + (textRectArea.width / 2);
+    var cy = textRectArea.y + (textRectArea.height / 2);
+    var rx = Math.sqrt(Math.pow((textRectArea.width / 2), 2) + (Math.pow(textRectArea.width, 2) / Math.pow(textRectArea.height, 2)) * (Math.pow((textRectArea.height / 2), 2)));
+    var ry = (textRectArea.height / textRectArea.width) * rx;
+
+    //paddingとstroke-width分を加算
+    rx += pdng + (strkWdth / 2);
+    ry += pdng + (strkWdth / 2);
+
+    //resize
+    $3ellipseFrame.attr("cx", cx)
+        .attr("cy", cy)
+        .attr("rx", rx)
+        .attr("ry", ry);
+}
+
+//
+//DOM要素のパスを取得する(デバッグ用)
+//
+function getDomPath(el) {
+    var stack = [];
+    while ( el.parentNode != null ) {
+    //   console.log(el.nodeName);
+      var sibCount = 0;
+      var sibIndex = 0;
+      for ( var i = 0; i < el.parentNode.childNodes.length; i++ ) {
+        var sib = el.parentNode.childNodes[i];
+        if ( sib.nodeName == el.nodeName ) {
+          if ( sib === el ) {
+            sibIndex = sibCount;
+          }
+          sibCount++;
+        }
+      }
+      if ( el.hasAttribute('id') && el.id != '' ) {
+        stack.unshift(el.nodeName.toLowerCase() + '#' + el.id);
+      } else if ( sibCount > 1 ) {
+        stack.unshift(el.nodeName.toLowerCase() + ':eq(' + sibIndex + ')');
+      } else {
+        stack.unshift(el.nodeName.toLowerCase());
+      }
+      el = el.parentNode;
+    }
+    return stack.slice(1); // removes the html element
+  }
