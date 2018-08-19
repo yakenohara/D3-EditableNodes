@@ -362,10 +362,6 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     }
 
     //テキストの色
-    // if((typeof renderByThisObj.text.fontColor != 'undefined') && (renderByThisObj.text.fontColor != "")){
-    //     $3SVGnodeElem_text.style("fill", renderByThisObj.text.fontColor);
-    //     //haveToUpdateFrame = true; //<- not needed
-    // }
     if(typeof renderByThisObj.text.text_fill != 'undefined'){ //text fill指定有り
         if(typeof renderByThisObj.text.text_fill != 'string'){ //型がstringでない場合
             console.warn("Wrong type specified in \`renderByThisObj.text.text_fill\`. " +
@@ -418,6 +414,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 pxNumOfStrokeWidth = parseFloat(renderByThisObj.text.frame_stroke_width);
             }
         }
+        
         if(typeof (pxNumOfStrokeWidth) == 'undefined'){ //レンダー指定オブジェクト内に有効なstroke-widthがない
 
             //ブラウザ適用済みスタイルからstroke-widthを抽出する
@@ -437,6 +434,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 pxNumOfStrokeWidth = parseFloat(appliedStrokeWidth);
             }
         }
+
         var SVGnodeElem_text = $3SVGnodeElem_text.node();
         var SVGnodeElem_text_tspans = SVGnodeElem_text.childNodes;
 
@@ -527,7 +525,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         if(rerender){
             
             //古いframe要素を再調整
-            SVGnodeElem_DOTframe_frame = $3SVGnodeElem_DOTframe.node().firstChild;
+            var SVGnodeElem_DOTframe_frame = $3SVGnodeElem_DOTframe.node().firstChild;
             switch(SVGnodeElem_DOTframe_frame.tagName.toLowerCase()){
                 case "rect":
                 {
@@ -734,28 +732,35 @@ function resizeTextTypeSVGNode_ellipseFrame($3ellipseFrame, textRectArea, pdng, 
 //DOM要素のパスを取得する(デバッグ用)
 //
 function getDomPath(el) {
+    
     var stack = [];
+    
     while ( el.parentNode != null ) {
-    //   console.log(el.nodeName);
-      var sibCount = 0;
-      var sibIndex = 0;
-      for ( var i = 0; i < el.parentNode.childNodes.length; i++ ) {
-        var sib = el.parentNode.childNodes[i];
-        if ( sib.nodeName == el.nodeName ) {
-          if ( sib === el ) {
-            sibIndex = sibCount;
-          }
-          sibCount++;
+        
+        //console.log(el.nodeName);
+        var sibCount = 0;
+        var sibIndex = 0;
+        
+        for ( var i = 0; i < el.parentNode.childNodes.length; i++ ) {
+            var sib = el.parentNode.childNodes[i];
+            if ( sib.nodeName == el.nodeName ) {
+                if ( sib === el ) {
+                    sibIndex = sibCount;
+                }
+                sibCount++;
+            }
         }
-      }
-      if ( el.hasAttribute('id') && el.id != '' ) {
-        stack.unshift(el.nodeName.toLowerCase() + '#' + el.id);
-      } else if ( sibCount > 1 ) {
-        stack.unshift(el.nodeName.toLowerCase() + ':eq(' + sibIndex + ')');
-      } else {
-        stack.unshift(el.nodeName.toLowerCase());
-      }
-      el = el.parentNode;
+
+        if ( el.hasAttribute('id') && el.id != '' ) {
+            stack.unshift(el.nodeName.toLowerCase() + '#' + el.id);
+        } else if ( sibCount > 1 ) {
+            stack.unshift(el.nodeName.toLowerCase() + ':eq(' + sibIndex + ')');
+        } else {
+            stack.unshift(el.nodeName.toLowerCase());
+        }
+
+        el = el.parentNode;
     }
+    
     return stack.slice(1); // removes the html element
-  }
+}
