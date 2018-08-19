@@ -9,8 +9,9 @@ var dataset = [
             text_font_size: 16,
             text_fill: "rgb(251, 255, 14)",
             frame_shape: "rect",
-            frame_stroke: "black",
+            frame_stroke: "rgb(0, 0, 0)",
             frame_stroke_width: 10,
+            frame_stroke_dasharray: "10,3",
             frame_fill: "rgba(34, 172, 41, 0.74)"
         }
     },
@@ -25,7 +26,7 @@ var dataset = [
         key: 2,
         type: "text",
         text: {
-            text_content: "no border",
+            text_content: "no stroke",
             frame_stroke_width: 0,
             frame_fill: "rgb(22, 126, 19)",
         }
@@ -462,7 +463,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         var rerender = false;
         
         if(typeof renderByThisObj.text.frame_shape != 'undefined'){ //frame shape指定有り
-            if(typeof renderByThisObj.text.frame_shape != 'string'){ //型が
+            if(typeof renderByThisObj.text.frame_shape != 'string'){ //型がstringでない
                 console.warn("Wrong type specified in \`renderByThisObj.text.frame_shape\`. " +
                              "specified type:\`" + (typeof (renderByThisObj.text.frame_shape)) + "\`, expected type:\`string\`.");
                 rerender = true;
@@ -550,6 +551,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
                 case "ellipse":
                 {
+                    //リサイズ
                     resizeTextTypeSVGNode_ellipseFrame(d3.select(SVGnodeElem_DOTframe_frame),
                                                        textRectArea,
                                                        padding,
@@ -558,11 +560,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 break;
 
                 default:
-                {
-                    console.warn("Unknown shape \`" + SVGnodeElem_DOTframe_frame.tagName.toLowerCase() + "\` found in \`" + (getDomPath($3SVGnodeElem_DOTframe.node())).join('/') + "\`. ");
-                    rerender = true;
-                }
-                break;
+                break; // nothing to do
             }
         }
     }
@@ -627,6 +625,34 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         }
     }
     
+    //枠線の波線形状
+    if(typeof renderByThisObj.text.frame_stroke_dasharray != 'undefined'){ //frame stroke-dasharray指定有り
+        if(typeof renderByThisObj.text.frame_stroke_dasharray != 'string'){ //型がstringでない場合
+            console.warn("Wrong type specified in \`renderByThisObj.text.frame_stroke_dasharray\`. " +
+                         "specified type:\`" + (typeof (renderByThisObj.text.frame_stroke_dasharray)) + "\`, expected type:\`string\`.");
+        
+        }else{ //型はstring
+            var applyThisStrokeDasharray = renderByThisObj.text.frame_stroke_dasharray;
+            //"px"とスペースは無視する
+            applyThisStrokeDasharray = applyThisStrokeDasharray.replace(/px/g, "");
+            applyThisStrokeDasharray = applyThisStrokeDasharray.replace(/ /g, "");
+
+            $3SVGnodeElem_DOTframe_frame.style("stroke-dasharray", applyThisStrokeDasharray);
+
+            //適用可否チェック
+            var appliedStrokeDasharray = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-dasharray");
+            appliedStrokeDasharray = appliedStrokeDasharray.replace(/px/g, ""); //"px"とスペースは無視する
+            appliedStrokeDasharray = appliedStrokeDasharray.replace(/ /g, "");
+
+
+            if(applyThisStrokeDasharray != appliedStrokeDasharray){ //computed styleに適用されなかった場合
+                console.warn("Specified style in \`renderByThisObj.text.frame_stroke_dasharray\` did not applied. " +
+                             "specified style:\`" + applyThisStrokeDasharray + "\`, browser applied style:\`" + appliedStrokeDasharray + "\`.");
+            }
+
+        }
+    }
+    
     //背景色
     if(typeof renderByThisObj.text.frame_fill != 'undefined'){ //frame fill指定有り
         if(typeof renderByThisObj.text.frame_fill != 'string'){ //型がstringでない場合
@@ -643,10 +669,6 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             }
         }
     }
-    // if((typeof renderByThisObj.text.backGroundColor != 'undefined') && (renderByThisObj.text.backGroundColor != "")){
-    //     $3txtContainerElem.style("fill", renderByThisObj.text.backGroundColor);
-    //     //haveToUpdateFrame = true; //<- not needed
-    // }
 }
 
 //
