@@ -335,7 +335,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                          "specified type:\`" + (typeof (renderByThisObj.text.text_font_size)) + "\`, expected type:\`number\`.");
         
         }else{ //型がnumber
-            var applyThisFontSize = renderByThisObj.text.text_font_size + "px"
+            var applyThisFontSize = renderByThisObj.text.text_font_size + "px";
             $3SVGnodeElem_text.style("font-size", applyThisFontSize);
 
             //適用可否チェック
@@ -349,7 +349,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                              "specified style:\`" + applyThisFontSize + "\`, browser applied style:\`" + appliedFontSize + "\`.");
 
             }else{
-                if( Math.abs(parseFloat(appliedFontSize) - applyThisFontSize) >= 0.1){ //適用されたfont-sizeと指定したfont-sizeの差分が大きすぎる
+                if( Math.abs(parseFloat(appliedFontSize) - renderByThisObj.text.text_font_size) >= 0.1){ //適用されたfont-sizeと指定したfont-sizeの差分が大きすぎる
                     console.warn("Specified style in \`renderByThisObj.text.text_font_size\` did not applied. " +
                                  "specified style:\`" + applyThisFontSize + "\`, browser applied style:\`" + appliedFontSize + "\`.");
                 
@@ -386,7 +386,6 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
     //frame存在チェック
     if(!($3SVGnodeElem_DOTframe.node().firstChild)){ //frameの描画要素が存在しない場合
-        
         $3SVGnodeElem_DOTframe.append("rect");
         haveToUpdateFrame = true;
     }
@@ -421,7 +420,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         if(typeof (pxNumOfStrokeWidth) == 'undefined'){ //レンダー指定オブジェクト内に有効なstroke-widthがない
 
             //ブラウザ適用済みスタイルからstroke-widthを抽出する
-            var appliedStrokeWidth = d3.select($3SVGnodeElem_DOTframe.node().firstChild).style("stroke-width");
+            var appliedStrokeWidth = window.getComputedStyle($3SVGnodeElem_DOTframe.node().firstChild).getPropertyValue("stroke-width");
             
             // `0.0px`形式に設定できていない場合
             var pixcelNumberRegex = new RegExp(/^[-]?[0-9]+(\.[0-9]+)?px$/);
@@ -437,15 +436,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 pxNumOfStrokeWidth = parseFloat(appliedStrokeWidth);
             }
         }
-        var halfOf_pxNumOfStrokeWidth = pxNumOfStrokeWidth / 2;
-
         var SVGnodeElem_text = $3SVGnodeElem_text.node();
         var SVGnodeElem_text_tspans = SVGnodeElem_text.childNodes;
-
-        var xOf_textRectArea;
-        var yOf_textRectArea;
-        var widthOf_textRectArea;
-        var heightOf_textRectArea;
 
         var textRectArea = {};
 
@@ -583,22 +575,74 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         $3SVGnodeElem_text.node().lastChild.textContent = "";
     }
 
-    //stroke-widthのstyleはここで設定
+    var $3SVGnodeElem_DOTframe_frame = d3.select($3SVGnodeElem_DOTframe.node().firstChild);
+    var computedStyleOf_SVGnodeElem_DOTframe_frame = window.getComputedStyle($3SVGnodeElem_DOTframe_frame.node());
+
+    //枠線の太さ
+    if(typeof renderByThisObj.text.frame_stroke_width != 'undefined'){ //frame stroke-width指定有り
+        if(typeof renderByThisObj.text.frame_stroke_width != 'number'){ //型がnumberでない場合
+            
+            //↓型がnumberかどうかのチェックはframe描画処理内でチェック済み↓
+            // console.warn("Wrong type specified in \`renderByThisObj.text.frame_stroke_width\`. " +
+            //              "specified type:\`" + (typeof (renderByThisObj.text.frame_stroke_width)) + "\`, expected type:\`number\`.");
+
+        }else{ //型はnumber
+            var applyThisStrokeWidth = renderByThisObj.text.frame_stroke_width + "px";
+            $3SVGnodeElem_DOTframe_frame.style("stroke-width", applyThisStrokeWidth);
+
+            //適用可否チェック
+            var appliedStrokeWidth = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-width");
+            var pixcelNumberRegex = new RegExp(/^[-]?[0-9]+(\.[0-9]+)?px$/);
+
+            if(!(pixcelNumberRegex.test(appliedStrokeWidth))){ // `0.0px`形式に設定できていない場合
+                                                               // 指数表記になるような極端な数値も、このルートに入る
+                
+                console.warn("Specified style in \`renderByThisObj.text.frame_stroke_width\` did not applied. " +
+                             "specified style:\`" + applyThisStrokeWidth + "\`, browser applied style:\`" + appliedStrokeWidth + "\`.");
+            
+            }else{
+                if( Math.abs(parseFloat(appliedStrokeWidth) - renderByThisObj.text.frame_stroke_width) >= 0.1){ //適用されたfont-sizeと指定したfont-sizeの差分が大きすぎる
+                    console.warn("Specified style in \`renderByThisObj.text.frame_stroke_width\` did not applied. " +
+                                 "specified style:\`" + applyThisStrokeWidth + "\`, browser applied style:\`" + appliedStrokeWidth + "\`.");
+                }
+            }
+        }
+    }
 
     //枠線の色
-    // if((typeof renderByThisObj.text.borderColor != 'undefined') && (renderByThisObj.text.borderColor != "")){
-    //     $3txtContainerElem.style("stroke", renderByThisObj.text.borderColor);
-    //     //haveToUpdateFrame = true; //<- not needed
-    // }
+    if(typeof renderByThisObj.text.frame_stroke != 'undefined'){ //frame stroke-width指定有り
+        if(typeof renderByThisObj.text.frame_stroke != 'string'){ //型がstringでない場合
+            console.warn("Wrong type specified in \`renderByThisObj.text.frame_stroke\`. " +
+                         "specified type:\`" + (typeof (renderByThisObj.text.frame_stroke)) + "\`, expected type:\`string\`.");
+        
+        }else{ //型はstring
+            $3SVGnodeElem_DOTframe_frame.style("stroke", renderByThisObj.text.frame_stroke);
+
+            //適用可否チェック
+            if(renderByThisObj.text.frame_stroke != computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke")){ //computed styleに適用されなかった場合
+                console.warn("Specified style in \`renderByThisObj.text.frame_stroke\` did not applied. " +
+                             "specified style:\`" + renderByThisObj.text.frame_stroke + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke") + "\`.");
+            }
+
+        }
+    }
     
+    //背景色
+    if(typeof renderByThisObj.text.frame_fill != 'undefined'){ //frame fill指定有り
+        if(typeof renderByThisObj.text.frame_fill != 'string'){ //型がstringでない場合
+            console.warn("Wrong type specified in \`renderByThisObj.text.frame_fill\`. " +
+                         "specified type:\`" + (typeof (renderByThisObj.text.frame_fill)) + "\`, expected type:\`string\`.");
+        
+        }else{ //型はstring
+            $3SVGnodeElem_DOTframe_frame.style("fill", renderByThisObj.text.frame_fill);
 
-    // //枠線の太さ
-    // if((typeof renderByThisObj.text.borderWidth != 'undefined') && (renderByThisObj.text.borderWidth != "")){
-    //     $3txtContainerElem.style("stroke-width", renderByThisObj.text.borderWidth);
-    //     haveToUpdateFrame = true;
-    // }
-
-    // //背景色
+            //適用可否チェック
+            if(renderByThisObj.text.frame_fill != computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("fill")){ //computed styleに適用されなかった場合
+                console.warn("Specified style in \`renderByThisObj.text.frame_fill\` did not applied. " +
+                             "specified style:\`" + renderByThisObj.text.frame_fill + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("fill") + "\`.");
+            }
+        }
+    }
     // if((typeof renderByThisObj.text.backGroundColor != 'undefined') && (renderByThisObj.text.backGroundColor != "")){
     //     $3txtContainerElem.style("fill", renderByThisObj.text.backGroundColor);
     //     //haveToUpdateFrame = true; //<- not needed
