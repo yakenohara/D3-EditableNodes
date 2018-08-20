@@ -76,7 +76,9 @@ var dataset = [
 ];
 
 var UITrappedEvents = {
-    editSVGNode: "dblclick", //caution `d3.js` event
+    editSVGNode: "dblclick", //`d3.js` event
+    submitEditingTextTypeSVGNode: "enter", //`Mousetrap` event
+    insertLFWhenEditingTextTypeSVGNode: "alt+enter", //`Mousetrap` event
 };
 
 var $3editableNodesTAG = d3.select("#editableNode").style("position", "relative");
@@ -839,7 +841,7 @@ function editTextTypeSVGNode(bindedData){
     //編集先Nodeの<text>を非表示にする
     $3SVGnodeElem_text.style("visibility", "hidden");
 
-    //textareaの表示
+    //<textarea>の表示
     $3textareaElem = $3editableNodesTAG.append("textarea")
         .style("position", "absolute")
         .style("top", textareaStyle_top)
@@ -859,19 +861,50 @@ function editTextTypeSVGNode(bindedData){
         .attr("wrap","off");
 
     //width, height, left位置の調整
-    resizeTxtarea(bindedData, $3textareaElem);
+    resizeTextarea(bindedData, $3textareaElem);
 
     //<textarea>のサイズ自動調整リスナ登録
-    $3textareaElem.node().oninput = function(){resizeTxtarea(bindedData, $3textareaElem);}
+    $3textareaElem.node().oninput = function(){resizeTextarea(bindedData, $3textareaElem);}
 
-    //テキストエリアにキャレットをフォーカス
+    //<textarea>にキャレットをフォーカス
     $3textareaElem.node().focus();
 
+    textareaElem = $3textareaElem.node();
+
     //UI TRAP
+    Mousetrap(textareaElem).bind(UITrappedEvents.insertLFWhenEditingTextTypeSVGNode, function(e){
+        //LFを挿入する
+        var txt = textareaElem.value;
+        var toSelect = textareaElem.selectionStart + 1;
+        var beforeTxt = txt.substr(0, textareaElem.selectionStart);
+        var afterTxt = txt.substr(textareaElem.selectionEnd);
+        textareaElem.value = beforeTxt + '\n' + afterTxt;
+        textareaElem.selectionStart = toSelect;
+        textareaElem.selectionEnd = toSelect;
+
+        //<textarea>のリサイズ
+        resizeTextarea(bindedData, $3textareaElem);
+
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+    Mousetrap(textareaElem).bind(UITrappedEvents.submitEditingTextTypeSVGNode, function(e){
+        console.log("<textarea> submitted");
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
 
 }
 
-function resizeTxtarea(bindedData, $3textareaElem){
+function disablingKeyEvent(e){
+    if (e.preventDefault) {
+        e.preventDefault();
+    } else {
+        // internet explorer
+        e.returnValue = false;
+    }
+}
+
+function resizeTextarea(bindedData, $3textareaElem){
     var textareaElem = $3textareaElem.node();
     
     var renderStr;
