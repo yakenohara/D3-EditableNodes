@@ -75,11 +75,21 @@ var dataset = [
     }
 ];
 
+var UITrappedEvents = {
+    editSVGNode: "dblclick", //caution `d3.js` event
+};
+
 var $3editableNodesTAG = d3.select("#editableNode").style("position", "relative");
 
 var padding = 5;
 var valOfEm = 1.3;
 var dummyChar = 'l'; //小さい幅の文字
+
+//text type node 編集時にfont-sizeを抽出できなかった場合に仮設定するfont-size
+var defaultFontSizeForTextArea = "11px";
+
+//text type node 編集時にtext-anchorを抽出できなかった場合に仮設定するtext-align
+var defaultTextAlignForTextArea = "left";
 
 //ノードの追加
 var $3nodes = $3editableNodesTAG.append("svg")
@@ -107,6 +117,9 @@ var $3nodes = $3editableNodesTAG.append("svg")
 
         makeSVGNodeStructure(d, d);
     });
+
+//UI TRAP
+$3nodes.on(UITrappedEvents.editSVGNode, function(d){editSVGNode(d);});
 
 function makeSVGNodeStructure(bindedData, makeByThisObj){
 
@@ -726,6 +739,285 @@ function resizeTextTypeSVGNode_ellipseFrame($3ellipseFrame, textRectArea, pdng, 
         .attr("cy", cy)
         .attr("rx", rx)
         .attr("ry", ry);
+}
+
+//
+//SVGノードを編集する
+//
+function editSVGNode(bindedData){
+
+    var $3SVGnodeElem = bindedData.$3bindedSVGElement;
+
+    //type指定チェック
+    if(typeof (bindedData.type) == 'undefined'){
+        console.warn("\"type\" property is not specified");
+        return; //存在しない場合場合は終了する
+    }
+
+    switch(bindedData.type){
+        case "text":
+        {
+            editTextTypeSVGNode(bindedData);
+        }
+        break;
+
+        default:
+        {
+            console.warn("unknown data type"); //<-仮の処理
+            return;
+        }
+        break;
+    }
+}
+
+function editTextTypeSVGNode(bindedData){
+    
+    var $3SVGnodeElem = bindedData.$3bindedSVGElement;
+
+    var $3SVGnodeElem_text = $3SVGnodeElem.select("text");
+    var computedStyleOf_SVGnodeElem_text = window.getComputedStyle($3SVGnodeElem_text.node());
+
+    //textを取得
+    var SVGnodeElem_text_tspans = $3SVGnodeElem_text.node().childNodes;
+    var textareaValue = SVGnodeElem_text_tspans[0].textContent;
+    for(var i = 1 ; i < SVGnodeElem_text_tspans.length ; i++){
+        textareaValue += ("\n" + SVGnodeElem_text_tspans[i].textContent);
+    }
+
+    //text-alignを取得
+    var textareaStyle_textAlign = computedStyleOf_SVGnodeElem_text.getPropertyValue("text-anchor");
+    switch(textareaStyle_textAlign){
+        case "start": // `text-anchor:start;` -> `text-align:left;`
+        {
+            textareaStyle_textAlign = "left";
+        }
+        break;
+
+        case "middle": // `text-anchor:middle;` -> `text-align:center;`
+        {
+            textareaStyle_textAlign = "center";
+        }
+        break;
+
+        case "end": // `text-anchor:end;` -> `text-align:right;`
+        {
+            textareaStyle_textAlign = "right";
+        }
+        break;
+
+        default:
+        {
+            console.warn("Unkown style \`text-anchor:" + textareaStyle_textAlign + ";\` applied in \`" + getDomPath($3SVGnodeElem_text.node()) + "\`");
+            textareaStyle_textAlign = defaultTextAlignForTextArea;
+        }
+        break;
+    }
+    
+    //フォントの取得
+    var textareaStyle_fontFamily = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-family");
+
+    //フォントサイズの取得
+    var textareaStyle_fontSize = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-size");
+    var pixcelNumberRegex = new RegExp(/^[-]?[0-9]+(\.[0-9]+)?px$/);
+    if(!(pixcelNumberRegex.test(textareaStyle_fontSize))){ // `0.0px`形式に設定できていない場合
+                                                           // 指数表記になるような極端な数値も、このルートに入る
+
+        console.warn("Cannot calculate pxcel size of Browser applied font-size." +
+                     "browser applied font-size:\`" + textareaStyle_fontSize + "\`.");
+        
+        textareaStyle_fontSize = defaultFontSizeForTextArea;
+    }
+
+    //文字色の取得
+    var textareaStyle_color = computedStyleOf_SVGnodeElem_text.getPropertyValue("fill");
+
+    //<textarea>表示の為のtop位置を算出
+    var halfLeading = (parseFloat(textareaStyle_fontSize) * (valOfEm - 1.0)) / 2;
+    var textareaStyle_top = parseFloat($3SVGnodeElem_text.attr("y")) - getPxDistanceOf_textBeforeEdge_baseline(textareaStyle_fontSize, textareaStyle_fontFamily, $3editableNodesTAG.node()) - halfLeading;
+    textareaStyle_top += "px";
+
+    //編集先Nodeの<text>を非表示にする
+    $3SVGnodeElem_text.style("visibility", "hidden");
+
+    //textareaの表示
+    $3textareaElem = $3editableNodesTAG.append("textarea")
+        .style("position", "absolute")
+        .style("top", textareaStyle_top)
+        .style("margin", 0)
+        .style("border", 0)
+        .style("padding", 0)
+        .style("text-align", textareaStyle_textAlign)
+        .style("font-family", textareaStyle_fontFamily)
+        .style("font-size", textareaStyle_fontSize)
+        .style("line-height", valOfEm + "em")
+        .style("color", textareaStyle_color)
+        .style("resize", "none")
+        .style("overflow", "hidden")
+        .style("background-color", "rgba(105, 105, 105, 0)")
+        .classed("mousetrap",true)
+        .property("value", textareaValue)
+        .attr("wrap","off");
+
+    //width, height, left位置の調整
+    resizeTxtarea(bindedData, $3textareaElem);
+
+    //<textarea>のサイズ自動調整リスナ登録
+    $3textareaElem.node().oninput = function(){resizeTxtarea(bindedData, $3textareaElem);}
+
+    //テキストエリアにキャレットをフォーカス
+    $3textareaElem.node().focus();
+
+    //UI TRAP
+
+}
+
+function resizeTxtarea(bindedData, $3textareaElem){
+    var textareaElem = $3textareaElem.node();
+    
+    var renderStr;
+    var dummyForBefore = "";
+    var dummyForAfter = "";
+    var isVacant = false;
+    
+    var lfSeparatedStrings = textareaElem.value.split(/\n/); //改行コードで分割
+    if(textareaElem.value == ""){ //空文字の場合
+        renderStr = "";
+        isVacant = true;
+
+    }else{ //空文字ではない場合
+
+        if(lfSeparatedStrings[0] == ""){ //1行目が空文字の場合
+            dummyForBefore = dummyChar;
+        }
+
+        if((lfSeparatedStrings.length>1) && (lfSeparatedStrings[lfSeparatedStrings.length - 1] == "")){ //最終行が空文字の場合
+            dummyForAfter = dummyChar;
+        }
+
+        renderStr = dummyForBefore + textareaElem.value + dummyForAfter;
+    }
+
+    //ノードをリレンダリング
+    renderTextTypeSVGNode(bindedData, {text:{text_content:renderStr}});
+
+    var $3SVGnodeElem_text = bindedData.$3bindedSVGElement.select("text");
+    var marginWidthForCaret = parseFloat($3textareaElem.style("font-size")) / 2;
+    
+    //Width・Height調整
+    if(isVacant){ //空文字の場合
+        $3textareaElem.style("width", marginWidthForCaret + "px");
+        $3textareaElem.style("height", (parseFloat($3textareaElem.style("font-size")) * valOfEm) + "px");
+
+    
+    }else{ //1文字以上存在する場合
+        $3textareaElem.style("width", ($3SVGnodeElem_text.node().getBBox().width + marginWidthForCaret) + "px");
+        $3textareaElem.style("height", (lfSeparatedStrings.length * (parseFloat($3textareaElem.style("font-size")) * valOfEm)) + "px");
+        
+    }
+
+    //overflowしている場合は、領域を広げる
+    var pxNumOfScrollWidth = parseFloat(textareaElem.scrollWidth);
+    if(pxNumOfScrollWidth > parseFloat($3textareaElem.style("width"))){ //widthがoverflowしている場合
+        $3textareaElem.style("width", (pxNumOfScrollWidth + marginWidthForCaret) + "px");
+    }
+    var pxNumOfScrollHeight = parseFloat(textareaElem.scrollHeight);
+    if(pxNumOfScrollHeight > parseFloat($3textareaElem.style("height"))){ //heightがoverflowしている場合
+        $3textareaElem.style("height", pxNumOfScrollHeight + "px");
+    }
+    
+    console.log("parseFloat($3textareaElem.attr(\"x\")):" + parseFloat($3textareaElem.attr("x")));
+
+    //left位置調整
+    var pxNumOfLeft;
+    switch($3textareaElem.style("text-align")){
+        case "left":
+        {
+            pxNumOfLeft = parseFloat($3SVGnodeElem_text.attr("x"));
+        }
+        break;
+
+        case "center":
+        {
+            pxNumOfLeft = parseFloat($3SVGnodeElem_text.attr("x")) - (parseFloat($3textareaElem.style("width")) / 2);
+        }
+        break;
+
+        case "right":
+        {
+            pxNumOfLeft = parseFloat($3SVGnodeElem_text.attr("x")) - parseFloat($3textareaElem.style("width"));
+        }
+        break;
+
+        default:
+        break; //nothing to do
+    }
+    $3textareaElem.style("left", pxNumOfLeft + "px");
+
+}
+
+//
+//指定フォントのbaselineからtext-before-edgeまでの高さを求める
+//
+function getPxDistanceOf_textBeforeEdge_baseline(fntSiz, fntFam, onlyForCalcElem){
+    
+    fntSiz = parseFloat(fntSiz); //"px"消去
+
+    var distanceOf_baseline_textAfterEdge = getPxDistanceOf_baseline_textAfterEdge(fntSiz, fntFam, onlyForCalcElem);
+
+    return fntSiz - distanceOf_baseline_textAfterEdge;
+
+}
+
+//
+//指定フォントのdecenderの高さを取得する
+//
+//フォントのメタデータ解析をするのではなく、
+//ダミー要素(フォントサイズ大のbmp画像と"y")を`vertical-align: baseline;`でレンダリングした結果を元に求める
+//
+//↓フォントのメタデータ解析は以下を理解する必要あり↓
+//https://nixeneko.hatenablog.com/category/%E3%83%95%E3%82%A9%E3%83%B3%E3%83%88?page=1476195275
+//
+function getPxDistanceOf_baseline_textAfterEdge(fntSiz, fntFam, onlyForCalcElem){
+
+    fntSiz = parseFloat(fntSiz); //"px"消去
+
+    //計算用のdivを作る
+    var tmpElem = onlyForCalcElem.appendChild(document.createElement("div"));
+    tmpElem.setAttribute("class", "getPxDistanceOf_baseline_textAfterEdge");
+    tmpElem.setAttribute("style", "position: absolute; " +
+                                  "display: inline-block; " +
+                                  "top: 0; " + 
+                                  "left: 0; " + 
+                                  "margin: 0; " +
+                                  "border: 0; " +
+                                  "padding: 0;");
+
+    var tmpElem_p = tmpElem.appendChild(document.createElement("p"));
+    tmpElem_p.setAttribute("style", "margin: 0; " +
+                                    "border: 0; " +
+                                    "padding: 0;" +
+                                    "font-family: " + fntFam + "; " +
+                                    "font-size: " + fntSiz + "px; " +
+                                    "line-height: " + fntSiz + "px;");
+    
+    //フォントサイズの画像を追加
+    var tmpElem_p_img = tmpElem_p.appendChild(document.createElement("img"));
+    tmpElem_p_img.setAttribute("src", "data:image/bmp;base64,Qk1CAAAAAAAAAD4AAAAoAAAAAQAAAAEAAAABAAEAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP///wAAAAAA"); //画像直接定義
+    tmpElem_p_img.setAttribute("width", fntSiz + "px");
+    tmpElem_p_img.setAttribute("height", fntSiz + "px");
+    
+    //文字列を追加
+    var tmpElem_p_span = tmpElem_p.appendChild(document.createElement("span"));
+    tmpElem_p_span.textContent = "y";
+    
+    //calc descender height
+    var styleOf_tmpElem_p = window.getComputedStyle(tmpElem_p);
+    var descenerHeight = parseFloat(styleOf_tmpElem_p.height) - fntSiz;
+
+    //計算用divの削除
+    onlyForCalcElem.removeChild(tmpElem);
+
+    return descenerHeight;
 }
 
 //
