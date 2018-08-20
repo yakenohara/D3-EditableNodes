@@ -19,3 +19,7 @@
 #editableNode .node .selectionLayer{
     fill: rgba(40, 207, 96, 0.644);
 }
+
+#editableNode .nodeEditConsoleElem{
+    background-color: rgb(255, 255, 255);
+}

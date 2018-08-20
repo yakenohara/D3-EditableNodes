@@ -86,6 +86,7 @@ var $3editableNodesTAG = d3.select("#editableNode").style("position", "relative"
 var padding = 5;
 var valOfEm = 1.3;
 var dummyChar = 'l'; //小さい幅の文字
+var positionOf_nodeEditConsoleElem = "bottom"; // top / bottom / right / left
 
 //text type node 編集時にfont-sizeを抽出できなかった場合に仮設定するfont-size
 var defaultFontSizeForTextArea = "11px";
@@ -93,10 +94,98 @@ var defaultFontSizeForTextArea = "11px";
 //text type node 編集時にtext-anchorを抽出できなかった場合に仮設定するtext-align
 var defaultTextAlignForTextArea = "left";
 
+var $3craneFor_nodeEditConsoleElem = $3editableNodesTAG.append("div")
+    // .style("visibility", "hidden")
+    .style("position", "absolute")
+    .style("z-index", 10)
+    .style("margin", 0)
+    .style("border", 0)
+    .style("padding", 0);
+
+var $3craneFor_nodeEditConsoleElem_div = $3craneFor_nodeEditConsoleElem.append("div")
+    .style("margin", 0)
+    .style("border", 0)
+    .style("padding", 0);
+
+var $3nodeEditConsoleElem = $3craneFor_nodeEditConsoleElem_div.append("div")
+    .style("margin", 0)
+    .style("border", 0)
+    .style("padding", 0)
+    .classed("nodeEditConsoleElem",true);
+
+//位置調整
+movePositionOf_nodeEditConsoleElem(positionOf_nodeEditConsoleElem);
+
+function movePositionOf_nodeEditConsoleElem(position){
+    switch(position){
+        case "top":
+        {
+            $3craneFor_nodeEditConsoleElem.style("width", "100%")
+                .style("text-align", "center");
+
+            $3craneFor_nodeEditConsoleElem_div.style("display", "inline-block");
+        }
+        break;
+
+        case "bottom":
+        {
+            $3craneFor_nodeEditConsoleElem.style("width", "100%")
+                .style("text-align", "center")
+                .style("bottom", 0);
+
+            $3craneFor_nodeEditConsoleElem_div.style("display", "inline-block");
+        }
+        break;
+
+        case "right":
+        {
+            $3craneFor_nodeEditConsoleElem.style("height", "100%")
+            .style("display", "table")
+            .style("right", 0);
+            
+
+            $3craneFor_nodeEditConsoleElem_div.style("display", "inline")
+                .style("display", "table-cell")
+                .style("vertical-align", "middle");
+        }
+        break;
+
+        case "left":
+        {
+            $3craneFor_nodeEditConsoleElem.style("height", "100%")
+            .style("display", "table");
+            ;
+
+            $3craneFor_nodeEditConsoleElem_div.style("display", "inline")
+                .style("display", "table-cell")
+                .style("vertical-align", "middle");
+        }
+        break;
+
+        default:
+        {
+            console.warn("Unknown position type \`" + position + "\` specified.");
+        }
+        break;
+    }
+}
+
+var $3nodeEditConsoleElem_ul = $3nodeEditConsoleElem.append("ul");
+
+$3nodeEditConsoleElem_ul.append("li")
+    .text("text-anchor");
+    
+$3nodeEditConsoleElem_ul.append("li")
+    .text("font-family");
+
+$3nodeEditConsoleElem_ul.append("li")
+    .text("font-size");
+
 //ノードの追加
 var $3nodes = $3editableNodesTAG.append("svg")
     .attr("width", "100%") //<-テスト用の仮数値
     .attr("height", 800) //<-テスト用の仮数値
+    .style("vertical-align", "bottom")
     .selectAll("g")
     .data(dataset)
     .enter()
