@@ -54,14 +54,14 @@ var dataset = [
         key:6,
         type:"text",
         text:{
-            text_content:"text\nanchor\n\`start\`"
+            text_content:"text-anchor\n\`start\`"
         }
     },
     {
         key:7,
         type:"text",
         text:{
-            text_content:"text\nanchor\n\`middle\`",
+            text_content:"text-anchor\n\`middle\`",
             text_anchor: "middle"
         }
     },
@@ -69,7 +69,7 @@ var dataset = [
         key:8,
         type:"text",
         text:{
-            text_content:"text\nanchor\n\`end\`",
+            text_content:"text-anchor\n\`end\`",
             text_anchor: "end"
         }
     },
