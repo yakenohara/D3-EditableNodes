@@ -919,8 +919,15 @@ function resizeTextTypeSVGNode_ellipseFrame($3ellipseFrame, textRectArea, pdng, 
     //位置・サイズ算出
     var cx = textRectArea.x + (textRectArea.width / 2);
     var cy = textRectArea.y + (textRectArea.height / 2);
-    var rx = Math.sqrt(Math.pow((textRectArea.width / 2), 2) + (Math.pow(textRectArea.width, 2) / Math.pow(textRectArea.height, 2)) * (Math.pow((textRectArea.height / 2), 2)));
-    var ry = (textRectArea.height / textRectArea.width) * rx;
+
+    if(textRectArea.width > 0 && textRectArea.height > 0){ //zero dividing 回避チェック
+        var rx = Math.sqrt(Math.pow((textRectArea.width / 2), 2) + (Math.pow(textRectArea.width, 2) / Math.pow(textRectArea.height, 2)) * (Math.pow((textRectArea.height / 2), 2)));
+        var ry = (textRectArea.height / textRectArea.width) * rx;
+
+    }else{
+        var rx = 0;
+        var ry = 0;
+    }
 
     //paddingとstroke-width分を加算
     rx += pdng + (strkWdth / 2);
