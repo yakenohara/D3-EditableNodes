@@ -12,7 +12,7 @@ var dataset = [
             frame_stroke: "rgb(0, 0, 0)",
             frame_stroke_width: 10,
             frame_stroke_dasharray: "10,3",
-            frame_fill: "rgba(34, 172, 41, 0.74)"
+            frame_fill: "rgba(34, 172, 41, 0.74)",
         }
     },
     {
@@ -72,6 +72,31 @@ var dataset = [
             text_content:"text\nanchor\n\`end\`",
             text_anchor: "end"
         }
+    },
+    {
+        key:9,
+        type:"text",
+        text:{
+            text_content:"Bold",
+            text_font_size: 15,
+            text_font_weight: "bold"
+        }
+    },
+    {
+        key:10,
+        type:"text",
+        text:{
+            text_content:"italic",
+            text_font_style: "italic"
+        }
+    },
+    {
+        key:11,
+        type:"text",
+        text:{
+            text_content:"line-through",
+            text_text_decoration: "line-through"
+        }
     }
 ];
 
@@ -86,7 +111,7 @@ var $3editableNodesTAG = d3.select("#editableNode").style("position", "relative"
 var padding = 5;
 var valOfEm = 1.3;
 var dummyChar = 'l'; //小さい幅の文字
-var positionOf_nodeEditConsoleElem = "bottom"; // top / bottom / right / left
+var positionOf_nodeEditConsoleElem = "left"; // top / bottom / right / left
 
 //text type node 編集時にfont-sizeを抽出できなかった場合に仮設定するfont-size
 var defaultFontSizeForTextArea = "11px";
@@ -140,8 +165,8 @@ function movePositionOf_nodeEditConsoleElem(position){
         case "right":
         {
             $3craneFor_nodeEditConsoleElem.style("height", "100%")
-            .style("display", "table")
-            .style("right", 0);
+                .style("display", "table")
+                .style("right", 0);
             
 
             $3craneFor_nodeEditConsoleElem_div.style("display", "inline")
@@ -153,8 +178,7 @@ function movePositionOf_nodeEditConsoleElem(position){
         case "left":
         {
             $3craneFor_nodeEditConsoleElem.style("height", "100%")
-            .style("display", "table");
-            ;
+                .style("display", "table");
 
             $3craneFor_nodeEditConsoleElem_div.style("display", "inline")
                 .style("display", "table-cell")
@@ -203,7 +227,7 @@ var $3nodes = $3editableNodesTAG.append("svg")
         //座標追加
         d.coordinate = {
             x: ($3editableNodesTAG.node().offsetWidth / 2), //<-仮の処理
-            y: (70*(i+1)) //<-仮の処理
+            y: (60*(i+1)) //<-仮の処理
         };
 
         makeSVGNodeStructure(d, d);
@@ -461,6 +485,83 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 }else{ //適用された場合
                     haveToUpdateFrame = true;
                 }
+            }
+        }
+    }
+
+    //font-weight
+    if(typeof renderByThisObj.text.text_font_weight != 'undefined'){ //font-weight指定有り
+        if(typeof renderByThisObj.text.text_font_weight != 'string'){ //型がstringでない場合
+            console.warn("Wrong type specified in \`renderByThisObj.text.text_font_weight\`. " +
+                         "specified type:\`" + (typeof (renderByThisObj.text.text_font_weight)) + "\`, expected type:\`string\`.");
+        
+        }else{ //型はstring
+            var applyThisFontWeight = renderByThisObj.text.text_font_weight;
+            if(applyThisFontWeight == "bold"){
+                applyThisFontWeight = "700";
+
+            }else if(applyThisFontWeight == "normal"){
+                applyThisFontWeight = "400";
+            }
+
+            //font-weightの適用
+            $3SVGnodeElem_text.style("font-weight", renderByThisObj.text.text_font_weight);
+
+            var appliedFontWeight = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-weight");
+            if(appliedFontWeight == "bold"){
+                appliedFontWeight = "700";
+
+            }else if(appliedFontWeight == "normal"){
+                appliedFontWeight = "400";
+            }
+
+            //適用可否チェック
+            if(applyThisFontWeight != appliedFontWeight){ //computed styleに適用されなかった場合
+                console.warn("Specified style in \`renderByThisObj.text.text_font_weight\` did not applied. " +
+                             "specified style:\`" + applyThisFontWeight + "\`, browser applied style:\`" + appliedFontWeight + "\`.");
+            
+            }else{ //適用された場合
+                haveToUpdateFrame = true;
+            }
+        }
+    }
+
+    //font-style
+    if(typeof renderByThisObj.text.text_font_style != 'undefined'){ //font-style指定有り
+        if(typeof renderByThisObj.text.text_font_style != 'string'){ //型がstringでない
+            console.warn("Wrong type specified in \`renderByThisObj.text.text_font_style\`. " +
+                         "specified type:\`" + (typeof (renderByThisObj.text.text_font_style)) + "\`, expected type:\`string\`.");
+        
+        }else{ //型はstring
+            $3SVGnodeElem_text.style("font-style", renderByThisObj.text.text_font_style);
+
+            //適用可否チェック
+            if(renderByThisObj.text.text_font_style != computedStyleOf_SVGnodeElem_text.getPropertyValue("font-style")){ //computed styleに適用されなかった場合
+                console.warn("Specified style in \`renderByThisObj.text.text_font_style\` did not applied. " +
+                             "specified style:\`" + renderByThisObj.text.text_font_style + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_text.getPropertyValue("font-style") + "\`.");
+            
+            }else{ //適用された場合
+                haveToUpdateFrame = true;
+            }
+        }
+    }
+
+    //text-decoration
+    if(typeof renderByThisObj.text.text_text_decoration != 'undefined'){ //text-decoration指定有り
+        if(typeof renderByThisObj.text.text_text_decoration != 'string'){ //型がstringでない
+            console.warn("Wrong type specified in \`renderByThisObj.text.text_text_decoration\`. " +
+                         "specified type:\`" + (typeof (renderByThisObj.text.text_text_decoration)) + "\`, expected type:\`string\`.");
+        
+        }else{ //型はstring
+            $3SVGnodeElem_text.style("text-decoration", renderByThisObj.text.text_text_decoration);
+
+            //適用可否チェック
+            if(renderByThisObj.text.text_text_decoration != computedStyleOf_SVGnodeElem_text.getPropertyValue("text-decoration")){ //computed styleに適用されなかった場合
+                console.warn("Specified style in \`renderByThisObj.text.text_text_decoration\` did not applied. " +
+                             "specified style:\`" + renderByThisObj.text.text_text_decoration + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_text.getPropertyValue("text-decoration") + "\`.");
+            
+            }else{ //適用された場合
+                haveToUpdateFrame = true;
             }
         }
     }
@@ -919,6 +1020,15 @@ function editTextTypeSVGNode(bindedData){
         textareaStyle_fontSize = defaultFontSizeForTextArea;
     }
 
+    //font-weightの取得
+    var textareaStyle_fontWeight = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-weight");
+
+    //font-styleの取得
+    var textareaStyle_fontStyle = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-style");
+
+    //text-decorationの取得
+    var textareaStyle_textDecoration = computedStyleOf_SVGnodeElem_text.getPropertyValue("text-decoration");
+
     //文字色の取得
     var textareaStyle_color = computedStyleOf_SVGnodeElem_text.getPropertyValue("fill");
 
@@ -940,6 +1050,9 @@ function editTextTypeSVGNode(bindedData){
         .style("text-align", textareaStyle_textAlign)
         .style("font-family", textareaStyle_fontFamily)
         .style("font-size", textareaStyle_fontSize)
+        .style("font-weight",textareaStyle_fontWeight)
+        .style("font-style",textareaStyle_fontStyle)
+        .style("text-decoration",textareaStyle_textDecoration)
         .style("line-height", valOfEm + "em")
         .style("color", textareaStyle_color)
         .style("resize", "none")
@@ -1047,8 +1160,6 @@ function resizeTextarea(bindedData, $3textareaElem){
         $3textareaElem.style("height", pxNumOfScrollHeight + "px");
     }
     
-    console.log("parseFloat($3textareaElem.attr(\"x\")):" + parseFloat($3textareaElem.attr("x")));
-
     //left位置調整
     var pxNumOfLeft;
     switch($3textareaElem.style("text-align")){
