@@ -1,0 +1,19 @@
+/* <エディタ共通設定>----------------------- */
+
+.propertyEditor .selected{
+  background-color: rgba(0, 89, 255, 0.548);
+}
+
+/* ----------------------</エディタ共通設定> */
+
+.propertyEditor.fill .pickedColorText{
+  vertical-align: middle;
+
+  width:150px;
+  height:22px;
+
+  border-style: solid;
+  border-width: 1px;
+  border-color: rgb(145, 118, 93);
+  padding:4px;
+}
