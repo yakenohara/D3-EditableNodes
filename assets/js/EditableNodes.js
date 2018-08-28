@@ -111,7 +111,13 @@ var $3editableNodesTAG = d3.select("#editableNode").style("position", "relative"
 var padding = 5;
 var valOfEm = 1.3;
 var dummyChar = 'l'; //小さい幅の文字
-var positionOf_nodeEditConsoleElem = "left"; // top / bottom / right / left
+var urlOf_EditableNodes_components_html = "assets/components/EditableNodes_components.html";
+
+/* <エディタ共通設定>----------------------- */
+
+var slctd = "selected";
+
+/* ----------------------</エディタ共通設定> */
 
 //text type node 編集時にfont-sizeを抽出できなかった場合に仮設定するfont-size
 var defaultFontSizeForTextArea = "11px";
@@ -119,94 +125,104 @@ var defaultFontSizeForTextArea = "11px";
 //text type node 編集時にtext-anchorを抽出できなかった場合に仮設定するtext-align
 var defaultTextAlignForTextArea = "left";
 
-var $3craneFor_nodeEditConsoleElem = $3editableNodesTAG.append("div")
+var $3nodeEditConsoleElem = $3editableNodesTAG.append("div")
     // .style("visibility", "hidden")
     .style("position", "absolute")
     .style("z-index", 10)
     .style("margin", 0)
     .style("border", 0)
-    .style("padding", 0);
-
-var $3craneFor_nodeEditConsoleElem_div = $3craneFor_nodeEditConsoleElem.append("div")
-    .style("margin", 0)
-    .style("border", 0)
-    .style("padding", 0);
-
-var $3nodeEditConsoleElem = $3craneFor_nodeEditConsoleElem_div.append("div")
-    .style("margin", 0)
-    .style("border", 0)
     .style("padding", 0)
     .classed("nodeEditConsoleElem",true);
 
-//位置調整
-movePositionOf_nodeEditConsoleElem(positionOf_nodeEditConsoleElem);
+var $nodeEditConsoleElem = $($3nodeEditConsoleElem.node());
+$nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseText, textStatus, jqXHR) {
 
-function movePositionOf_nodeEditConsoleElem(position){
-    switch(position){
-        case "top":
-        {
-            $3craneFor_nodeEditConsoleElem.style("width", "100%")
-                .style("text-align", "center");
+    //成功確認
+    if(textStatus === "error"){
+        console.error("Cannot load \`" + urlOf_EditableNodes_components_html + "\`. statusText:\`" + jqXHR.statusText + "\`");
+        return;
+    }
 
-            $3craneFor_nodeEditConsoleElem_div.style("display", "inline-block");
+    //<register behavor>----------------------------------------------------------------------------------------------------------
+
+    //<text_text_anchor>---------------------------------------------------------------
+    var $pickerElem = $nodeEditConsoleElem.find(".propertyEditor.textAnchor").children(".textAnchorType").on("click",function(){
+        var clickedElem = this;
+        var specifiedType = clickedElem.getAttribute("data-textAnchorType");
+        switch(specifiedType){
+            case "start":
+            break;
+
+            case "middle":
+            break;
+
+            case "end":
+            break;
+
+            default:
+            {
+                console.warn("Unknown style \`text-anchor:" + specifiedType + ";\` specified.");
+                return;
+            }
+            break;
         }
-        break;
 
-        case "bottom":
-        {
-            $3craneFor_nodeEditConsoleElem.style("width", "100%")
-                .style("text-align", "center")
-                .style("bottom", 0);
+        console.log("\`text-anchor:" + specifiedType + ";\` specified.");
+        fireNodeEditConsoleEvent({text:{text_anchor: specifiedType}});
 
-            $3craneFor_nodeEditConsoleElem_div.style("display", "inline-block");
+        //表示状態変更
+        var siblings = clickedElem.parentNode.children;
+        for(var i = 0 ; i < siblings.length ; i++){ //選択状態の解除ループ
+            siblings[i].classList.remove(slctd);
         }
-        break;
+        clickedElem.classList.add(slctd);
+    });
+    //--------------------------------------------------------------</text_text_anchor>
 
-        case "right":
-        {
-            $3craneFor_nodeEditConsoleElem.style("height", "100%")
-                .style("display", "table")
-                .style("right", 0);
-            
+    //<text_fill>---------------------------------------------------------------
+    var $pickerElem = $nodeEditConsoleElem.find(".propertyEditor.fill").children(".picker").eq(0);
+    var $inputElem = $nodeEditConsoleElem.find(".propertyEditor.fill").children(".pickedColorText").eq(0);
 
-            $3craneFor_nodeEditConsoleElem_div.style("display", "inline")
-                .style("display", "table-cell")
-                .style("vertical-align", "middle");
-        }
-        break;
+    $pickerElem.spectrum({
+        showAlpha: true,
+        showInitial: true,
+        preferredFormat: "rgb",
+    });
 
-        case "left":
-        {
-            $3craneFor_nodeEditConsoleElem.style("height", "100%")
-                .style("display", "table");
+    // Alternatively, they can be added as an event listener:
+    $pickerElem.on('move.spectrum', function(e, tinycolor) {
+        $inputElem.val(tinycolor);
+        console.log("moved. value:" + tinycolor);
+        fireNodeEditConsoleEvent({text:{fill: tinycolor.toRgbString()}});
+    });
 
-            $3craneFor_nodeEditConsoleElem_div.style("display", "inline")
-                .style("display", "table-cell")
-                .style("vertical-align", "middle");
-        }
-        break;
+    $inputElem.get(0).oninput = function(){
+        console.log("manually inputted. value:" + clickedElem.value);
+        $pickerElem.spectrum("set", clickedElem.value);
+    }
+    //--------------------------------------------------------------</text_fill>
 
-        default:
-        {
-            console.warn("Unknown position type \`" + position + "\` specified.");
-        }
-        break;
+    //---------------------------------------------------------------------------------------------------------</register behavor>
+});
+
+function fireNodeEditConsoleEvent(argObj){
+    
+    console.warn("todo ie以外のテスト");
+
+    var eventObj = document.createEvent("Event");
+    eventObj.initEvent("NodeEditConsoleEvent", false, false);
+    eventObj.argumentObject  = argObj;
+
+    //すべてのnode要素にイベントを発行する
+    var nodes = $3nodes.nodes();
+    for(var i = 0 ; i < nodes.length ; i++){
+        nodes[i].dispatchEvent(eventObj);
     }
 }
 
-var $3nodeEditConsoleElem_ul = $3nodeEditConsoleElem.append("ul");
-
-$3nodeEditConsoleElem_ul.append("li")
-    .text("text-anchor");
-    
-$3nodeEditConsoleElem_ul.append("li")
-    .text("font-family");
-
-$3nodeEditConsoleElem_ul.append("li")
-    .text("font-size");
-
 //ノードの追加
 var $3nodes = $3editableNodesTAG.append("svg")
+    .classed("SVGForNodesMapping",true)
     .attr("width", "100%") //<-テスト用の仮数値
     .attr("height", 800) //<-テスト用の仮数値
     .style("vertical-align", "bottom")
@@ -1048,7 +1064,7 @@ function editTextTypeSVGNode(bindedData){
     $3SVGnodeElem_text.style("visibility", "hidden");
 
     //<textarea>の表示
-    $3textareaElem = $3editableNodesTAG.append("textarea")
+    var $3textareaElem = $3editableNodesTAG.append("textarea")
         .style("position", "absolute")
         .style("top", textareaStyle_top)
         .style("margin", 0)
@@ -1074,6 +1090,17 @@ function editTextTypeSVGNode(bindedData){
 
     //<textarea>のサイズ自動調整リスナ登録
     $3textareaElem.node().oninput = function(){resizeTextarea(bindedData, $3textareaElem);}
+
+    //NodeEditConsoleからイベント受け取るリスナ登録
+    $3SVGnodeElem.node().addEventListener("NodeEditConsoleEvent",function(eventObj){
+        
+        if(typeof eventObj.argumentObject == 'undefined'){
+            console.warn("NodeEditConsoleEvent was not specified \`argumentObject\`.")
+            return;
+        }
+        console.log(eventObj.argumentObject);
+        
+    });
 
     //<textarea>にキャレットをフォーカス
     $3textareaElem.node().focus();
