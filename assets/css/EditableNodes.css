@@ -34,6 +34,11 @@
 #editableNode .nodeEditConsoleElem .propertyEditor .SVGicon{
     stroke:black;
 }
+
+#editableNode .historyElem{
+    background-color: rgb(160, 160, 160);
+}
+
 /* -----------------------------------------------------</ユーザーが好みで変更する定義> */
 
 /* <構造定義>------------------------------------------------------ */

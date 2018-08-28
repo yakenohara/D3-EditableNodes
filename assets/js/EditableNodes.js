@@ -218,6 +218,28 @@ function fireNodeEditConsoleEvent(argObj){
     for(var i = 0 ; i < nodes.length ; i++){
         nodes[i].dispatchEvent(eventObj);
     }
+
+    appendHistory();
+}
+
+
+var $3historyElem = $3editableNodesTAG.append("div")
+    .style("position", "absolute")
+    .style("z-index", 10)
+    .style("margin", 0)
+    .style("border", 0)
+    .style("padding", 0)
+    .style("right",0)
+    .style("max-width", "300px")
+    .style("max-height", "300px")
+    .style("overflow","scroll")
+    .classed("historyElem",true)
+    .attr("wrap","off");
+
+function appendHistory(){
+    $3historyElem.append("div")
+        .append("p")
+        .text("changed changed changed  changed changed changed");
 }
 
 //ノードの追加
