@@ -239,7 +239,6 @@ var $3historyElem = $3editableNodesTAG.append("div")
 function appendHistory(){
     $3historyElem.append("div")
         .append("p")
-        // .style("white-space","nowrap")
         .text("changed changed changed  changed changed changed");
 }
 
