@@ -222,7 +222,6 @@ function fireNodeEditConsoleEvent(argObj){
     appendHistory();
 }
 
-
 var $3historyElem = $3editableNodesTAG.append("div")
     .style("position", "absolute")
     .style("z-index", 10)
@@ -230,15 +229,17 @@ var $3historyElem = $3editableNodesTAG.append("div")
     .style("border", 0)
     .style("padding", 0)
     .style("right",0)
-    .style("max-width", "300px")
-    .style("max-height", "300px")
-    .style("overflow","scroll")
+    .style("max-width", "300px") //<- 仮の数値
+    .style("max-height", "300px") //<- 仮の数値
+    .style("white-space","nowrap")
+    .style("overflow","auto")
     .classed("historyElem",true)
     .attr("wrap","off");
 
 function appendHistory(){
     $3historyElem.append("div")
         .append("p")
+        // .style("white-space","nowrap")
         .text("changed changed changed  changed changed changed");
 }
 
