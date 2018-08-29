@@ -320,7 +320,7 @@ function makeSVGNodeStructure(bindedData, makeByThisObj){
 
 function renderSVGNode(bindedData, renderByThisObj){
 
-    var $3SVGnodeElem = bindedData.$3bindedSVGElement;
+    var reportObj;
 
     //type指定チェック
     if(typeof (renderByThisObj.type) == 'undefined'){
@@ -331,7 +331,7 @@ function renderSVGNode(bindedData, renderByThisObj){
     switch(renderByThisObj.type){
         case "text":
         {
-            renderTextTypeSVGNode(bindedData, renderByThisObj);
+            reportObj = renderTextTypeSVGNode(bindedData, renderByThisObj);
         }
         break;
 
@@ -342,15 +342,33 @@ function renderSVGNode(bindedData, renderByThisObj){
         }
         break;
     }
+
+    return reportObj;
 }
 
 function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
     //text property存在チェック
     if(typeof (renderByThisObj.text) == 'undefined'){
-        console.warn("\"text\" property is not specified");
-        return; //存在しない場合は終了する
+        renderByThisObj.text = {};
     }
+
+    //変更レポート
+    var reportObj = {
+        allOK:true,
+        PrevObj:{
+            text: {},
+            coordinate: {}
+        },
+        RenderedObj:{
+            text: {},
+            coordinate: {}
+        },
+        FailuredMessages:{
+            text: {},
+            coordinate: {}
+        }
+    };
 
     var $3SVGnodeElem = bindedData.$3bindedSVGElement;
 
@@ -358,6 +376,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     var $3SVGnodeElem_text = $3SVGnodeElem.select("text");
     var $3SVGnodeElem_DOTselectionLayer = $3SVGnodeElem.select(".selectionLayer");
 
+    var inlineStyleOf_SVGnodeElem_text = $3SVGnodeElem_text.node().style;
     var computedStyleOf_SVGnodeElem_text = window.getComputedStyle($3SVGnodeElem_text.node());
 
     var haveToUpdateFrame = false;
@@ -367,9 +386,21 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     //テキスト更新
     if(typeof (renderByThisObj.text.text_content) != 'undefined'){ //textオブジェクトがある場合
 
+        //変更前textを取得
+        var beforeTspans = $3SVGnodeElem_text.node().childNodes;
+        var prevTxt = "";
+        if(beforeTspans.length > 0){ //<tspan>が存在する
+            prevTxt = beforeTspans[0].textContent;
+            for(var i = 1 ; i < beforeTspans.length ; i++){
+                prevTxt += ("\n" + beforeTspans[i].textContent);
+            }
+        }
+        
         if(typeof (renderByThisObj.text.text_content) != 'string'){ //型がstringでない場合
-            console.warn("Wrong type specified in \`renderByThisObj.text.text_content\`. " +
-                         "specified type:\`" + (typeof (renderByThisObj.text.text_content)) + "\`, expected type:\`string\`.");
+            var wrn = "Wrong type specified in \`renderByThisObj.text.text_content\`. " +
+                      "specified type:\`" + (typeof (renderByThisObj.text.text_content)) + "\`, expected type:\`string\`.";
+            console.warn(wrn);
+            reportObj.FailuredMessages.text.text_content = wrn;
 
         }else{ //型がstring
 
@@ -417,6 +448,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 }
             }
 
+            reportObj.PrevObj.text.text_content = prevTxt;
+            reportObj.RenderedObj.text.text_content = renderByThisObj.text.text_content;
             haveToUpdateFrame = true;
         }
     }
@@ -425,9 +458,14 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     if(typeof (renderByThisObj.coordinate) != 'undefined'){
         if(typeof (renderByThisObj.coordinate.x) != 'undefined'){ //x座標指定オブジェクトがあり
 
+            //変更前状態を取得
+            var prevX = parseFloat($3SVGnodeElem_text.attr("x"));
+            
             if(typeof (renderByThisObj.coordinate.x) != 'number'){ //型がnumberでない場合
-                console.warn("Wrong type specified in \`renderByThisObj.coordinate.x\`. " +
-                             "specified type:\`" + (typeof (renderByThisObj.coordinate.x)) + "\`, expected type:\`number\`.");
+                var wrn = "Wrong type specified in \`renderByThisObj.coordinate.x\`. " +
+                          "specified type:\`" + (typeof (renderByThisObj.coordinate.x)) + "\`, expected type:\`number\`.";
+                console.warn(wrn);
+                reportObj.FailuredMessages.coordinate.x = wrn;
             
             }else{ //型がnumber
                 $3SVGnodeElem_text.attr("x", renderByThisObj.coordinate.x);
@@ -436,18 +474,27 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 $3SVGnodeElem_text.selectAll("tspan")
                     .attr("x", renderByThisObj.coordinate.x);
                 
+                reportObj.PrevObj.coordinate.x = prevX;
+                reportObj.RenderedObj.coordinate.x = renderByThisObj.coordinate.x;
                 haveToUpdateFrame = true;
             }
         }
 
         if(typeof (renderByThisObj.coordinate.y) != 'undefined'){ //y座標指定があり
 
+            //変更前状態を取得
+            var prevY = parseFloat($3SVGnodeElem_text.attr("y"));
+
             if(typeof (renderByThisObj.coordinate.y) != 'number'){ //型がnumberでない場合
-                console.warn("Wrong type specified in \`renderByThisObj.coordinate.y\`. " +
-                             "specified type:\`" + (typeof (renderByThisObj.coordinate.y)) + "\`, expected type:\`number\`.");
+                var wrn = "Wrong type specified in \`renderByThisObj.coordinate.y\`. " +
+                          "specified type:\`" + (typeof (renderByThisObj.coordinate.y)) + "\`, expected type:\`number\`.";
+                console.warn(wrn);
+                reportObj.FailuredMessages.coordinate.y = wrn;
 
             }else{ //型がnumber
                 $3SVGnodeElem_text.attr("y", renderByThisObj.coordinate.y);
+                reportObj.PrevObj.coordinate.y = prevY;
+                reportObj.RenderedObj.coordinate.y = renderByThisObj.coordinate.y;
                 haveToUpdateFrame = true;
             }
         }
@@ -455,19 +502,34 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
     //テキストの右寄せ・中央寄せ・左寄せ
     if(typeof renderByThisObj.text.text_anchor != 'undefined'){ //text-anchor指定有り
+
+        //変更前状態を取得
+        var prevTextAnchor = inlineStyleOf_SVGnodeElem_text.getPropertyValue("text-anchor");
+        if(prevTextAnchor == ""){ //空文字のの場合
+            prevTextAnchor = null;
+        }
+
         if(typeof renderByThisObj.text.text_anchor != 'string'){ //型がstringでない場合
-            console.warn("Wrong type specified in \`renderByThisObj.text.text_anchor\`. " +
-                         "specified type:\`" + (typeof (renderByThisObj.text.text_anchor)) + "\`, expected type:\`string\`.");
+            var wrn = "Wrong type specified in \`renderByThisObj.text.text_anchor\`. " +
+                      "specified type:\`" + (typeof (renderByThisObj.text.text_anchor)) + "\`, expected type:\`string\`.";
+            console.warn(wrn);
+            reportObj.FailuredMessages.text.text_anchor = wrn;
         
         }else{ //型がstring
             $3SVGnodeElem_text.style("text-anchor", renderByThisObj.text.text_anchor);
             
             //適用可否チェック
             if(renderByThisObj.text.text_anchor != computedStyleOf_SVGnodeElem_text.getPropertyValue("text-anchor")){ //computed styleに適用されなかった場合
-                console.warn("Specified style in \`renderByThisObj.text.text_anchor\` did not applied. " +
-                             "specified style:\`" + renderByThisObj.text.text_anchor + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_text.getPropertyValue("text-anchor") + "\`.");
-            
+                var wrn = "Specified style in \`renderByThisObj.text.text_anchor\` did not applied. " +
+                          "specified style:\`" + renderByThisObj.text.text_anchor + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_text.getPropertyValue("text-anchor") + "\`.";
+                console.warn(wrn);
+                reportObj.FailuredMessages.text.text_anchor = wrn;
+
+                $3SVGnodeElem_text.style("text-anchor", prevTextAnchor); //変更前の状態に戻す
+
             }else{ //適用された場合
+                reportObj.PrevObj.text.text_anchor = prevTextAnchor;
+                reportObj.RenderedObj.text.text_anchor = renderByThisObj.text.text_anchor;
                 haveToUpdateFrame = true;
             }
         }
@@ -475,9 +537,18 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
     //font-family
     if(typeof renderByThisObj.text.text_font_family != 'undefined'){ //font-family指定有り
+
+        //変更前状態を取得
+        var prevFontFamily = inlineStyleOf_SVGnodeElem_text.getPropertyValue("font-family");
+        if(prevFontFamily == ""){ //未設定の場合
+            prevFontFamily = null;
+        }
+
         if(typeof renderByThisObj.text.text_font_family != 'string'){ //型がstringでない場合
-            console.warn("Wrong type specified in \`renderByThisObj.text.text_font_family\`. " +
-                         "specified type:\`" + (typeof (renderByThisObj.text.text_font_family)) + "\`, expected type:\`string\`.");
+            var wrn = "Wrong type specified in \`renderByThisObj.text.text_font_family\`. " +
+                      "specified type:\`" + (typeof (renderByThisObj.text.text_font_family)) + "\`, expected type:\`string\`.";
+            console.warn(wrn);
+            reportObj.FailuredMessages.text.text_font_family = wrn;
 
         }else{ //型がstring
             var applyThisFontFamily = (renderByThisObj.text.text_font_family).replace(/\"/g, "'"); //スペースを含むフォントの引用符をsingle quoteに統一
@@ -486,10 +557,16 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             //適用可否チェック
             var appliedFontFamily = (computedStyleOf_SVGnodeElem_text.getPropertyValue("font-family")).replace(/\"/g, "'");
             if(applyThisFontFamily != appliedFontFamily){ //computed styleに適用されなかった場合
-                console.warn("Specified style in \`renderByThisObj.text.text_font_family\` did not applied. " +
-                             "specified style:\`" + applyThisFontFamily + "\`, browser applied style:\`" + appliedFontFamily + "\`.");
+                var wrn = "Specified style in \`renderByThisObj.text.text_font_family\` did not applied. " +
+                          "specified style:\`" + applyThisFontFamily + "\`, browser applied style:\`" + appliedFontFamily + "\`.";
+                console.warn(wrn);
+                reportObj.FailuredMessages.text.text_font_family = wrn;
+
+                $3SVGnodeElem_text.style("font-family", prevFontFamily); //変更前の状態に戻す
             
             }else{ //適用された場合
+                reportObj.PrevObj.text.text_font_family = prevFontFamily;
+                reportObj.RenderedObj.text.text_font_family = appliedFontFamily;
                 haveToUpdateFrame = true;
             }
         }
@@ -497,9 +574,18 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
     //font-size
     if(typeof renderByThisObj.text.text_font_size != 'undefined'){ //font-size指定有り
+
+        //変更前状態を取得
+        var prevFontSize = inlineStyleOf_SVGnodeElem_text.getPropertyValue("font-size");
+        if(prevFontSize == ""){
+            prevFontSize = null;
+        }
+
         if(typeof renderByThisObj.text.text_font_size != 'number'){ //型がnumberでない場合
-            console.warn("Wrong type specified in \`renderByThisObj.text.text_font_size\`. " +
-                         "specified type:\`" + (typeof (renderByThisObj.text.text_font_size)) + "\`, expected type:\`number\`.");
+            var wrn = "Wrong type specified in \`renderByThisObj.text.text_font_size\`. " +
+                      "specified type:\`" + (typeof (renderByThisObj.text.text_font_size)) + "\`, expected type:\`number\`.";
+            console.warn(wrn);
+            reportObj.FailuredMessages.text.text_font_size = wrn;
         
         }else{ //型がnumber
             var applyThisFontSize = renderByThisObj.text.text_font_size + "px";
@@ -512,15 +598,28 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             if(!(pixcelNumberRegex.test(appliedFontSize))){ // `0.0px`形式に設定できていない場合
                                                             // 指数表記になるような極端な数値も、このルートに入る
 
-                console.warn("Specified style in \`renderByThisObj.text.text_font_size\` did not applied. " +
-                             "specified style:\`" + applyThisFontSize + "\`, browser applied style:\`" + appliedFontSize + "\`.");
+                var wrn = "Specified style in \`renderByThisObj.text.text_font_size\` did not applied. " +
+                          "specified style:\`" + applyThisFontSize + "\`, browser applied style:\`" + appliedFontSize + "\`.";
+                console.warn(wrn);
+                reportObj.FailuredMessages.text.text_font_size = wrn;
+
+                $3SVGnodeElem_text.style("font-size", prevFontSize); //変更前の状態に戻す
 
             }else{
                 if( Math.abs(parseFloat(appliedFontSize) - renderByThisObj.text.text_font_size) >= 0.1){ //適用されたfont-sizeと指定したfont-sizeの差分が大きすぎる
-                    console.warn("Specified style in \`renderByThisObj.text.text_font_size\` did not applied. " +
-                                 "specified style:\`" + applyThisFontSize + "\`, browser applied style:\`" + appliedFontSize + "\`.");
+                    var wrn = "Specified style in \`renderByThisObj.text.text_font_size\` did not applied. " +
+                              "specified style:\`" + applyThisFontSize + "\`, browser applied style:\`" + appliedFontSize + "\`.";
+                    console.warn(wrn);
+                    reportObj.FailuredMessages.text.text_font_size = wrn;
+
+                    $3SVGnodeElem_text.style("font-size", prevFontSize); //変更前の状態に戻す
                 
                 }else{ //適用された場合
+                    if(prevFontSize !== null){
+                        prevFontSize = parseFloat(prevFontSize);
+                    }
+                    reportObj.PrevObj.text.text_font_size = prevFontSize;
+                    reportObj.RenderedObj.text.text_font_size = parseFloat(appliedFontSize);
                     haveToUpdateFrame = true;
                 }
             }
@@ -529,9 +628,18 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
     //font-weight
     if(typeof renderByThisObj.text.text_font_weight != 'undefined'){ //font-weight指定有り
+
+        //変更前状態を取得
+        var prevFontWeight = inlineStyleOf_SVGnodeElem_text.getPropertyValue("font-weight");
+        if(prevFontWeight == ""){ //未設定の場合
+            prevFontWeight = null;
+        }
+
         if(typeof renderByThisObj.text.text_font_weight != 'string'){ //型がstringでない場合
-            console.warn("Wrong type specified in \`renderByThisObj.text.text_font_weight\`. " +
-                         "specified type:\`" + (typeof (renderByThisObj.text.text_font_weight)) + "\`, expected type:\`string\`.");
+            var wrn = "Wrong type specified in \`renderByThisObj.text.text_font_weight\`. " +
+                      "specified type:\`" + (typeof (renderByThisObj.text.text_font_weight)) + "\`, expected type:\`string\`.";
+            console.warn(wrn);
+            reportObj.FailuredMessages.text.text_font_weight = wrn;
         
         }else{ //型はstring
             var applyThisFontWeight = renderByThisObj.text.text_font_weight;
@@ -555,10 +663,16 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
             //適用可否チェック
             if(applyThisFontWeight != appliedFontWeight){ //computed styleに適用されなかった場合
-                console.warn("Specified style in \`renderByThisObj.text.text_font_weight\` did not applied. " +
-                             "specified style:\`" + applyThisFontWeight + "\`, browser applied style:\`" + appliedFontWeight + "\`.");
+                var wrn = "Specified style in \`renderByThisObj.text.text_font_weight\` did not applied. " +
+                          "specified style:\`" + applyThisFontWeight + "\`, browser applied style:\`" + appliedFontWeight + "\`.";
+                console.warn(wrn);
+                reportObj.FailuredMessages.text.text_font_weight = wrn;
+
+                $3SVGnodeElem_text.style("font-weight", prevFontWeight); //変更前の状態に戻す
             
             }else{ //適用された場合
+                reportObj.PrevObj.text.text_font_weight = prevFontWeight;
+                reportObj.RenderedObj.text.text_font_weight = renderByThisObj.text.text_font_weight;
                 haveToUpdateFrame = true;
             }
         }
@@ -566,19 +680,34 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
     //font-style
     if(typeof renderByThisObj.text.text_font_style != 'undefined'){ //font-style指定有り
+
+        //変更前状態を取得
+        var prevFontStyle = inlineStyleOf_SVGnodeElem_text.getPropertyValue("font-style");
+        if(prevFontStyle == ""){ //未設定の場合
+            prevFontStyle = null;
+        }
+
         if(typeof renderByThisObj.text.text_font_style != 'string'){ //型がstringでない
-            console.warn("Wrong type specified in \`renderByThisObj.text.text_font_style\`. " +
-                         "specified type:\`" + (typeof (renderByThisObj.text.text_font_style)) + "\`, expected type:\`string\`.");
+            var wrn = "Wrong type specified in \`renderByThisObj.text.text_font_style\`. " +
+                      "specified type:\`" + (typeof (renderByThisObj.text.text_font_style)) + "\`, expected type:\`string\`.";
+            console.warn(wrn);
+            reportObj.FailuredMessages.text.text_font_style = wrn;
         
         }else{ //型はstring
             $3SVGnodeElem_text.style("font-style", renderByThisObj.text.text_font_style);
 
             //適用可否チェック
             if(renderByThisObj.text.text_font_style != computedStyleOf_SVGnodeElem_text.getPropertyValue("font-style")){ //computed styleに適用されなかった場合
-                console.warn("Specified style in \`renderByThisObj.text.text_font_style\` did not applied. " +
-                             "specified style:\`" + renderByThisObj.text.text_font_style + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_text.getPropertyValue("font-style") + "\`.");
+                var wrn = "Specified style in \`renderByThisObj.text.text_font_style\` did not applied. " +
+                          "specified style:\`" + renderByThisObj.text.text_font_style + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_text.getPropertyValue("font-style") + "\`.";
+                console.warn(wrn);
+                reportObj.FailuredMessages.text.text_font_style = wrn;
+
+                $3SVGnodeElem_text.style("font-style", prevFontStyle); //変更前の状態に戻す
             
             }else{ //適用された場合
+                reportObj.PrevObj.text.text_font_style = prevFontStyle;
+                reportObj.RenderedObj.text.text_font_style = renderByThisObj.text.text_font_style;
                 haveToUpdateFrame = true;
             }
         }
@@ -586,19 +715,34 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
     //text-decoration
     if(typeof renderByThisObj.text.text_text_decoration != 'undefined'){ //text-decoration指定有り
+
+        //変更前状態を取得
+        var prevTextDeco = inlineStyleOf_SVGnodeElem_text.getPropertyValue("text-decoration");
+        if(prevTextDeco == ""){ //未設定の場合
+            prevTextDeco = null;
+        }
+
         if(typeof renderByThisObj.text.text_text_decoration != 'string'){ //型がstringでない
-            console.warn("Wrong type specified in \`renderByThisObj.text.text_text_decoration\`. " +
-                         "specified type:\`" + (typeof (renderByThisObj.text.text_text_decoration)) + "\`, expected type:\`string\`.");
+            var wrn = "Wrong type specified in \`renderByThisObj.text.text_text_decoration\`. " +
+                      "specified type:\`" + (typeof (renderByThisObj.text.text_text_decoration)) + "\`, expected type:\`string\`.";
+            console.warn(wrn);
+            reportObj.FailuredMessages.text.text_text_decoration = wrn;
         
         }else{ //型はstring
             $3SVGnodeElem_text.style("text-decoration", renderByThisObj.text.text_text_decoration);
 
             //適用可否チェック
             if(renderByThisObj.text.text_text_decoration != computedStyleOf_SVGnodeElem_text.getPropertyValue("text-decoration")){ //computed styleに適用されなかった場合
-                console.warn("Specified style in \`renderByThisObj.text.text_text_decoration\` did not applied. " +
-                             "specified style:\`" + renderByThisObj.text.text_text_decoration + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_text.getPropertyValue("text-decoration") + "\`.");
+                var wrn = "Specified style in \`renderByThisObj.text.text_text_decoration\` did not applied. " +
+                          "specified style:\`" + renderByThisObj.text.text_text_decoration + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_text.getPropertyValue("text-decoration") + "\`.";
+                console.warn(wrn);
+                reportObj.FailuredMessages.text.text_text_decoration = wrn;
+
+                $3SVGnodeElem_text.style("text-decoration", prevTextDeco); //変更前の状態に戻す
             
             }else{ //適用された場合
+                reportObj.PrevObj.text.text_text_decoration = prevTextDeco;
+                reportObj.RenderedObj.text.text_text_decoration = renderByThisObj.text.text_text_decoration;
                 haveToUpdateFrame = true;
             }
         }
@@ -606,19 +750,34 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
     //テキストの色
     if(typeof renderByThisObj.text.text_fill != 'undefined'){ //text fill指定有り
+
+        //変更前状態を取得
+        var prevTextFill = inlineStyleOf_SVGnodeElem_text.getPropertyValue("fill");
+        if(prevTextFill == ""){ //未設定の場合
+            prevTextFill = null;
+        }
+
         if(typeof renderByThisObj.text.text_fill != 'string'){ //型がstringでない場合
-            console.warn("Wrong type specified in \`renderByThisObj.text.text_fill\`. " +
-                         "specified type:\`" + (typeof (renderByThisObj.text.text_fill)) + "\`, expected type:\`string\`.");
+            var wrn = "Wrong type specified in \`renderByThisObj.text.text_fill\`. " +
+                      "specified type:\`" + (typeof (renderByThisObj.text.text_fill)) + "\`, expected type:\`string\`.";
+            console.warn(wrn);
+            reportObj.FailuredMessages.text.text_fill = wrn;
         
         }else{ //型はstring
             $3SVGnodeElem_text.style("fill", renderByThisObj.text.text_fill);
 
             //適用可否チェック
             if(renderByThisObj.text.text_fill != computedStyleOf_SVGnodeElem_text.getPropertyValue("fill")){ //computed styleに適用されなかった場合
-                console.warn("Specified style in \`renderByThisObj.text.text_fill\` did not applied. " +
-                             "specified style:\`" + renderByThisObj.text.text_fill + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_text.getPropertyValue("fill") + "\`.");
+                var wrn  = "Specified style in \`renderByThisObj.text.text_fill\` did not applied. " +
+                           "specified style:\`" + renderByThisObj.text.text_fill + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_text.getPropertyValue("fill") + "\`.";
+                console.warn(wrn);
+                reportObj.FailuredMessages.text.text_fill = wrn;
+
+                $3SVGnodeElem_text.style("fill", prevTextFill); //変更前の状態に戻す
             
             }else{ //適用された場合
+                reportObj.PrevObj.text.text_fill = prevTextFill;
+                reportObj.RenderedObj.text.text_fill = renderByThisObj.text.text_fill;
                 //haveToUpdateFrame = true; //<- not needed
             }
         }
@@ -650,8 +809,9 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         var pxNumOfStrokeWidth;
         if(typeof renderByThisObj.text.frame_stroke_width != 'undefined'){ //frame stroke-width指定有り
             if(typeof renderByThisObj.text.frame_stroke_width != 'number'){ //型がnumberでない場合
-                console.warn("Wrong type specified in \`renderByThisObj.text.frame_stroke_width\`. " +
-                             "specified type:\`" + (typeof (renderByThisObj.text.frame_stroke_width)) + "\`, expected type:\`number\`.");
+
+                //nothing to do
+                //※エラーレポート処理はstroke-width描画処理内で行う※
 
             }else{ //型はnumber
                 pxNumOfStrokeWidth = parseFloat(renderByThisObj.text.frame_stroke_width);
@@ -704,14 +864,21 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         var rerender = false;
         
         if(typeof renderByThisObj.text.frame_shape != 'undefined'){ //frame shape指定有り
+
+            //変更前状態を取得
+            var prevShape = $3SVGnodeElem_DOTframe.node().firstChild.tagName.toLowerCase();  //1回目の描画時は"rect"になる。->仕様とする
+            
             if(typeof renderByThisObj.text.frame_shape != 'string'){ //型がstringでない
-                console.warn("Wrong type specified in \`renderByThisObj.text.frame_shape\`. " +
-                             "specified type:\`" + (typeof (renderByThisObj.text.frame_shape)) + "\`, expected type:\`string\`.");
+                var wrn = "Wrong type specified in \`renderByThisObj.text.frame_shape\`. " +
+                          "specified type:\`" + (typeof (renderByThisObj.text.frame_shape)) + "\`, expected type:\`string\`.";
+                console.warn(wrn);
+                reportObj.FailuredMessages.text.frame_shape = wrn;
+
                 rerender = true;
             
             }else{ //型はstring
-                switch(renderByThisObj.text.frame_shape){
-                    
+                switch(renderByThisObj.text.frame_shape){ //frame shape 変更分岐
+
                     case "rect":
                     {
                         //古いframeオブジェクトを削除
@@ -722,7 +889,9 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                                                         textRectArea,
                                                         padding,
                                                         pxNumOfStrokeWidth);
-
+                        
+                        reportObj.PrevObj.text.frame_shape = prevShape;
+                        reportObj.RenderedObj.text.frame_shape = "rect";
                     }
                     break;
     
@@ -736,6 +905,9 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                                                           textRectArea,
                                                           padding,
                                                           pxNumOfStrokeWidth);
+
+                        reportObj.PrevObj.text.frame_shape = prevShape;
+                        reportObj.RenderedObj.text.frame_shape = "circle";
                     }
                     break;
     
@@ -749,12 +921,18 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                                                            textRectArea,
                                                            padding,
                                                            pxNumOfStrokeWidth);
+
+                        reportObj.PrevObj.text.frame_shape = prevShape;
+                        reportObj.RenderedObj.text.frame_shape = "ellipse";
                     }
                     break;
     
                     default:
                     {
-                        console.warn("Unknown shape \`" + renderByThisObj.text.frame_shape + "\` specified in \`renderByThisObj.text.frame_shape\`. ");
+                        var wrn = "Unknown shape \`" + renderByThisObj.text.frame_shape + "\` specified in \`renderByThisObj.text.frame_shape\`. ";
+                        console.warn(wrn);
+                        reportObj.FailuredMessages.text.frame_shape = wrn;
+
                         rerender = true;
                     }
                     break;
@@ -815,15 +993,23 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     }
 
     var $3SVGnodeElem_DOTframe_frame = d3.select($3SVGnodeElem_DOTframe.node().firstChild);
+    var inlineStyleOf_SVGnodeElem_DOTframe_frame = $3SVGnodeElem_DOTframe_frame.node().style;
     var computedStyleOf_SVGnodeElem_DOTframe_frame = window.getComputedStyle($3SVGnodeElem_DOTframe_frame.node());
 
     //枠線の太さ
     if(typeof renderByThisObj.text.frame_stroke_width != 'undefined'){ //frame stroke-width指定有り
+        
+        //変更前状態を取得
+        var prevStrokeWidth = inlineStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-width");
+        if(prevStrokeWidth == ""){
+            prevStrokeWidth = null;
+        }
+
         if(typeof renderByThisObj.text.frame_stroke_width != 'number'){ //型がnumberでない場合
-            
-            //↓型がnumberかどうかのチェックはframe描画処理内でチェック済み↓
-            // console.warn("Wrong type specified in \`renderByThisObj.text.frame_stroke_width\`. " +
-            //              "specified type:\`" + (typeof (renderByThisObj.text.frame_stroke_width)) + "\`, expected type:\`number\`.");
+            var wrn = "Wrong type specified in \`renderByThisObj.text.frame_stroke_width\`. " +
+                      "specified type:\`" + (typeof (renderByThisObj.text.frame_stroke_width)) + "\`, expected type:\`number\`.";
+            console.warn(wrn);
+            reportObj.FailuredMessages.text.frame_stroke_width = wrn;
 
         }else{ //型はnumber
             var applyThisStrokeWidth = renderByThisObj.text.frame_stroke_width + "px";
@@ -836,41 +1022,82 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             if(!(pixcelNumberRegex.test(appliedStrokeWidth))){ // `0.0px`形式に設定できていない場合
                                                                // 指数表記になるような極端な数値も、このルートに入る
                 
-                console.warn("Specified style in \`renderByThisObj.text.frame_stroke_width\` did not applied. " +
-                             "specified style:\`" + applyThisStrokeWidth + "\`, browser applied style:\`" + appliedStrokeWidth + "\`.");
+                var wrn = "Specified style in \`renderByThisObj.text.frame_stroke_width\` did not applied. " +
+                          "specified style:\`" + applyThisStrokeWidth + "\`, browser applied style:\`" + appliedStrokeWidth + "\`.";
+                console.warn(wrn);
+                reportObj.FailuredMessages.text.frame_stroke_width = wrn;
+
+                $3SVGnodeElem_DOTframe_frame.style("stroke-width", prevStrokeWidth); //変更前の状態に戻す
             
             }else{
                 if( Math.abs(parseFloat(appliedStrokeWidth) - renderByThisObj.text.frame_stroke_width) >= 0.1){ //適用されたfont-sizeと指定したfont-sizeの差分が大きすぎる
-                    console.warn("Specified style in \`renderByThisObj.text.frame_stroke_width\` did not applied. " +
-                                 "specified style:\`" + applyThisStrokeWidth + "\`, browser applied style:\`" + appliedStrokeWidth + "\`.");
+                    var wrn = "Specified style in \`renderByThisObj.text.frame_stroke_width\` did not applied. " +
+                              "specified style:\`" + applyThisStrokeWidth + "\`, browser applied style:\`" + appliedStrokeWidth + "\`.";
+                    console.warn(wrn);
+                    reportObj.FailuredMessages.text.frame_stroke_width = wrn;
+
+                    $3SVGnodeElem_DOTframe_frame.style("stroke-width", prevStrokeWidth); //変更前の状態に戻す
+                
+                }else{ //適用された場合
+                    if(prevStrokeWidth !== null){
+                        prevStrokeWidth = parseFloat(prevStrokeWidth);
+                    }
+                    reportObj.PrevObj.text.frame_stroke_width = prevStrokeWidth;
+                    reportObj.RenderedObj.text.frame_stroke_width = parseFloat(appliedStrokeWidth);
                 }
             }
         }
     }
 
     //枠線の色
-    if(typeof renderByThisObj.text.frame_stroke != 'undefined'){ //frame stroke-width指定有り
+    if(typeof renderByThisObj.text.frame_stroke != 'undefined'){ //frame stroke指定有り
+
+        //変更前状態を取得
+        var prevStroke = inlineStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke");
+        if(prevStroke == ""){
+            prevStroke = null;
+        }
+
         if(typeof renderByThisObj.text.frame_stroke != 'string'){ //型がstringでない場合
-            console.warn("Wrong type specified in \`renderByThisObj.text.frame_stroke\`. " +
-                         "specified type:\`" + (typeof (renderByThisObj.text.frame_stroke)) + "\`, expected type:\`string\`.");
+            var wrn = "Wrong type specified in \`renderByThisObj.text.frame_stroke\`. " +
+                      "specified type:\`" + (typeof (renderByThisObj.text.frame_stroke)) + "\`, expected type:\`string\`.";
+            console.warn(wrn);
+            reportObj.FailuredMessages.text.frame_stroke = wrn;
         
         }else{ //型はstring
             $3SVGnodeElem_DOTframe_frame.style("stroke", renderByThisObj.text.frame_stroke);
 
             //適用可否チェック
             if(renderByThisObj.text.frame_stroke != computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke")){ //computed styleに適用されなかった場合
-                console.warn("Specified style in \`renderByThisObj.text.frame_stroke\` did not applied. " +
-                             "specified style:\`" + renderByThisObj.text.frame_stroke + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke") + "\`.");
+                var wrn = "Specified style in \`renderByThisObj.text.frame_stroke\` did not applied. " +
+                          "specified style:\`" + renderByThisObj.text.frame_stroke + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke") + "\`.";
+                console.warn(wrn);
+                reportObj.FailuredMessages.text.frame_stroke = wrn;
+
+                $3SVGnodeElem_DOTframe_frame.style("stroke", prevStroke); //変更前の状態に戻す
+            
+            }else{ //適用された場合
+                reportObj.PrevObj.text.frame_stroke = prevStroke;
+                reportObj.RenderedObj.text.frame_stroke = renderByThisObj.text.frame_stroke;
             }
 
         }
     }
     
-    //枠線の波線形状
+    //枠線の破線パターン
     if(typeof renderByThisObj.text.frame_stroke_dasharray != 'undefined'){ //frame stroke-dasharray指定有り
+
+        //変更前状態を取得
+        var prevDashArr = inlineStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-dasharray");
+        if(prevDashArr == ""){
+            prevDashArr = null;
+        }
+
         if(typeof renderByThisObj.text.frame_stroke_dasharray != 'string'){ //型がstringでない場合
-            console.warn("Wrong type specified in \`renderByThisObj.text.frame_stroke_dasharray\`. " +
-                         "specified type:\`" + (typeof (renderByThisObj.text.frame_stroke_dasharray)) + "\`, expected type:\`string\`.");
+            var wrn =  "Wrong type specified in \`renderByThisObj.text.frame_stroke_dasharray\`. " +
+                       "specified type:\`" + (typeof (renderByThisObj.text.frame_stroke_dasharray)) + "\`, expected type:\`string\`.";
+            console.warn(wrn);
+            reportObj.FailuredMessages.text.frame_stroke_dasharray = wrn;
         
         }else{ //型はstring
             var applyThisStrokeDasharray = renderByThisObj.text.frame_stroke_dasharray;
@@ -885,10 +1112,17 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             appliedStrokeDasharray = appliedStrokeDasharray.replace(/px/g, ""); //"px"とスペースは無視する
             appliedStrokeDasharray = appliedStrokeDasharray.replace(/ /g, "");
 
-
             if(applyThisStrokeDasharray != appliedStrokeDasharray){ //computed styleに適用されなかった場合
-                console.warn("Specified style in \`renderByThisObj.text.frame_stroke_dasharray\` did not applied. " +
-                             "specified style:\`" + applyThisStrokeDasharray + "\`, browser applied style:\`" + appliedStrokeDasharray + "\`.");
+                var wrn  = "Specified style in \`renderByThisObj.text.frame_stroke_dasharray\` did not applied. " +
+                           "specified style:\`" + applyThisStrokeDasharray + "\`, browser applied style:\`" + appliedStrokeDasharray + "\`.";
+                console.warn(wrn);
+                reportObj.FailuredMessages.text.frame_stroke_dasharray = wrn;
+
+                $3SVGnodeElem_DOTframe_frame.style("stroke-dasharray", prevDashArr); //変更前の状態に戻す
+            
+            }else{ //適用された場合
+                reportObj.PrevObj.text.frame_stroke_dasharray = prevDashArr;
+                reportObj.RenderedObj.text.frame_stroke_dasharray = applyThisStrokeDasharray;
             }
 
         }
@@ -896,20 +1130,45 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     
     //背景色
     if(typeof renderByThisObj.text.frame_fill != 'undefined'){ //frame fill指定有り
+
+        var prevFramefill = inlineStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("fill");
+        if(prevFramefill == ""){
+            prevFramefill = null;
+        }
+
         if(typeof renderByThisObj.text.frame_fill != 'string'){ //型がstringでない場合
-            console.warn("Wrong type specified in \`renderByThisObj.text.frame_fill\`. " +
-                         "specified type:\`" + (typeof (renderByThisObj.text.frame_fill)) + "\`, expected type:\`string\`.");
+            var wrn  = "Wrong type specified in \`renderByThisObj.text.frame_fill\`. " +
+                       "specified type:\`" + (typeof (renderByThisObj.text.frame_fill)) + "\`, expected type:\`string\`.";
+            console.warn(wrn);
+            reportObj.FailuredMessages.text.frame_fill = wrn;
         
         }else{ //型はstring
             $3SVGnodeElem_DOTframe_frame.style("fill", renderByThisObj.text.frame_fill);
 
             //適用可否チェック
             if(renderByThisObj.text.frame_fill != computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("fill")){ //computed styleに適用されなかった場合
-                console.warn("Specified style in \`renderByThisObj.text.frame_fill\` did not applied. " +
-                             "specified style:\`" + renderByThisObj.text.frame_fill + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("fill") + "\`.");
+                var wrn = "Specified style in \`renderByThisObj.text.frame_fill\` did not applied. " +
+                           "specified style:\`" + renderByThisObj.text.frame_fill + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("fill") + "\`."; 
+                console.warn(wrn);
+                reportObj.FailuredMessages.text.frame_fill = wrn;
+
+                $3SVGnodeElem_DOTframe_frame.style("fill", prevFramefill); //変更前の状態に戻す
+            
+            }else{ //適用された場合
+                reportObj.PrevObj.text.frame_fill = prevFramefill;
+                reportObj.RenderedObj.text.frame_fill = renderByThisObj.text.frame_fill;
             }
         }
     }
+
+    //変更レポート用警告チェック
+    if(Object.keys(reportObj.FailuredMessages.text).length > 0 ||
+       Object.keys(reportObj.FailuredMessages.coordinate).length > 0){ //警告が1つ以上ある場合
+        reportObj.allOK = false;
+    }
+
+    //変更レポートを返却
+    return reportObj;
 }
 
 //
