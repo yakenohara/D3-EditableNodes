@@ -459,7 +459,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         if(typeof (renderByThisObj.coordinate.x) != 'undefined'){ //x座標指定オブジェクトがあり
 
             //変更前状態を取得
-            var prevX = parseFloat($3SVGnodeElem_text.attr("x"));
+            var prevX = $3SVGnodeElem_text.attr("x");
             
             if(typeof (renderByThisObj.coordinate.x) != 'number'){ //型がnumberでない場合
                 var wrn = "Wrong type specified in \`renderByThisObj.coordinate.x\`. " +
@@ -474,6 +474,9 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 $3SVGnodeElem_text.selectAll("tspan")
                     .attr("x", renderByThisObj.coordinate.x);
                 
+                if(prevX !== null){
+                    prevX = parseFloat(prevX);
+                }
                 reportObj.PrevObj.coordinate.x = prevX;
                 reportObj.RenderedObj.coordinate.x = renderByThisObj.coordinate.x;
                 haveToUpdateFrame = true;
@@ -483,7 +486,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         if(typeof (renderByThisObj.coordinate.y) != 'undefined'){ //y座標指定があり
 
             //変更前状態を取得
-            var prevY = parseFloat($3SVGnodeElem_text.attr("y"));
+            var prevY = $3SVGnodeElem_text.attr("y");
 
             if(typeof (renderByThisObj.coordinate.y) != 'number'){ //型がnumberでない場合
                 var wrn = "Wrong type specified in \`renderByThisObj.coordinate.y\`. " +
@@ -493,6 +496,10 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
             }else{ //型がnumber
                 $3SVGnodeElem_text.attr("y", renderByThisObj.coordinate.y);
+
+                if(prevY !== null){
+                    prevY = parseFloat(prevY);
+                }
                 reportObj.PrevObj.coordinate.y = prevY;
                 reportObj.RenderedObj.coordinate.y = renderByThisObj.coordinate.y;
                 haveToUpdateFrame = true;
@@ -566,7 +573,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             
             }else{ //適用された場合
                 reportObj.PrevObj.text.text_font_family = prevFontFamily;
-                reportObj.RenderedObj.text.text_font_family = appliedFontFamily;
+                reportObj.RenderedObj.text.text_font_family = applyThisFontFamily; //inline styleに適用するために整形した状態の文字列を格納する
                 haveToUpdateFrame = true;
             }
         }
@@ -619,7 +626,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                         prevFontSize = parseFloat(prevFontSize);
                     }
                     reportObj.PrevObj.text.text_font_size = prevFontSize;
-                    reportObj.RenderedObj.text.text_font_size = parseFloat(appliedFontSize);
+                    reportObj.RenderedObj.text.text_font_size = renderByThisObj.text.text_font_size;
                     haveToUpdateFrame = true;
                 }
             }
@@ -642,6 +649,9 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             reportObj.FailuredMessages.text.text_font_weight = wrn;
         
         }else{ //型はstring
+            $3SVGnodeElem_text.style("font-weight", renderByThisObj.text.text_font_weight);
+
+            //適用可否確認用文字列生成
             var applyThisFontWeight = renderByThisObj.text.text_font_weight;
             if(applyThisFontWeight == "bold"){
                 applyThisFontWeight = "700";
@@ -649,10 +659,6 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             }else if(applyThisFontWeight == "normal"){
                 applyThisFontWeight = "400";
             }
-
-            //font-weightの適用
-            $3SVGnodeElem_text.style("font-weight", renderByThisObj.text.text_font_weight);
-
             var appliedFontWeight = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-weight");
             if(appliedFontWeight == "bold"){
                 appliedFontWeight = "700";
@@ -866,7 +872,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         if(typeof renderByThisObj.text.frame_shape != 'undefined'){ //frame shape指定有り
 
             //変更前状態を取得
-            var prevShape = $3SVGnodeElem_DOTframe.node().firstChild.tagName.toLowerCase();  //1回目の描画時は"rect"になる。->仕様とする
+            var prevShape = $3SVGnodeElem_DOTframe.node().firstChild.tagName.toLowerCase();  //1回目の描画時は"rect"になる。-> 仕様とする
             
             if(typeof renderByThisObj.text.frame_shape != 'string'){ //型がstringでない
                 var wrn = "Wrong type specified in \`renderByThisObj.text.frame_shape\`. " +
@@ -877,8 +883,10 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 rerender = true;
             
             }else{ //型はstring
-                switch(renderByThisObj.text.frame_shape){ //frame shape 変更分岐
 
+                //frame shape 変更分岐
+                switch(renderByThisObj.text.frame_shape.toLowerCase()){
+                    
                     case "rect":
                     {
                         //古いframeオブジェクトを削除
@@ -1043,7 +1051,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                         prevStrokeWidth = parseFloat(prevStrokeWidth);
                     }
                     reportObj.PrevObj.text.frame_stroke_width = prevStrokeWidth;
-                    reportObj.RenderedObj.text.frame_stroke_width = parseFloat(appliedStrokeWidth);
+                    reportObj.RenderedObj.text.frame_stroke_width = renderByThisObj.text.frame_stroke_width;
                 }
             }
         }
@@ -1122,7 +1130,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             
             }else{ //適用された場合
                 reportObj.PrevObj.text.frame_stroke_dasharray = prevDashArr;
-                reportObj.RenderedObj.text.frame_stroke_dasharray = applyThisStrokeDasharray;
+                reportObj.RenderedObj.text.frame_stroke_dasharray = applyThisStrokeDasharray; //inline styleに適用するために整形した状態の文字列を格納する
             }
 
         }
