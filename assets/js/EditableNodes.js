@@ -1277,18 +1277,97 @@ function editSVGNode(bindedData){
 function editTextTypeSVGNode(bindedData){
     
     var $3SVGnodeElem = bindedData.$3bindedSVGElement;
-
     var $3SVGnodeElem_text = $3SVGnodeElem.select("text");
-    var computedStyleOf_SVGnodeElem_text = window.getComputedStyle($3SVGnodeElem_text.node());
-
-    //textを取得
+    
+    //<textarea>表示の為のtop位置を算出テキスト内容を<tspan>からを取得
     var SVGnodeElem_text_tspans = $3SVGnodeElem_text.node().childNodes;
     var textareaValue = SVGnodeElem_text_tspans[0].textContent;
     for(var i = 1 ; i < SVGnodeElem_text_tspans.length ; i++){
         textareaValue += ("\n" + SVGnodeElem_text_tspans[i].textContent);
     }
 
-    //text-alignを取得
+    //編集先Nodeの<text>を非表示にする
+    $3SVGnodeElem_text.style("visibility", "hidden");
+
+    //<textarea>の表示
+    var $3textareaElem = $3editableNodesTAG.append("textarea")
+        .style("position", "absolute")
+        .style("margin", 0)
+        .style("border", 0)
+        .style("padding", 0)
+        .style("line-height", valOfEm + "em")
+        .style("resize", "none")
+        .style("overflow", "hidden")
+        .style("background-color", "rgba(105, 105, 105, 0)")
+        .classed("mousetrap",true)
+        .property("value", textareaValue)
+        .attr("wrap","off");
+
+    //<textarea>の表示調整
+    adjustTextarea(bindedData, $3textareaElem);
+
+    //<textarea>のサイズ自動調整リスナ登録
+    $3textareaElem.node().oninput = function(){
+        renderTextTypeSVGNode(bindedData, {text:{text_content:$3textareaElem.node().value}});
+        adjustTextarea(bindedData, $3textareaElem);
+    }
+
+    //NodeEditConsoleからイベント受け取るリスナ登録
+    $3SVGnodeElem.node().addEventListener("NodeEditConsoleEvent",function(eventObj){
+        
+        if(typeof eventObj.argumentObject == 'undefined'){
+            console.warn("NodeEditConsoleEvent was not specified \`argumentObject\`.")
+            return;
+        }
+        console.log(eventObj.argumentObject);
+        
+    });
+
+    //<textarea>にキャレットをフォーカス
+    $3textareaElem.node().focus();
+
+    textareaElem = $3textareaElem.node();
+
+    //UI TRAP
+    Mousetrap(textareaElem).bind(UITrappedEvents.insertLFWhenEditingTextTypeSVGNode, function(e){
+        //LFを挿入する
+        var txt = textareaElem.value;
+        var toSelect = textareaElem.selectionStart + 1;
+        var beforeTxt = txt.substr(0, textareaElem.selectionStart);
+        var afterTxt = txt.substr(textareaElem.selectionEnd);
+        textareaElem.value = beforeTxt + '\n' + afterTxt;
+        textareaElem.selectionStart = toSelect;
+        textareaElem.selectionEnd = toSelect;
+
+        //<textarea>の表示調整
+        renderTextTypeSVGNode(bindedData, {text:{text_content:textareaElem.value}});
+        adjustTextarea(bindedData, $3textareaElem);
+
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+    Mousetrap(textareaElem).bind(UITrappedEvents.submitEditingTextTypeSVGNode, function(e){
+        console.log("<textarea> submitted");
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+}
+
+function disablingKeyEvent(e){
+    if (e.preventDefault) {
+        e.preventDefault();
+    } else {
+        // internet explorer
+        e.returnValue = false;
+    }
+}
+
+function adjustTextarea(bindedData, $3textareaElem){
+
+    //apply styles from <SVGTextElement>------------------------------------------------------------------------------------
+    var $3SVGnodeElem_text = bindedData.$3bindedSVGElement.select("text");
+    var computedStyleOf_SVGnodeElem_text = window.getComputedStyle($3SVGnodeElem_text.node());
+
     var textareaStyle_textAlign = computedStyleOf_SVGnodeElem_text.getPropertyValue("text-anchor");
     switch(textareaStyle_textAlign){
         case "start": // `text-anchor:start;` -> `text-align:left;`
@@ -1332,6 +1411,11 @@ function editTextTypeSVGNode(bindedData){
         textareaStyle_fontSize = defaultFontSizeForTextArea;
     }
 
+    //<textarea>表示の為のtop位置を算出
+    var halfLeading = (parseFloat(textareaStyle_fontSize) * (valOfEm - 1.0)) / 2;
+    var textareaStyle_top = parseFloat($3SVGnodeElem_text.attr("y")) - getPxDistanceOf_textBeforeEdge_baseline(textareaStyle_fontSize, textareaStyle_fontFamily, $3editableNodesTAG.node()) - halfLeading;
+    textareaStyle_top += "px";
+
     //font-weightの取得
     var textareaStyle_fontWeight = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-weight");
 
@@ -1344,134 +1428,23 @@ function editTextTypeSVGNode(bindedData){
     //文字色の取得
     var textareaStyle_color = computedStyleOf_SVGnodeElem_text.getPropertyValue("fill");
 
-    //<textarea>表示の為のtop位置を算出
-    var halfLeading = (parseFloat(textareaStyle_fontSize) * (valOfEm - 1.0)) / 2;
-    var textareaStyle_top = parseFloat($3SVGnodeElem_text.attr("y")) - getPxDistanceOf_textBeforeEdge_baseline(textareaStyle_fontSize, textareaStyle_fontFamily, $3editableNodesTAG.node()) - halfLeading;
-    textareaStyle_top += "px";
-
-    //編集先Nodeの<text>を非表示にする
-    $3SVGnodeElem_text.style("visibility", "hidden");
-
-    //<textarea>の表示
-    var $3textareaElem = $3editableNodesTAG.append("textarea")
-        .style("position", "absolute")
+    $3textareaElem.style("text-align", textareaStyle_textAlign)
         .style("top", textareaStyle_top)
-        .style("margin", 0)
-        .style("border", 0)
-        .style("padding", 0)
-        .style("text-align", textareaStyle_textAlign)
         .style("font-family", textareaStyle_fontFamily)
         .style("font-size", textareaStyle_fontSize)
         .style("font-weight",textareaStyle_fontWeight)
         .style("font-style",textareaStyle_fontStyle)
         .style("text-decoration",textareaStyle_textDecoration)
-        .style("line-height", valOfEm + "em")
-        .style("color", textareaStyle_color)
-        .style("resize", "none")
-        .style("overflow", "hidden")
-        .style("background-color", "rgba(105, 105, 105, 0)")
-        .classed("mousetrap",true)
-        .property("value", textareaValue)
-        .attr("wrap","off");
+        .style("color", textareaStyle_color);
+    //-----------------------------------------------------------------------------------/apply styles from <SVGTextElement>
 
-    //width, height, left位置の調整
-    resizeTextarea(bindedData, $3textareaElem);
-
-    //<textarea>のサイズ自動調整リスナ登録
-    $3textareaElem.node().oninput = function(){resizeTextarea(bindedData, $3textareaElem);}
-
-    //NodeEditConsoleからイベント受け取るリスナ登録
-    $3SVGnodeElem.node().addEventListener("NodeEditConsoleEvent",function(eventObj){
-        
-        if(typeof eventObj.argumentObject == 'undefined'){
-            console.warn("NodeEditConsoleEvent was not specified \`argumentObject\`.")
-            return;
-        }
-        console.log(eventObj.argumentObject);
-        
-    });
-
-    //<textarea>にキャレットをフォーカス
-    $3textareaElem.node().focus();
-
-    textareaElem = $3textareaElem.node();
-
-    //UI TRAP
-    Mousetrap(textareaElem).bind(UITrappedEvents.insertLFWhenEditingTextTypeSVGNode, function(e){
-        //LFを挿入する
-        var txt = textareaElem.value;
-        var toSelect = textareaElem.selectionStart + 1;
-        var beforeTxt = txt.substr(0, textareaElem.selectionStart);
-        var afterTxt = txt.substr(textareaElem.selectionEnd);
-        textareaElem.value = beforeTxt + '\n' + afterTxt;
-        textareaElem.selectionStart = toSelect;
-        textareaElem.selectionEnd = toSelect;
-
-        //<textarea>のリサイズ
-        resizeTextarea(bindedData, $3textareaElem);
-
-        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
-    });
-
-    Mousetrap(textareaElem).bind(UITrappedEvents.submitEditingTextTypeSVGNode, function(e){
-        console.log("<textarea> submitted");
-        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
-    });
-
-}
-
-function disablingKeyEvent(e){
-    if (e.preventDefault) {
-        e.preventDefault();
-    } else {
-        // internet explorer
-        e.returnValue = false;
-    }
-}
-
-function resizeTextarea(bindedData, $3textareaElem){
+    //adjust size------------------------------------------------------------------------------------
     var textareaElem = $3textareaElem.node();
     
-    var renderStr;
-    var dummyForBefore = "";
-    var dummyForAfter = "";
-    var isVacant = false;
-    
-    var lfSeparatedStrings = textareaElem.value.split(/\n/); //改行コードで分割
-    if(textareaElem.value == ""){ //空文字の場合
-        renderStr = "";
-        isVacant = true;
-
-    }else{ //空文字ではない場合
-
-        if(lfSeparatedStrings[0] == ""){ //1行目が空文字の場合
-            dummyForBefore = dummyChar;
-        }
-
-        if((lfSeparatedStrings.length>1) && (lfSeparatedStrings[lfSeparatedStrings.length - 1] == "")){ //最終行が空文字の場合
-            dummyForAfter = dummyChar;
-        }
-
-        renderStr = dummyForBefore + textareaElem.value + dummyForAfter;
-    }
-
-    //ノードをリレンダリング
-    renderTextTypeSVGNode(bindedData, {text:{text_content:renderStr}});
-
-    var $3SVGnodeElem_text = bindedData.$3bindedSVGElement.select("text");
     var marginWidthForCaret = parseFloat($3textareaElem.style("font-size")) / 2;
-    
-    //Width・Height調整
-    if(isVacant){ //空文字の場合
-        $3textareaElem.style("width", marginWidthForCaret + "px");
-        $3textareaElem.style("height", (parseFloat($3textareaElem.style("font-size")) * valOfEm) + "px");
-
-    
-    }else{ //1文字以上存在する場合
-        $3textareaElem.style("width", ($3SVGnodeElem_text.node().getBBox().width + marginWidthForCaret) + "px");
-        $3textareaElem.style("height", (lfSeparatedStrings.length * (parseFloat($3textareaElem.style("font-size")) * valOfEm)) + "px");
-        
-    }
+    var numOfLines = textareaElem.value.split(/\n/).length;
+    $3textareaElem.style("width", ($3SVGnodeElem_text.node().getBBox().width + marginWidthForCaret) + "px");
+    $3textareaElem.style("height", (numOfLines * (parseFloat($3textareaElem.style("font-size")) * valOfEm)) + "px");
 
     //overflowしている場合は、領域を広げる
     var pxNumOfScrollWidth = parseFloat(textareaElem.scrollWidth);
@@ -1508,6 +1481,7 @@ function resizeTextarea(bindedData, $3textareaElem){
         break; //nothing to do
     }
     $3textareaElem.style("left", pxNumOfLeft + "px");
+    //-----------------------------------------------------------------------------------/adjust size
 
 }
 
