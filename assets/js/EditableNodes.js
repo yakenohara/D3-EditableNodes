@@ -185,41 +185,114 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
 
     $pickerElem.spectrum({
         showAlpha: true,
+        allowEmpty: true,
         showInitial: true,
+        clickoutFiresChange: false,
         preferredFormat: "rgb",
     });
 
-    // Alternatively, they can be added as an event listener:
+    //カラーピッカーのドラッグイベント
     $pickerElem.on('move.spectrum', function(e, tinycolor) {
-        $inputElem.val(tinycolor);
-        console.log("moved. value:" + tinycolor);
-        fireNodeEditConsoleEvent({text:{fill: tinycolor.toRgbString()}});
+        $inputElem.val(tinycolor); //<input>要素に値を設定する
+
+        //SVGNodeへの反映
+        var totalReport = fireNodeEditConsoleEvent({text:{text_fill: tinycolor.toRgbString()}});
+        if(!totalReport.allOK){ //適用失敗ノードがある場合
+            console.warn("Cannot apply style \`fill:" + tinycolor.toRgbString() + ";\` to following element(s).");
+            printRenderingFailuredSVGElements(totalReport);
+        }
     });
 
+    //カラーピッカーのchooseボタンイベント
+    // ↓nothing to do     ↓
+    // ↓非表示イベントで行う↓
+    //$pickerElem.on('change.spectrum', function(e, tinycolor) {    
+    //});
+
+    //カラーピッカーの非表示イベント
+    $pickerElem.on('hide.spectrum', function(e, tinycolor) {
+        $inputElem.val(tinycolor); //<input>要素に値を設定する
+    });
+
+    //<input>要素のキー押下イベント
     $inputElem.get(0).oninput = function(){
-        console.log("manually inputted. value:" + clickedElem.value);
-        $pickerElem.spectrum("set", clickedElem.value);
+
+        var iputStr = $inputElem.val();
+
+        //TinyColorでパース可能な文字列かどうかチェック
+        if(!(tinycolor(iputStr).isValid())){ //パース不可能な場合
+            console.warn("Cannot parse \`" + iputStr + "\` by TinyColor.");
+            return;
+        }
+        $pickerElem.spectrum("set", iputStr); //カラーピッカーに反映
+
+        //SVGNodeへの反映
+        var totalReport = fireNodeEditConsoleEvent({text:{text_fill:iputStr}});
+        if(!totalReport.allOK){ //適用失敗ノードがある場合
+            console.warn("Cannot apply style \`fill:" + iputStr + ";\` to following element(s).");
+            printRenderingFailuredSVGElements(totalReport);
+
+            //todo totalReport を使って変更前状態にロールバックする
+
+        }
     }
+
     //--------------------------------------------------------------</text_fill>
 
     //---------------------------------------------------------------------------------------------------------</register behavor>
 });
 
 function fireNodeEditConsoleEvent(argObj){
-    
-    console.warn("todo ie以外のテスト");
+    var totalReport = {};
+    totalReport.allOK = true;
+    totalReport.reportsArr = [];
 
     var eventObj = document.createEvent("Event");
     eventObj.initEvent("NodeEditConsoleEvent", false, false);
-    eventObj.argumentObject  = argObj;
+    eventObj.argObj　= {};
+    eventObj.argObj.renderByThisObj = argObj;
+    eventObj.argObj.clbkFunc = function(renderReport){ //ノード変更レポートの追加用コールバック関数
+        
+        //失敗が発生し場合は、totalReportも失敗とする
+        if(!renderReport.allOK){
+            totalReport.allOK = false;
+        }
 
+        totalReport.reportsArr.push(renderReport);
+    }
+    
     //すべてのnode要素にイベントを発行する
     var nodes = $3nodes.nodes();
     for(var i = 0 ; i < nodes.length ; i++){
         nodes[i].dispatchEvent(eventObj);
     }
 
-    appendHistory();
+    //コールバックがなかった(=登録リスナがなかった)場合は、totalReportも失敗とする
+    if(totalReport.reportsArr.length == 0){
+        totalReport.allOK = false;
+    }
+
+    return totalReport;
+}
+
+function printRenderingFailuredSVGElements(totalReport){
+
+    if(totalReport.reportsArr.length == 0){ //コールバックがなかった(=登録リスナがなかった)場合
+        console.warn("No SVG Node to Apply");
+
+    }else{ //1つ以上の失敗があった場合
+        for(var i = 0 ; i < totalReport.reportsArr.length ; i++){
+            var reportObj = totalReport.reportsArr[i];
+            if(!reportObj.allOK){ //失敗していた場合
+                var bindedData = getBindedDataFromKey(reportObj.key);
+                if(typeof bindedData == 'undefined'){ //データが見つからない場合
+                    console.warn("Cannot find \`key:" + reportObj.key + "\`"); //keyIDのみ表示する
+                }else{
+                    console.warn((getDomPath(bindedData.$3bindedSVGElement.node())).join('/')); //対象SVGのDomPathを表示する
+                }
+            }
+        }
+    }
 }
 
 var $3historyElem = $3editableNodesTAG.append("div")
@@ -239,7 +312,7 @@ var $3historyElem = $3editableNodesTAG.append("div")
 function appendHistory(){
     $3historyElem.append("div")
         .append("p")
-        .text("changed changed changed  changed changed changed");
+        .text("changed changed changed  changed changed changed"); //仮の処理
 }
 
 //ノードの追加
@@ -355,6 +428,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
     //変更レポート
     var reportObj = {
+        key:bindedData.key,
         allOK:true,
         PrevObj:{
             text: {},
@@ -1312,14 +1386,25 @@ function editTextTypeSVGNode(bindedData){
         adjustTextarea(bindedData, $3textareaElem);
     }
 
-    //NodeEditConsoleからイベント受け取るリスナ登録
+    //NodeEditConsoleからイベントを受け取るリスナ登録
     $3SVGnodeElem.node().addEventListener("NodeEditConsoleEvent",function(eventObj){
         
-        if(typeof eventObj.argumentObject == 'undefined'){
-            console.warn("NodeEditConsoleEvent was not specified \`argumentObject\`.")
+        //引数チェック
+        if(typeof eventObj.argObj == 'undefined'){ //引数なし
+            console.warn("NodeEditConsoleEvent was not specified \`argObj\`.");
             return;
         }
-        console.log(eventObj.argumentObject);
+        if(typeof eventObj.argObj.renderByThisObj != 'object'){ //nodeレンダリング用objが存在しない
+            console.warn("NodeEditConsoleEvent was not specified \`argObj.renderByThisObj\`.");
+            return;
+        }
+
+        var renderReport = renderTextTypeSVGNode(bindedData, eventObj.argObj.renderByThisObj);
+        adjustTextarea(bindedData, $3textareaElem);
+
+        if(typeof eventObj.argObj.clbkFunc == 'function'){ //コールバック関数が存在する
+            eventObj.argObj.clbkFunc(renderReport);
+        }
         
     });
 
@@ -1390,7 +1475,7 @@ function adjustTextarea(bindedData, $3textareaElem){
 
         default:
         {
-            console.warn("Unkown style \`text-anchor:" + textareaStyle_textAlign + ";\` applied in \`" + getDomPath($3SVGnodeElem_text.node()) + "\`");
+            console.warn("Unkown style \`text-anchor:" + textareaStyle_textAlign + ";\` applied in \`" + (getDomPath($3SVGnodeElem_text.node())).join('/') + "\`");
             textareaStyle_textAlign = defaultTextAlignForTextArea;
         }
         break;
@@ -1594,6 +1679,31 @@ function getWidthOfScrollbar(onlyForCalcElem){
 
     return scrollbarwidth;
     
+}
+
+//
+//dataset[]から特定キー番号のオブジェクトを返す
+//存在しない場合は、'undefined'を返す
+//
+function getBindedDataFromKey(findByThisKey){
+
+    //引数チェック
+    if(typeof findByThisKey != 'number'){
+        console.warn("specified argument \`findByThisKey\` type is not \`number\`");
+        return;
+    }
+
+    var bindedData;
+
+    //検索ループ
+    for(var i = 0 ; i <  dataset.length ; i++){
+        if(dataset[i].key == findByThisKey){
+            bindedData = dataset[i];
+            break;
+        }
+    }
+
+    return bindedData;
 }
 
 //
