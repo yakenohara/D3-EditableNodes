@@ -277,19 +277,21 @@ function fireNodeEditConsoleEvent(argObj){
 
 function printRenderingFailuredSVGElements(totalReport){
 
+    //引数チェック
     if(totalReport.reportsArr.length == 0){ //コールバックがなかった(=登録リスナがなかった)場合
         console.warn("No SVG Node to Apply");
+        return;
+    }
 
-    }else{ //1つ以上の失敗があった場合
-        for(var i = 0 ; i < totalReport.reportsArr.length ; i++){
-            var reportObj = totalReport.reportsArr[i];
-            if(!reportObj.allOK){ //失敗していた場合
-                var bindedData = getBindedDataFromKey(reportObj.key);
-                if(typeof bindedData == 'undefined'){ //データが見つからない場合
-                    console.warn("Cannot find \`key:" + reportObj.key + "\`"); //keyIDのみ表示する
-                }else{
-                    console.warn((getDomPath(bindedData.$3bindedSVGElement.node())).join('/')); //対象SVGのDomPathを表示する
-                }
+    //失敗レポート検索ループ
+    for(var i = 0 ; i < totalReport.reportsArr.length ; i++){
+        var reportObj = totalReport.reportsArr[i];
+        if(!reportObj.allOK){ //失敗していた場合
+            var bindedData = getBindedDataFromKey(reportObj.key);
+            if(typeof bindedData == 'undefined'){ //データが見つからない場合
+                console.warn("Cannot find \`key:" + reportObj.key + "\`"); //keyIDのみ表示する
+            }else{
+                console.warn((getDomPath(bindedData.$3bindedSVGElement.node())).join('/')); //対象SVGのDomPathを表示する
             }
         }
     }
@@ -330,90 +332,147 @@ var $3nodes = $3editableNodesTAG.append("svg")
 
         d.$3bindedSVGElement = d3.select(this);
 
-        //typeオブジェクト存在チェック
-        if(typeof (d.type) == 'undefined'){ //typeオブジェクトが存在しない場合
-            d.type = "text"; //text typeにする
-        }
-
+        checkToBindData(d); //data書式のチェック
+        
         //座標追加
         d.coordinate = {
             x: ($3editableNodesTAG.node().offsetWidth / 2), //<-仮の処理
             y: (60*(i+1)) //<-仮の処理
         };
 
-        makeSVGNodeStructure(d, d);
+        renderSVGNode(d,d); //SVGレンダリング
+
     });
 
 //UI TRAP
 $3nodes.on(UITrappedEvents.editSVGNode, function(d){editSVGNode(d);});
 
-function makeSVGNodeStructure(bindedData, makeByThisObj){
+function checkToBindData(checkThisData){
 
-    var $3SVGnodeElem = bindedData.$3bindedSVGElement;
-    
+    if(typeof checkThisData.type == 'undefined'){ //type指定がない場合
+        console.warn("Type not specified. This data will be handled as \`text\` type.");
+        checkThisData.type = "text";
+    }
+
+    if(typeof checkThisData.type != 'string'){ //typeの型がstringでない場合
+        console.warn("Wrong type specified in \`checkThisData.type\`. " +
+                     "specified type:\`" + (typeof (checkThisData.type)) + "\`, expected type:\`string\`.\n" +
+                     "This data will be handled as \`text\` type.");
+        checkThisData.type = "text";
+    }
+
+    var forceAsText = false;
+
     //不足オブジェクトのチェック&追加
-    switch(makeByThisObj.type){
+    switch(checkThisData.type){
         
         case "text":
         {
-            //SVGElement構造の定義
-            $3SVGnodeElem.append("g").classed("frame", true); //枠定義
-            
-            $3SVGnodeElem.append("text"). //<text>定義
-                classed("textContent", true)
-                .style("white-space", "pre");
-
-            $3SVGnodeElem.append("g").classed("selectionLayer", true); //selectionLayer定義
-            
-            //"text" type 固有の不足オブジェクトのチェック&追加
-            if(typeof (makeByThisObj.text) == 'undefined'){
-                makeByThisObj.text = {}; //空のオブジェクトを作る
-            }
-            if(typeof (makeByThisObj.text.text_content) == 'undefined'){
-                makeByThisObj.text.text_content = ""; //空文字を定義
-            }
-            if(typeof (makeByThisObj.text.frame_shape) == 'undefined'){
-                makeByThisObj.text.frame_shape = "rect" //矩形
-            }
-
+            forceAsText = true;
         }
         break;
 
         default:
         {
-            console.warn("unknown data type"); //<-仮の処理
-            return;
+            console.warn("unknown data type \`" + checkThisData.type + "\` specified. This data will be handled as \`text\` type.");
+            checkThisData.type = "text";
+            forceAsText = true;
         }
         break;
     }
 
-    //レンダリング
-    renderSVGNode(bindedData, makeByThisObj);
+    if(forceAsText){
+        //"text" type 固有の不足オブジェクトのチェック&追加
+        if(typeof (checkThisData.text) == 'undefined'){
+            checkThisData.text = {}; //空のオブジェクトを作る
+        }
+        if(typeof (checkThisData.text.text_content) == 'undefined'){
+            checkThisData.text.text_content = ""; //空文字を定義
+        }
+        if(typeof (checkThisData.text.frame_shape) == 'undefined'){
+            checkThisData.text.frame_shape = "rect" //矩形
+        }
+    }
 }
 
 function renderSVGNode(bindedData, renderByThisObj){
 
+    var $3SVGnodeElem = bindedData.$3bindedSVGElement;
     var reportObj;
-
+    var rerender = false;
+    var toAppendTypeRenderFail = "";
+    
     //type指定チェック
-    if(typeof (renderByThisObj.type) == 'undefined'){
-        console.warn("\"type\" property is not specified");
-        return; //存在しない場合場合は終了する
+    if(typeof (renderByThisObj.type) != 'undefined'){ //type指定がある場合
+        if(typeof (renderByThisObj.type) != 'string'){ //型がstringでない
+            
+            toAppendTypeRenderFail = "Wrong type specified in \`renderByThisObj.type\`. " +
+                          "specified type:\`" + (typeof (renderByThisObj.type)) + "\`, expected type:\`string\`.";
+            console.warn(toAppendTypeRenderFail);            
+            //failure レポート はリレンダリング後に行う
+
+            rerender = true;
+        
+        }else{ //型がstring
+            switch(renderByThisObj.type){
+                case "text":
+                {
+                    //定義済みSVGElement構造の全削除
+                    while($3SVGnodeElem.node().firstChild){
+                        $3SVGnodeElem.node().removeChild($3SVGnodeElem.node().firstChild);
+                    }
+
+                    //SVGElement構造の定義
+                    $3SVGnodeElem.append("g").classed("frame", true); //枠定義
+                    
+                    $3SVGnodeElem.append("text") //<text>定義
+                        .classed("textContent", true)
+                        .style("white-space", "pre");
+
+                    $3SVGnodeElem.append("g").classed("selectionLayer", true); //selectionLayer定義
+
+                    //レンダリング
+                    reportObj = renderTextTypeSVGNode(bindedData, renderByThisObj);
+
+                    //変更レポートの追加
+                    reportObj.PrevObj.type = bindedData.type;
+                    reportObj.RenderedObj.type = "text";
+                }
+                break;
+        
+                default:
+                {
+                    toAppendTypeRenderFail = "Unknown type \`" + renderByThisObj.type + "\` specified in \`renderByThisObj.type\`. ";
+                    console.warn(toAppendTypeRenderFail);
+                    //failure レポート はリレンダリング後に行う
+
+                    rerender = true;
+                }
+                break;
+            }
+        }
+    
+    }else{ //type指定が存在しない場合
+        rerender = true;
     }
 
-    switch(renderByThisObj.type){
-        case "text":
-        {
-            reportObj = renderTextTypeSVGNode(bindedData, renderByThisObj);
-        }
-        break;
+    if(rerender){
+        //前回のtypeでリレンダリングする
+        switch(bindedData.type){
+            case "text":
+            {
+                reportObj = renderTextTypeSVGNode(bindedData, renderByThisObj);
+            }
+            break;
 
-        default:
-        {
-            console.warn("unknown data type"); //<-仮の処理
-            return;
+            default:
+            break; //nothing to do
         }
-        break;
+
+        //type指定エラーがあった場合
+        if(toAppendTypeRenderFail != ""){
+            reportObj.FailuredMessages.type = toAppendTypeRenderFail;
+        }
     }
 
     return reportObj;
@@ -1251,6 +1310,29 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
     //変更レポートを返却
     return reportObj;
+}
+
+function rollbackTansaction(transaction){
+    
+    //引数チェック
+    if(transaction.reportsArr.length == 0){ //トランザクションレポートが存在しない
+        console.warn("Specified trucsaction not contains SVG rendering report.");
+        return;
+    }
+
+    //レンダリングレポート網羅ループ
+    for(var i = 0 ; i < transaction.reportsArr.length ; i++){
+        var reportObj = transaction.reportsArr[i];
+        var bindedData = getBindedDataFromKey(reportObj.key);
+
+        if(typeof bindedData == 'undefined'){ //対象のノードデータが存在しない場合
+            console.error("\`key:" + reportObj.key + "\` not found in D3.js binded data array.");
+
+        }else{ //対象のノードデータが存在する場合
+            //todo roll back
+        }
+    }
+
 }
 
 //
