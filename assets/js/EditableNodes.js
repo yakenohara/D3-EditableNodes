@@ -231,8 +231,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
         if(!totalReport.allOK){ //適用失敗ノードがある場合
             console.warn("Cannot apply style \`fill:" + iputStr + ";\` to following element(s).");
             printRenderingFailuredSVGElements(totalReport);
-
-            //todo totalReport を使って変更前状態にロールバックする
+            rollbackTansaction(totalReport); // totalReport を使って変更前状態にロールバックする
 
         }
     }
@@ -1330,6 +1329,11 @@ function rollbackTansaction(transaction){
 
         }else{ //対象のノードデータが存在する場合
             //todo roll back
+            var rollbackRenderringReport = renderSVGNode(bindedData, reportObj.PrevObj);
+
+            if(!rollbackRenderringReport.allOK){ //ロールバックに失敗した場合
+                console.error("Cannot roll back \`" + getDomPath(bindedData.$3bindedSVGElement.node()).join('/') + "\`");
+            }
         }
     }
 
