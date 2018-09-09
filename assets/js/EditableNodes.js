@@ -146,7 +146,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
     //<register behavor>----------------------------------------------------------------------------------------------------------
 
     //<text_text_anchor>---------------------------------------------------------------
-    var $pickerElem = $nodeEditConsoleElem.find(".propertyEditor.textAnchor").children(".textAnchorType").on("click",function(){
+    $nodeEditConsoleElem.find(".propertyEditor.textAnchor").children(".textAnchorType").on("click",function(){
         var clickedElem = this;
         var specifiedType = clickedElem.getAttribute("data-textAnchorType");
         switch(specifiedType){
@@ -187,31 +187,37 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
         showAlpha: true,
         allowEmpty: true,
         showInitial: true,
-        clickoutFiresChange: false,
+        clickoutFiresChange: true, // <- カラーピッカーの範囲外をクリックする or ESC押下時に、
+                                   //    最後に入力されていたtinyColorObjを、
+                                   //    'change'イベント、'hide'イベントそれぞれに渡す(コール順序は'change'→'hide')
+                                   //    最後に入力されていたtinyColorObjがEmptyな場合は、nullを渡す
         preferredFormat: "rgb",
     });
 
     //カラーピッカーのドラッグイベント
-    $pickerElem.on('move.spectrum', function(e, tinycolor) {
-        $inputElem.val(tinycolor); //<input>要素に値を設定する
+    $pickerElem.on('move.spectrum', function(e, tinycolorObj) {
+        $inputElem.val(tinycolorObj); //<input>要素に値を設定する
 
         //SVGNodeへの反映
-        var totalReport = fireNodeEditConsoleEvent({text:{text_fill: tinycolor.toRgbString()}});
+        var totalReport = fireNodeEditConsoleEvent({text:{text_fill: tinycolorObj.toRgbString()}});
         if(!totalReport.allOK){ //適用失敗ノードがある場合
-            console.warn("Cannot apply style \`fill:" + tinycolor.toRgbString() + ";\` to following element(s).");
+            console.warn("Cannot apply style \`fill:" + tinycolorObj.toRgbString() + ";\` to following element(s).");
             printRenderingFailuredSVGElements(totalReport);
         }
     });
 
     //カラーピッカーのchooseボタンイベント
-    // ↓nothing to do     ↓
-    // ↓非表示イベントで行う↓
-    //$pickerElem.on('change.spectrum', function(e, tinycolor) {    
-    //});
+    $pickerElem.on('change.spectrum', function(e, tinycolorObj) {    
+        console.log("chnanged.tinycolorObj:" + tinycolorObj);
+        
+    });
 
     //カラーピッカーの非表示イベント
-    $pickerElem.on('hide.spectrum', function(e, tinycolor) {
-        $inputElem.val(tinycolor); //<input>要素に値を設定する
+    $pickerElem.on('hide.spectrum', function(e, tinycolorObj) {
+        console.log("hided.tinycolorObj:" + tinycolorObj);
+        console.log(e);
+        yyy = e;
+        $inputElem.val(tinycolorObj); //<input>要素に値を設定する
     });
 
     //<input>要素のキー押下イベント
