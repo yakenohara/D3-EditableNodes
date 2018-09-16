@@ -192,6 +192,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
                                    //    'change'イベント、'hide'イベントそれぞれに渡す(コール順序は'change'→'hide')
                                    //    最後に入力されていたtinyColorObjがEmptyな場合は、nullを渡す
         preferredFormat: "rgb",
+        containerClassName: 'editableNode-spectrum_container',
     });
 
     //カラーピッカーのドラッグイベント
@@ -204,20 +205,33 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
             console.warn("Cannot apply style \`fill:" + tinycolorObj.toRgbString() + ";\` to following element(s).");
             printRenderingFailuredSVGElements(totalReport);
         }
+        //ログはとらない
     });
 
-    //カラーピッカーのchooseボタンイベント
-    $pickerElem.on('change.spectrum', function(e, tinycolorObj) {    
-        console.log("chnanged.tinycolorObj:" + tinycolorObj);
+    //カラーピッカーの'chooseボタン'イベント
+    $pickerElem.on('change.spectrum', function(e, tinycolorObj) {
+        
+        var rgbStr = tinycolorObj.toRgbString();
+
+        //SVGNodeへの反映
+        var totalReport = fireNodeEditConsoleEvent({text:{text_fill:rgbStr}});
+        if(!totalReport.allOK){ //適用失敗ノードがある場合
+            console.warn("Cannot apply style \`fill:" + rgbStr + ";\` to following element(s).");
+            printRenderingFailuredSVGElements(totalReport);
+            rollbackTansaction(totalReport); // totalReport を使って変更前状態にロールバックする
+            
+            //caution ロールバックしたカラーはカラーピッカーに反映されない
+
+        }else{ //適用成功の場合
+            totalReport.message = "text fill:" + rgbStr;
+            appendHistory(totalReport); //historyに追加
+        }
         
     });
 
     //カラーピッカーの非表示イベント
     $pickerElem.on('hide.spectrum', function(e, tinycolorObj) {
-        console.log("hided.tinycolorObj:" + tinycolorObj);
-        console.log(e);
-        yyy = e;
-        $inputElem.val(tinycolorObj); //<input>要素に値を設定する
+        // nothing to do
     });
 
     //<input>要素のキー押下イベント
@@ -238,9 +252,40 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
             console.warn("Cannot apply style \`fill:" + iputStr + ";\` to following element(s).");
             printRenderingFailuredSVGElements(totalReport);
             rollbackTansaction(totalReport); // totalReport を使って変更前状態にロールバックする
+            
+            //caution ロールバックしたカラーはカラーピッカーに反映されない
 
+        }else{ //適用成功の場合
+            totalReport.message = "text fill:" + iputStr;
+            appendHistory(totalReport); //historyに追加
         }
     }
+
+    //cancelボタンクリックイベント
+    $(".editableNode-spectrum_container .sp-cancel").on('click',function(){
+        
+        var tinycolorObj = $pickerElem.spectrum("get");
+
+        //動きが直感的でないので要再検討
+
+        if(tinycolorObj !== null){ //nullな場合はrenderしない
+            var rbgStr = tinycolorObj.toRgbString();
+            //SVGNodeへの反映
+            var totalReport = fireNodeEditConsoleEvent({text:{text_fill:rbgStr}});
+            if(!totalReport.allOK){ //適用失敗ノードがある場合
+                console.warn("Cannot apply style \`fill:" + rbgStr + ";\` to following element(s).");
+                printRenderingFailuredSVGElements(totalReport);
+                rollbackTansaction(totalReport); // totalReport を使って変更前状態にロールバックする
+                
+                //caution ロールバックしたカラーはカラーピッカーに反映されない
+
+            }else{ //適用成功の場合
+                totalReport.message = "canceled text fill";
+                appendHistory(totalReport); //historyに追加
+            }
+        }
+
+    });
 
     //--------------------------------------------------------------</text_fill>
 
@@ -316,10 +361,10 @@ var $3historyElem = $3editableNodesTAG.append("div")
     .classed("historyElem",true)
     .attr("wrap","off");
 
-function appendHistory(){
+function appendHistory(transactionObj){
     $3historyElem.append("div")
         .append("p")
-        .text("changed changed changed  changed changed changed"); //仮の処理
+        .text(transactionObj.message); //仮の処理
 }
 
 //ノードの追加
