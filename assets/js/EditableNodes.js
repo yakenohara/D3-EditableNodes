@@ -125,6 +125,8 @@ var defaultFontSizeForTextArea = "11px";
 //text type node 編集時にtext-anchorを抽出できなかった場合に仮設定するtext-align
 var defaultTextAlignForTextArea = "left";
 
+var transactionHistory = [];
+
 var $3nodeEditConsoleElem = $3editableNodesTAG.append("div")
     // .style("visibility", "hidden")
     .style("position", "absolute")
@@ -266,24 +268,26 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
         
         var tinycolorObj = $pickerElem.spectrum("get");
 
-        //動きが直感的でないので要再検討
+        //todo 動きが直感的でないので要再検討
 
-        if(tinycolorObj !== null){ //nullな場合はrenderしない
-            var rbgStr = tinycolorObj.toRgbString();
-            //SVGNodeへの反映
-            var totalReport = fireNodeEditConsoleEvent({text:{text_fill:rbgStr}});
-            if(!totalReport.allOK){ //適用失敗ノードがある場合
-                console.warn("Cannot apply style \`fill:" + rbgStr + ";\` to following element(s).");
-                printRenderingFailuredSVGElements(totalReport);
-                rollbackTansaction(totalReport); // totalReport を使って変更前状態にロールバックする
+        // if(tinycolorObj !== null){ //nullな場合はrenderしない
+        //     var rbgStr = tinycolorObj.toRgbString();
+        //     //SVGNodeへの反映
+        //     var totalReport = fireNodeEditConsoleEvent({text:{text_fill:rbgStr}});
+        //     if(!totalReport.allOK){ //適用失敗ノードがある場合
+        //         console.warn("Cannot apply style \`fill:" + rbgStr + ";\` to following element(s).");
+        //         printRenderingFailuredSVGElements(totalReport);
+        //         rollbackTansaction(totalReport); // totalReport を使って変更前状態にロールバックする
                 
-                //caution ロールバックしたカラーはカラーピッカーに反映されない
+        //         //caution ロールバックしたカラーはカラーピッカーに反映されない
 
-            }else{ //適用成功の場合
-                totalReport.message = "canceled text fill";
-                appendHistory(totalReport); //historyに追加
-            }
-        }
+        //     }else{ //適用成功の場合
+        //         totalReport.message = "canceled text fill";
+        //         appendHistory(totalReport); //historyに追加
+        //     }
+        // }
+
+        
 
     });
 
@@ -365,9 +369,17 @@ function appendHistory(transactionObj){
     $3historyElem.append("div")
         .append("p")
         .text(transactionObj.message); //仮の処理
+
+    //Append History
+    transactionHistory.push(transactionObj);
 }
 
+
+
 //ノードの追加
+var firstTotalReport = {};
+firstTotalReport.allOK = true;
+firstTotalReport.reportsArr = [];
 var $3nodes = $3editableNodesTAG.append("svg")
     .classed("SVGForNodesMapping",true)
     .attr("width", "100%") //<-テスト用の仮数値
@@ -390,9 +402,18 @@ var $3nodes = $3editableNodesTAG.append("svg")
             y: (60*(i+1)) //<-仮の処理
         };
 
-        renderSVGNode(d,d); //SVGレンダリング
+        var renderReport = renderSVGNode(d,d); //SVGレンダリング
+        
+        //失敗が発生した場合は、firstTotalReportも失敗とする
+        if(!renderReport.allOK){
+            firstTotalReport.allOK = false;
+        }
 
+        firstTotalReport.reportsArr.push(renderReport);
     });
+
+//Append History
+transactionHistory.push(firstTotalReport);
 
 //UI TRAP
 $3nodes.on(UITrappedEvents.editSVGNode, function(d){editSVGNode(d);});
