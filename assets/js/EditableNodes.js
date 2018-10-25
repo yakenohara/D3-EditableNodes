@@ -170,7 +170,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
         }
 
         console.log("\`text-anchor:" + specifiedType + ";\` specified.");
-        fireNodeEditConsoleEvent({text:{text_anchor: specifiedType}});
+        fireNodeEditConsoleEvent_renderSVG({text:{text_anchor: specifiedType}});
 
         //表示状態変更
         var siblings = clickedElem.parentNode.children;
@@ -185,6 +185,75 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
     var $pickerElem = $nodeEditConsoleElem.find(".propertyEditor.fill").children(".picker").eq(0);
     var $inputElem = $nodeEditConsoleElem.find(".propertyEditor.fill").children(".pickedColorText").eq(0);
 
+    var bufTotalReport_For_text_fill; //Rendering Report 用バッファ
+
+    //Rendering Report 用バッファ クリア
+    var func_clearBufTotalReport_For_text_fill = function clearBufTotalReport_For_text_fill(){
+        bufTotalReport_For_text_fill = {};
+        bufTotalReport_For_text_fill.allOK = false; //本来はRendering時の成功・失敗を表すものだが、
+                                                    //成功時したRenderingReportがあった時だけTrueで上書き更新する事で、
+                                                    //ログに記録するべきRenderingReportが存在するかどうかを判定する条件として利用する
+        bufTotalReport_For_text_fill.reportsArr = [];
+    }
+
+    //バッファに積んだ Rendering Report を 確定させる
+    var func_confirmBufTotalReport_For_text_fill = function confirmBufTotalReport_For_text_fill(){
+        if(bufTotalReport_For_text_fill.allOK){ //ログに記録するべきレポートが存在する場合
+
+            //最後に反映したカラーをログから取得
+            var latestTextFill = bufTotalReport_For_text_fill.reportsArr[0].RenderedObj.text.text_fill;
+
+            appendHistory(bufTotalReport_For_text_fill);
+            func_clearBufTotalReport_For_text_fill(); //ログ用バッファ初期化
+
+            $inputElem.val(latestTextFill); //最後に反映したカラーで<input>要素を更新
+            $pickerElem.spectrum("set", latestTextFill); //カラーピッカーに反映
+
+        }
+    }
+
+    //SVGNodeへの反映 & Rendering Reportをバッファに積む
+    var func_renderAndMergeBufTotalReport_For_text_fill = function renderAndMergeBufTotalReport_For_text_fill(toFillStr){
+        //SVGNodeへの反映
+        var totalReport = fireNodeEditConsoleEvent_renderSVG({text:{text_fill:toFillStr}});
+        if(!totalReport.allOK){ //適用失敗ノードがある場合
+            console.warn("Cannot apply style \`fill:" + toFillStr + ";\` to following element(s).");
+            printRenderingFailuredSVGElements(totalReport);
+            rollbackTansaction(totalReport); // totalReport を使って変更前状態にロールバックする
+            fireNodeEditConsoleEvent_adjust(); //編集中の<textarea>を元に戻したSVGNodeに合わせる
+
+            //caution ロールバックしたカラーはカラーピッカーに反映されない
+        
+        }else{ //適用成功の場合
+            totalReport.message = "text fill:" + toFillStr;
+            mergeTransactionToPrev(bufTotalReport_For_text_fill, totalReport);
+        }
+    }
+
+    func_clearBufTotalReport_For_text_fill(); //ログ用バッファ初期化
+
+    //<input>要素のキー押下イベント
+    $inputElem.get(0).oninput = function(){
+
+        var iputStr = $inputElem.val();
+
+        //TinyColorでパース可能な文字列かどうかチェック
+        if(!(tinycolor(iputStr).isValid())){ //パース不可能な場合
+            console.warn("Cannot parse \`" + iputStr + "\` by TinyColor.");
+            return;
+        }
+        $pickerElem.spectrum("set", iputStr); //カラーピッカーに反映
+
+        //SVGNodeへの反映 & Rendering Reportをバッファに積む
+        func_renderAndMergeBufTotalReport_For_text_fill(iputStr);
+    }
+
+    //<input>要素からフォーカスが離れた時のイベント
+    $inputElem.get(0).onblur = function(){
+        func_confirmBufTotalReport_For_text_fill(); //バッファに積んだ Rendering Report を 確定させる
+    }
+
+    //register spectrum
     $pickerElem.spectrum({
         showAlpha: true,
         allowEmpty: true,
@@ -199,36 +268,20 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
 
     //カラーピッカーのドラッグイベント
     $pickerElem.on('move.spectrum', function(e, tinycolorObj) {
-        $inputElem.val(tinycolorObj); //<input>要素に値を設定する
+        
+        if(tinycolorObj != null){ //nullチェック。カラーピッカー右上の「×」をクリックすると、nullが来る。
 
-        //SVGNodeへの反映
-        var totalReport = fireNodeEditConsoleEvent({text:{text_fill: tinycolorObj.toRgbString()}});
-        if(!totalReport.allOK){ //適用失敗ノードがある場合
-            console.warn("Cannot apply style \`fill:" + tinycolorObj.toRgbString() + ";\` to following element(s).");
-            printRenderingFailuredSVGElements(totalReport);
+            var iputStr = tinycolorObj.toRgbString();
+            $inputElem.val(iputStr); //<input>要素に値を設定する
+
+            //SVGNodeへの反映 & Rendering Reportをバッファに積む
+            func_renderAndMergeBufTotalReport_For_text_fill(iputStr);
         }
-        //ログはとらない
     });
 
-    //カラーピッカーの'chooseボタン'イベント
+    //カラーピッカーの `chooseボタンクリック` or `範囲外クリック` or `ESC押下` イベント
     $pickerElem.on('change.spectrum', function(e, tinycolorObj) {
-        
-        var rgbStr = tinycolorObj.toRgbString();
-
-        //SVGNodeへの反映
-        var totalReport = fireNodeEditConsoleEvent({text:{text_fill:rgbStr}});
-        if(!totalReport.allOK){ //適用失敗ノードがある場合
-            console.warn("Cannot apply style \`fill:" + rgbStr + ";\` to following element(s).");
-            printRenderingFailuredSVGElements(totalReport);
-            rollbackTansaction(totalReport); // totalReport を使って変更前状態にロールバックする
-            
-            //caution ロールバックしたカラーはカラーピッカーに反映されない
-
-        }else{ //適用成功の場合
-            totalReport.message = "text fill:" + rgbStr;
-            appendHistory(totalReport); //historyに追加
-        }
-        
+        func_confirmBufTotalReport_For_text_fill(); //バッファに積んだ Rendering Report を 確定させる
     });
 
     //カラーピッカーの非表示イベント
@@ -236,59 +289,25 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
         // nothing to do
     });
 
-    //<input>要素のキー押下イベント
-    $inputElem.get(0).oninput = function(){
-
-        var iputStr = $inputElem.val();
-
-        //TinyColorでパース可能な文字列かどうかチェック
-        if(!(tinycolor(iputStr).isValid())){ //パース不可能な場合
-            console.warn("Cannot parse \`" + iputStr + "\` by TinyColor.");
-            return;
-        }
-        $pickerElem.spectrum("set", iputStr); //カラーピッカーに反映
-
-        //SVGNodeへの反映
-        var totalReport = fireNodeEditConsoleEvent({text:{text_fill:iputStr}});
-        if(!totalReport.allOK){ //適用失敗ノードがある場合
-            console.warn("Cannot apply style \`fill:" + iputStr + ";\` to following element(s).");
-            printRenderingFailuredSVGElements(totalReport);
-            rollbackTansaction(totalReport); // totalReport を使って変更前状態にロールバックする
-            
-            //caution ロールバックしたカラーはカラーピッカーに反映されない
-
-        }else{ //適用成功の場合
-            totalReport.message = "text fill:" + iputStr;
-            appendHistory(totalReport); //historyに追加
-        }
-    }
-
     //cancelボタンクリックイベント
     $(".editableNode-spectrum_container .sp-cancel").on('click',function(){
         
+        if(bufTotalReport_For_text_fill.allOK){ //成功したRenderingReportが存在する場合
+            rollbackTansaction(bufTotalReport_For_text_fill); //元に戻す
+            fireNodeEditConsoleEvent_adjust(); //編集中の<textarea>を元に戻したSVGNodeに合わせる
+            func_clearBufTotalReport_For_text_fill(); //ログ用バッファ初期化
+        }
+
+        //<input>要素をカラーピッカーの色に合わせる
         var tinycolorObj = $pickerElem.spectrum("get");
 
-        //todo 動きが直感的でないので要再検討
+        if( tinycolorObj == null){ //直前がnullの場合
+            $inputElem.val(""); //空文字にする
 
-        // if(tinycolorObj !== null){ //nullな場合はrenderしない
-        //     var rbgStr = tinycolorObj.toRgbString();
-        //     //SVGNodeへの反映
-        //     var totalReport = fireNodeEditConsoleEvent({text:{text_fill:rbgStr}});
-        //     if(!totalReport.allOK){ //適用失敗ノードがある場合
-        //         console.warn("Cannot apply style \`fill:" + rbgStr + ";\` to following element(s).");
-        //         printRenderingFailuredSVGElements(totalReport);
-        //         rollbackTansaction(totalReport); // totalReport を使って変更前状態にロールバックする
-                
-        //         //caution ロールバックしたカラーはカラーピッカーに反映されない
-
-        //     }else{ //適用成功の場合
-        //         totalReport.message = "canceled text fill";
-        //         appendHistory(totalReport); //historyに追加
-        //     }
-        // }
-
-        
-
+        }else{
+            var rgbstr = tinycolorObj.toRgbString();
+            $inputElem.val(rgbstr);
+        }
     });
 
     //--------------------------------------------------------------</text_fill>
@@ -296,13 +315,13 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
     //---------------------------------------------------------------------------------------------------------</register behavor>
 });
 
-function fireNodeEditConsoleEvent(argObj){
+function fireNodeEditConsoleEvent_renderSVG(argObj){
     var totalReport = {};
     totalReport.allOK = true;
     totalReport.reportsArr = [];
 
     var eventObj = document.createEvent("Event");
-    eventObj.initEvent("NodeEditConsoleEvent", false, false);
+    eventObj.initEvent("NodeEditConsoleEvent_renderSVG", false, false);
     eventObj.argObj　= {};
     eventObj.argObj.renderByThisObj = argObj;
     eventObj.argObj.clbkFunc = function(renderReport){ //ノード変更レポートの追加用コールバック関数
@@ -327,6 +346,17 @@ function fireNodeEditConsoleEvent(argObj){
     }
 
     return totalReport;
+}
+
+function fireNodeEditConsoleEvent_adjust(){
+    var eventObj = document.createEvent("Event");
+    eventObj.initEvent("NodeEditConsoleEvent_adjust", false, false);
+
+    //すべてのnode要素にイベントを発行する
+    var nodes = $3nodes.nodes();
+    for(var i = 0 ; i < nodes.length ; i++){
+        nodes[i].dispatchEvent(eventObj);
+    }
 }
 
 function printRenderingFailuredSVGElements(totalReport){
@@ -366,6 +396,7 @@ var $3historyElem = $3editableNodesTAG.append("div")
     .attr("wrap","off");
 
 function appendHistory(transactionObj){
+
     $3historyElem.append("div")
         .append("p")
         .text(transactionObj.message); //仮の処理
@@ -1383,6 +1414,45 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     return reportObj;
 }
 
+function mergeTransactionToPrev(prevTransaction, latestTransaction){
+    
+    //引数チェック
+    if(latestTransaction.reportsArr.length == 0){ //マージするべきレポートが存在しない
+        console.warn("Specified trucsaction not contains SVG rendering report.");
+        return;
+    }
+
+    prevTransaction.allOK = latestTransaction.allOK; //直近の成功可否状態で更新
+
+    if(typeof (latestTransaction.message != 'undefined')){ //message指定がある場合
+        prevTransaction.message = latestTransaction.message; //直近のmessageで更新
+    }
+
+    //レンダリングレポート網羅ループ
+    for(var i_l = 0 ; i_l < latestTransaction.reportsArr.length ; i_l++){
+
+        //マージ対象ノード検索ループ
+        var i_p = 0;
+        for( ; i_p < prevTransaction.reportsArr.length ; i_p++){
+
+            //マージ対象のノードkeyが見つかった場合
+            if(prevTransaction.reportsArr[i_p].key == latestTransaction.reportsArr[i_l].key){
+                break;
+            }
+        }
+
+        if(i_p == prevTransaction.reportsArr.length){ //マージ対象のノードkeyが見つからなかった場合
+            prevTransaction.reportsArr.push(latestTransaction.reportsArr[i_l]); //直近のレポートを追加する
+
+        }else{ //マージ対象のノードkeyが見つかった場合
+
+            //直近のRenderedObjで更新する
+            prevTransaction.reportsArr[i_p].RenderedObj = latestTransaction.reportsArr[i_l].RenderedObj;
+
+        }        
+    }
+}
+
 function rollbackTansaction(transaction){
     
     //引数チェック
@@ -1400,7 +1470,6 @@ function rollbackTansaction(transaction){
             console.error("\`key:" + reportObj.key + "\` not found in D3.js binded data array.");
 
         }else{ //対象のノードデータが存在する場合
-            //todo roll back
             var rollbackRenderringReport = renderSVGNode(bindedData, reportObj.PrevObj);
 
             if(!rollbackRenderringReport.allOK){ //ロールバックに失敗した場合
@@ -1545,15 +1614,15 @@ function editTextTypeSVGNode(bindedData){
     }
 
     //NodeEditConsoleからイベントを受け取るリスナ登録
-    $3SVGnodeElem.node().addEventListener("NodeEditConsoleEvent",function(eventObj){
+    $3SVGnodeElem.node().addEventListener("NodeEditConsoleEvent_renderSVG",function(eventObj){
         
         //引数チェック
         if(typeof eventObj.argObj == 'undefined'){ //引数なし
-            console.warn("NodeEditConsoleEvent was not specified \`argObj\`.");
+            console.warn("NodeEditConsoleEvent_renderSVG was not specified \`argObj\`.");
             return;
         }
         if(typeof eventObj.argObj.renderByThisObj != 'object'){ //nodeレンダリング用objが存在しない
-            console.warn("NodeEditConsoleEvent was not specified \`argObj.renderByThisObj\`.");
+            console.warn("NodeEditConsoleEvent_renderSVG was not specified \`argObj.renderByThisObj\`.");
             return;
         }
 
@@ -1564,6 +1633,10 @@ function editTextTypeSVGNode(bindedData){
             eventObj.argObj.clbkFunc(renderReport);
         }
         
+    });
+
+    $3SVGnodeElem.node().addEventListener("NodeEditConsoleEvent_adjust",function(eventObj){
+        adjustTextarea(bindedData, $3textareaElem);
     });
 
     //<textarea>にキャレットをフォーカス
