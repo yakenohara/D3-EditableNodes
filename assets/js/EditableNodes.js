@@ -102,6 +102,7 @@ var dataset = [
 
 var UITrappedEvents = {
     editSVGNode: "dblclick", //`d3.js` event
+    selectSVGNode: "click", //`d3.js` event
     submitEditingTextTypeSVGNode: "enter", //`Mousetrap` event
     insertLFWhenEditingTextTypeSVGNode: "alt+enter", //`Mousetrap` event
 };
@@ -405,18 +406,43 @@ function appendHistory(transactionObj){
     transactionHistory.push(transactionObj);
 }
 
-
-
-//ノードの追加
 var firstTotalReport = {};
 firstTotalReport.allOK = true;
 firstTotalReport.reportsArr = [];
-var $3nodes = $3editableNodesTAG.append("svg")
+
+//<svg>の作成
+var $3svgGroup = $3editableNodesTAG.append("svg")
     .classed("SVGForNodesMapping",true)
     .attr("width", "100%") //<-テスト用の仮数値
     .attr("height", 800) //<-テスト用の仮数値
-    .style("vertical-align", "bottom")
-    .selectAll("g")
+    .style("vertical-align", "bottom");
+
+var $3nodesGroup = $3svgGroup.append("g") //ノードグループの作成
+    .classed("nodes",true);
+
+var $3selectionLayersGroup = $3svgGroup.append("g") //Selection Layer 用グループの作成
+    .classed("selectionLayers",true);
+
+//Node選択用Brushの作成
+var ifFirstEndOfBrush = true;
+var $3NodeSelectingBrush = d3.brush()
+    .on("end", function(){ //選択終了イベント
+        if(ifFirstEndOfBrush){ //Avoid infinite loop
+            ifFirstEndOfBrush = false;
+            clearNodeSelectingBrush();
+            ifFirstEndOfBrush = true;
+        }
+    });
+    
+var $3NodeSelectingBrushGroup = $3selectionLayersGroup.append("g")
+    .call($3NodeSelectingBrush);
+
+function clearNodeSelectingBrush(){
+    $3NodeSelectingBrushGroup.call($3NodeSelectingBrush.move, null); //Brush 選択範囲のクリア
+}
+
+// ノード追加
+var $3nodes = $3nodesGroup.selectAll("g")
     .data(dataset)
     .enter()
     .append("g")
@@ -424,6 +450,11 @@ var $3nodes = $3editableNodesTAG.append("svg")
     .each(function(d ,i){
 
         d.$3bindedSVGElement = d3.select(this);
+
+        d.$3bindedSelectionLayerSVGElement = $3selectionLayersGroup.append("g")
+            .classed("selectionLayer",true)
+            .style("pointer-events", "none")
+            .style("visibility", "hidden");
 
         checkToBindData(d); //data書式のチェック
         
@@ -446,8 +477,37 @@ var $3nodes = $3editableNodesTAG.append("svg")
 //Append History
 transactionHistory.push(firstTotalReport);
 
-//UI TRAP
-$3nodes.on(UITrappedEvents.editSVGNode, function(d){editSVGNode(d);});
+//<UI TRAP>---------------------------------------------------------------------
+
+//todo 編集モードのキック
+//$3nodes.on(UITrappedEvents.editSVGNode, function(d){editSVGNode(d);});
+
+//SVGノードの単一選択イベント
+$3nodes.on(UITrappedEvents.selectSVGNode, function(d){
+
+    if(!(d3.event.ctrlKey)){ //ctrl key 押下でない場合
+
+        //別ノードすべてを選択解除する
+        for(var i = 0 ; i < dataset.length ; i++){
+            if(dataset[i].key != d.key){ //自分のノードでない場合
+                dataset[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden"); //選択解除
+            }
+        }
+    }
+
+    var visib = d.$3bindedSelectionLayerSVGElement.style("visibility");
+
+    //表示状態を切り替える
+    if(visib == "hidden"){ //非表示状態の場合
+        d.$3bindedSelectionLayerSVGElement.style("visibility",null); //表示状態にする
+
+    }else{ //表示状態の場合
+        d.$3bindedSelectionLayerSVGElement.style("visibility","hidden"); //非表示にする
+
+    }
+});
+
+//--------------------------------------------------------------------</UI TRAP>
 
 function checkToBindData(checkThisData){
 
@@ -531,8 +591,6 @@ function renderSVGNode(bindedData, renderByThisObj){
                         .classed("textContent", true)
                         .style("white-space", "pre");
 
-                    $3SVGnodeElem.append("g").classed("selectionLayer", true); //selectionLayer定義
-
                     //レンダリング
                     reportObj = renderTextTypeSVGNode(bindedData, renderByThisObj);
 
@@ -609,8 +667,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
     var $3SVGnodeElem_DOTframe = $3SVGnodeElem.select(".frame");
     var $3SVGnodeElem_text = $3SVGnodeElem.select("text");
-    var $3SVGnodeElem_DOTselectionLayer = $3SVGnodeElem.select(".selectionLayer");
-
+    
     var inlineStyleOf_SVGnodeElem_text = $3SVGnodeElem_text.node().style;
     var computedStyleOf_SVGnodeElem_text = window.getComputedStyle($3SVGnodeElem_text.node());
 
@@ -1027,9 +1084,9 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     //frame存在チェック
     if(!($3SVGnodeElem_DOTframe.node().firstChild)){ //frameの描画要素が存在しない場合
         $3SVGnodeElem_DOTframe.append("rect");
+        bindedData.$3bindedSelectionLayerSVGElement.append("rect"); //SelectionLayerも追加
         haveToUpdateFrame = true;
     }
-
 
     //frame設定変更によるframe自体の再描画要否チェック
     
@@ -1107,7 +1164,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         if(typeof renderByThisObj.text.frame_shape != 'undefined'){ //frame shape指定有り
 
             //変更前状態を取得
-            var prevShape = $3SVGnodeElem_DOTframe.node().firstChild.tagName.toLowerCase();  //1回目の描画時は"rect"になる。-> 仕様とする
+            var prevShape = $3SVGnodeElem_DOTframe.node().firstChild.tagName.toLowerCase();  //1回目の描画時は `frame存在チェック`で設定した "rect"になる。
+                                                                                             // -> 仕様とする
             
             if(typeof renderByThisObj.text.frame_shape != 'string'){ //型がstringでない
                 var wrn = "Wrong type specified in \`renderByThisObj.text.frame_shape\`. " +
@@ -1124,11 +1182,17 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                     
                     case "rect":
                     {
-                        //古いframeオブジェクトを削除
+                        //古いframeオブジェクト・SelectionLayerを削除
                         $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
+                        bindedData.$3bindedSelectionLayerSVGElement.node().removeChild(bindedData.$3bindedSelectionLayerSVGElement.node().firstChild);
 
                         //rect描画
-                        resizeTextTypeSVGNode_rectFrame($3SVGnodeElem_DOTframe.append("rect"),
+                        resizeTextTypeSVGNode_rectFrame($3SVGnodeElem_DOTframe.append("rect"), //Frame
+                                                        textRectArea,
+                                                        padding,
+                                                        pxNumOfStrokeWidth);
+                        
+                        resizeTextTypeSVGNode_rectFrame(bindedData.$3bindedSelectionLayerSVGElement.append("rect"), // Selection Layer
                                                         textRectArea,
                                                         padding,
                                                         pxNumOfStrokeWidth);
@@ -1140,11 +1204,17 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     
                     case "circle":
                     {
-                        //古いframeオブジェクトを削除
+                        //古いframeオブジェクト・SelectionLayerを削除
                         $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
+                        bindedData.$3bindedSelectionLayerSVGElement.node().removeChild(bindedData.$3bindedSelectionLayerSVGElement.node().firstChild);
 
                         //circle描画
-                        resizeTextTypeSVGNode_circleFrame($3SVGnodeElem_DOTframe.append("circle"),
+                        resizeTextTypeSVGNode_circleFrame($3SVGnodeElem_DOTframe.append("circle"), //Frame
+                                                          textRectArea,
+                                                          padding,
+                                                          pxNumOfStrokeWidth);
+
+                        resizeTextTypeSVGNode_circleFrame(bindedData.$3bindedSelectionLayerSVGElement.append("circle"), // Selection Layer
                                                           textRectArea,
                                                           padding,
                                                           pxNumOfStrokeWidth);
@@ -1156,11 +1226,17 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     
                     case "ellipse":
                     {
-                        //古いframeオブジェクトを削除
+                        //古いframeオブジェクト・SelectionLayerを削除
                         $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
+                        bindedData.$3bindedSelectionLayerSVGElement.node().removeChild(bindedData.$3bindedSelectionLayerSVGElement.node().firstChild);
 
                         //ellipse描画
-                        resizeTextTypeSVGNode_ellipseFrame($3SVGnodeElem_DOTframe.append("ellipse"),
+                        resizeTextTypeSVGNode_ellipseFrame($3SVGnodeElem_DOTframe.append("ellipse"), // Frame
+                                                           textRectArea,
+                                                           padding,
+                                                           pxNumOfStrokeWidth);
+
+                        resizeTextTypeSVGNode_ellipseFrame(bindedData.$3bindedSelectionLayerSVGElement.append("ellipse"), // Selection Layer
                                                            textRectArea,
                                                            padding,
                                                            pxNumOfStrokeWidth);
@@ -1190,11 +1266,17 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             
             //古いframe要素を再調整
             var SVGnodeElem_DOTframe_frame = $3SVGnodeElem_DOTframe.node().firstChild;
+            var SVGnodeElem_SelectionLayer = bindedData.$3bindedSelectionLayerSVGElement.node().firstChild;
             switch(SVGnodeElem_DOTframe_frame.tagName.toLowerCase()){
                 case "rect":
                 {
-                    //リサイズ
-                    resizeTextTypeSVGNode_rectFrame(d3.select(SVGnodeElem_DOTframe_frame),
+                    //リサイズ Frame and Selection Layer
+                    resizeTextTypeSVGNode_rectFrame(d3.select(SVGnodeElem_DOTframe_frame), // Frame
+                                                    textRectArea,
+                                                    padding,
+                                                    pxNumOfStrokeWidth);
+
+                    resizeTextTypeSVGNode_rectFrame(d3.select(SVGnodeElem_SelectionLayer), // Selection Layer
                                                     textRectArea,
                                                     padding,
                                                     pxNumOfStrokeWidth);
@@ -1203,8 +1285,13 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
                 case "circle":
                 {
-                    //リサイズ
-                    resizeTextTypeSVGNode_circleFrame(d3.select(SVGnodeElem_DOTframe_frame),
+                    //リサイズ Frame and Selection Layer
+                    resizeTextTypeSVGNode_circleFrame(d3.select(SVGnodeElem_DOTframe_frame), // Frame
+                                                      textRectArea,
+                                                      padding,
+                                                      pxNumOfStrokeWidth);
+
+                    resizeTextTypeSVGNode_circleFrame(d3.select(SVGnodeElem_SelectionLayer), // Selection Layer
                                                       textRectArea,
                                                       padding,
                                                       pxNumOfStrokeWidth);
@@ -1213,8 +1300,13 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
                 case "ellipse":
                 {
-                    //リサイズ
-                    resizeTextTypeSVGNode_ellipseFrame(d3.select(SVGnodeElem_DOTframe_frame),
+                    //リサイズ Frame and Selection Layer
+                    resizeTextTypeSVGNode_ellipseFrame(d3.select(SVGnodeElem_DOTframe_frame), // Frame
+                                                       textRectArea,
+                                                       padding,
+                                                       pxNumOfStrokeWidth);
+
+                    resizeTextTypeSVGNode_ellipseFrame(d3.select(SVGnodeElem_SelectionLayer), // Selection Layer
                                                        textRectArea,
                                                        padding,
                                                        pxNumOfStrokeWidth);

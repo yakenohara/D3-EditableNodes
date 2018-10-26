@@ -5,20 +5,20 @@
     background-color: rgb(44, 44, 44);
 }
 
-#editableNode .node .frame{
+#editableNode .nodes .node .frame{
     stroke: rgb(0, 89, 255);
     stroke-width: 2px;
     fill: rgb(44, 44, 44);
 }
 
-#editableNode .node .textContent{
+#editableNode .nodes .node .textContent{
     font-family: arial, sans-serif;
     font-size: 11px;
     fill: rgb(255, 255, 255);
 
 }
 
-#editableNode .node .selectionLayer{
+#editableNode .selectionLayers .selectionLayer{
     fill: rgba(40, 207, 96, 0.644);
 }
 
