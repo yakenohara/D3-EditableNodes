@@ -184,7 +184,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
             if(!totalReport.allOK){ //適用失敗ノードがある場合
                 console.warn("Cannot apply style \`text-anchor:" + specifiedType + ";\` to following element(s).");
                 printRenderingFailuredSVGElements(totalReport);
-                rollbackTansaction(totalReport); // totalReport を使って変更前状態にロールバックする
+                rollbackTransaction(totalReport); // totalReport を使って変更前状態にロールバックする
                 fireNodeEditConsoleEvent_adjust(); //編集中の<textarea>を元に戻したSVGNodeに合わせる
 
                 //todo
@@ -248,7 +248,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
         if(!totalReport.allOK){ //適用失敗ノードがある場合
             console.warn("Cannot apply style \`fill:" + toFillStr + ";\` to following element(s).");
             printRenderingFailuredSVGElements(totalReport);
-            rollbackTansaction(totalReport); // totalReport を使って変更前状態にロールバックする
+            rollbackTransaction(totalReport); // totalReport を使って変更前状態にロールバックする
             fireNodeEditConsoleEvent_adjust(); //編集中の<textarea>を元に戻したSVGNodeに合わせる
 
             //caution ロールバックしたカラーはカラーピッカーに反映されない
@@ -322,7 +322,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
     $(".editableNode-spectrum_container .sp-cancel").on('click',function(){
         
         if(bufTotalReport_For_text_fill.allOK){ //成功したRenderingReportが存在する場合
-            rollbackTansaction(bufTotalReport_For_text_fill); //元に戻す
+            rollbackTransaction(bufTotalReport_For_text_fill); //元に戻す
             fireNodeEditConsoleEvent_adjust(); //編集中の<textarea>を元に戻したSVGNodeに合わせる
             func_clearBufTotalReport_For_text_fill(); //ログ用バッファ初期化
         }
@@ -502,6 +502,7 @@ var $3nodes = $3nodesGroup.selectAll("g")
         };
 
         var renderReport = renderSVGNode(d,d); //SVGレンダリング
+        backToDefaulIfWarn(renderReport, d);
         
         //失敗が発生した場合は、firstTotalReportも失敗とする
         if(!renderReport.allOK){
@@ -717,10 +718,12 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         key:bindedData.key,
         allOK:true,
         PrevObj:{
+            type: bindedData.type,
             text: {},
             coordinate: {}
         },
         RenderedObj:{
+            type: "text",
             text: {},
             coordinate: {}
         },
@@ -741,9 +744,6 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     var haveToUpdateFrame = false;
     var vacantStarted = false;
     var vacantEnded = false;
-
-    // todo
-    // 適用したstyleをdataset[]に反映する
 
     //テキスト更新
     if(typeof (renderByThisObj.text.text_content) != 'undefined'){ //textオブジェクトがある場合
@@ -812,6 +812,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
             reportObj.PrevObj.text.text_content = prevTxt;
             reportObj.RenderedObj.text.text_content = renderByThisObj.text.text_content;
+            bindedData.text.text_content = renderByThisObj.text.text_content;
             haveToUpdateFrame = true;
         }
     }
@@ -841,6 +842,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 }
                 reportObj.PrevObj.coordinate.x = prevX;
                 reportObj.RenderedObj.coordinate.x = renderByThisObj.coordinate.x;
+                bindedData.coordinate.x = renderByThisObj.coordinate.x; //todo <- d3.js に任せられるかどうか
                 haveToUpdateFrame = true;
             }
         }
@@ -864,6 +866,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 }
                 reportObj.PrevObj.coordinate.y = prevY;
                 reportObj.RenderedObj.coordinate.y = renderByThisObj.coordinate.y;
+                bindedData.coordinate.y = renderByThisObj.coordinate.y; //todo <- d3.js に任せられるかどうか
                 haveToUpdateFrame = true;
             }
         }
@@ -883,6 +886,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
             reportObj.PrevObj.text.text_anchor = prevTextAnchor;
             reportObj.RenderedObj.text.text_anchor = null;
+            delete bindedData.text.text_anchor;
             haveToUpdateFrame = true;
 
         }else if(typeof renderByThisObj.text.text_anchor != 'string'){ //型がstringでない場合
@@ -892,10 +896,11 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             reportObj.FailuredMessages.text.text_anchor = wrn;
         
         }else{ //型がstring
-            $3SVGnodeElem_text.style("text-anchor", renderByThisObj.text.text_anchor);
+            var applyThisTextAnchor = renderByThisObj.text.text_anchor.toLowerCase();
+            $3SVGnodeElem_text.style("text-anchor", applyThisTextAnchor);
             
             //適用可否チェック
-            if(renderByThisObj.text.text_anchor != computedStyleOf_SVGnodeElem_text.getPropertyValue("text-anchor")){ //computed styleに適用されなかった場合
+            if(applyThisTextAnchor != computedStyleOf_SVGnodeElem_text.getPropertyValue("text-anchor").toLowerCase()){ //computed styleに適用されなかった場合
                 var wrn = "Specified style in \`renderByThisObj.text.text_anchor\` did not applied. " +
                           "specified style:\`" + renderByThisObj.text.text_anchor + "\`, browser applied style:\`" + computedStyleOf_SVGnodeElem_text.getPropertyValue("text-anchor") + "\`.";
                 console.warn(wrn);
@@ -905,7 +910,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
             }else{ //適用された場合
                 reportObj.PrevObj.text.text_anchor = prevTextAnchor;
-                reportObj.RenderedObj.text.text_anchor = renderByThisObj.text.text_anchor;
+                reportObj.RenderedObj.text.text_anchor = applyThisTextAnchor;
+                bindedData.text.text_anchor = applyThisTextAnchor;
                 haveToUpdateFrame = true;
             }
         }
@@ -920,11 +926,12 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             prevFontFamily = null;
         }
 
-        if(renderByThisObj.text.text_font_family !== null){ //削除指定の場合
+        if(renderByThisObj.text.text_font_family === null){ //削除指定の場合
             $3SVGnodeElem_text.style("font-family", null);
             
             reportObj.PrevObj.text.text_font_family = prevFontFamily;
             reportObj.RenderedObj.text.text_font_family = null;
+            delete bindedData.text.text_font_family;
             haveToUpdateFrame = true;
 
         }else if(typeof renderByThisObj.text.text_font_family != 'string'){ //型がstringでない場合
@@ -950,6 +957,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             }else{ //適用された場合
                 reportObj.PrevObj.text.text_font_family = prevFontFamily;
                 reportObj.RenderedObj.text.text_font_family = applyThisFontFamily; //inline styleに適用するために整形した状態の文字列を格納する
+                bindedData.text.text_font_family = applyThisFontFamily;
                 haveToUpdateFrame = true;
             }
         }
@@ -972,6 +980,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             }
             reportObj.PrevObj.text.text_font_size = prevFontSize;
             reportObj.RenderedObj.text.text_font_size = null;
+            delete bindedData.text.text_font_size;
             haveToUpdateFrame = true;
 
         }else if(typeof renderByThisObj.text.text_font_size != 'number'){ //型がnumberでない場合
@@ -1013,6 +1022,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                     }
                     reportObj.PrevObj.text.text_font_size = prevFontSize;
                     reportObj.RenderedObj.text.text_font_size = renderByThisObj.text.text_font_size;
+                    bindedData.text.text_font_size = renderByThisObj.text.text_font_size;
                     haveToUpdateFrame = true;
                 }
             }
@@ -1033,6 +1043,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
             reportObj.PrevObj.text.text_font_weight = prevFontWeight;
             reportObj.RenderedObj.text.text_font_weight = null;
+            delete bindedData.text.text_font_weight;
             haveToUpdateFrame = true;
 
         }else if(typeof renderByThisObj.text.text_font_weight != 'string'){ //型がstringでない場合
@@ -1072,6 +1083,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             }else{ //適用された場合
                 reportObj.PrevObj.text.text_font_weight = prevFontWeight;
                 reportObj.RenderedObj.text.text_font_weight = renderByThisObj.text.text_font_weight;
+                bindedData.text.text_font_weight = renderByThisObj.text.text_font_weight;
                 haveToUpdateFrame = true;
             }
         }
@@ -1091,6 +1103,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
             reportObj.PrevObj.text.text_font_style = prevFontStyle;
             reportObj.RenderedObj.text.text_font_style = null;
+            delete bindedData.text.text_font_style;
             haveToUpdateFrame = true;
 
         }else if(typeof renderByThisObj.text.text_font_style != 'string'){ //型がstringでない
@@ -1114,6 +1127,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             }else{ //適用された場合
                 reportObj.PrevObj.text.text_font_style = prevFontStyle;
                 reportObj.RenderedObj.text.text_font_style = renderByThisObj.text.text_font_style;
+                bindedData.text.text_font_style = renderByThisObj.text.text_font_style;
                 haveToUpdateFrame = true;
             }
         }
@@ -1133,6 +1147,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
             reportObj.PrevObj.text.text_text_decoration = prevTextDeco;
             reportObj.RenderedObj.text.text_text_decoration = null;
+            delete bindedData.text.text_text_decoration;
             haveToUpdateFrame = true;
 
         }else if(typeof renderByThisObj.text.text_text_decoration != 'string'){ //型がstringでない
@@ -1156,6 +1171,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             }else{ //適用された場合
                 reportObj.PrevObj.text.text_text_decoration = prevTextDeco;
                 reportObj.RenderedObj.text.text_text_decoration = renderByThisObj.text.text_text_decoration;
+                bindedData.text.text_text_decoration = renderByThisObj.text.text_text_decoration;
                 haveToUpdateFrame = true;
             }
         }
@@ -1175,6 +1191,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
             reportObj.PrevObj.text.text_fill = prevTextFill;
             reportObj.RenderedObj.text.text_fill = null;
+            delete bindedData.text.text_fill;
             //haveToUpdateFrame = true; //<- not needed
 
         }else if(typeof renderByThisObj.text.text_fill != 'string'){ //型がstringでない場合
@@ -1198,6 +1215,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             }else{ //適用された場合
                 reportObj.PrevObj.text.text_fill = prevTextFill;
                 reportObj.RenderedObj.text.text_fill = renderByThisObj.text.text_fill;
+                bindedData.text.text_fill= renderByThisObj.text.text_fill;
                 //haveToUpdateFrame = true; //<- not needed
             }
         }
@@ -1327,6 +1345,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                         
                         reportObj.PrevObj.text.frame_shape = prevShape;
                         reportObj.RenderedObj.text.frame_shape = "rect";
+                        bindedData.text.frame_shape = "rect";
                     }
                     break;
     
@@ -1349,6 +1368,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
                         reportObj.PrevObj.text.frame_shape = prevShape;
                         reportObj.RenderedObj.text.frame_shape = "circle";
+                        bindedData.text.frame_shape = "circle";
                     }
                     break;
     
@@ -1371,6 +1391,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
                         reportObj.PrevObj.text.frame_shape = prevShape;
                         reportObj.RenderedObj.text.frame_shape = "ellipse";
+                        bindedData.text.frame_shape = "ellipse";
                     }
                     break;
     
@@ -1478,6 +1499,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             }
             reportObj.PrevObj.text.frame_stroke_width = prevStrokeWidth;
             reportObj.RenderedObj.text.frame_stroke_width = null;
+            delete bindedData.text.frame_stroke_width;
 
         }else if(typeof renderByThisObj.text.frame_stroke_width != 'number'){ //型がnumberでない場合
             var wrn = "Wrong type specified in \`renderByThisObj.text.frame_stroke_width\`. " +
@@ -1518,6 +1540,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                     }
                     reportObj.PrevObj.text.frame_stroke_width = prevStrokeWidth;
                     reportObj.RenderedObj.text.frame_stroke_width = renderByThisObj.text.frame_stroke_width;
+                    bindedData.text.frame_stroke_width = renderByThisObj.text.frame_stroke_width;
                 }
             }
         }
@@ -1537,6 +1560,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
             reportObj.PrevObj.text.frame_stroke = prevStroke;
             reportObj.RenderedObj.text.frame_stroke = null;
+            delete bindedData.text.frame_stroke;
 
         }else if(typeof renderByThisObj.text.frame_stroke != 'string'){ //型がstringでない場合
             var wrn = "Wrong type specified in \`renderByThisObj.text.frame_stroke\`. " +
@@ -1559,6 +1583,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             }else{ //適用された場合
                 reportObj.PrevObj.text.frame_stroke = prevStroke;
                 reportObj.RenderedObj.text.frame_stroke = renderByThisObj.text.frame_stroke;
+                bindedData.text.frame_stroke = renderByThisObj.text.frame_stroke;
             }
 
         }
@@ -1578,6 +1603,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
             reportObj.PrevObj.text.frame_stroke_dasharray = prevDashArr;
             reportObj.RenderedObj.text.frame_stroke_dasharray = null;
+            delete bindedData.text.frame_stroke_dasharray;
 
         }else if(typeof renderByThisObj.text.frame_stroke_dasharray != 'string'){ //型がstringでない場合
             var wrn =  "Wrong type specified in \`renderByThisObj.text.frame_stroke_dasharray\`. " +
@@ -1609,6 +1635,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             }else{ //適用された場合
                 reportObj.PrevObj.text.frame_stroke_dasharray = prevDashArr;
                 reportObj.RenderedObj.text.frame_stroke_dasharray = applyThisStrokeDasharray; //inline styleに適用するために整形した状態の文字列を格納する
+                bindedData.text.frame_stroke_dasharray = applyThisStrokeDasharray;
             }
 
         }
@@ -1627,6 +1654,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
             reportObj.PrevObj.text.frame_fill = prevFramefill;
             reportObj.RenderedObj.text.frame_fill = null;
+            delete bindedData.text.frame_fill;
 
         }else if(typeof renderByThisObj.text.frame_fill != 'string'){ //型がstringでない場合
             var wrn  = "Wrong type specified in \`renderByThisObj.text.frame_fill\`. " +
@@ -1649,6 +1677,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             }else{ //適用された場合
                 reportObj.PrevObj.text.frame_fill = prevFramefill;
                 reportObj.RenderedObj.text.frame_fill = renderByThisObj.text.frame_fill;
+                bindedData.text.frame_fill = renderByThisObj.text.frame_fill;
             }
         }
     }
@@ -1702,7 +1731,92 @@ function mergeTransactionToPrev(prevTransaction, latestTransaction){
     }
 }
 
-function rollbackTansaction(transaction){
+function backToDefaulIfWarn(reportObj, bindedData){
+
+    if(typeof reportObj.RenderedObj.type != 'undefined'){
+        switch(reportObj.RenderedObj.type){
+            case "text":
+            {
+                backToDefaulIfWarn_TextType(reportObj, bindedData);
+            }
+            break;
+
+            default:
+            break;
+        }
+    }
+}
+
+function backToDefaulIfWarn_TextType(reportObj, bindedData){
+
+    //text_content
+    if(typeof reportObj.FailuredMessages.text.text_content != 'undefined'){
+        bindedData.text.text_content = "";
+    }
+
+    //text_anchor
+    if(typeof reportObj.FailuredMessages.text.text_anchor != 'undefined'){
+        delete bindedData.text.text_anchor;
+    }
+    
+    //text_font_family
+    if(typeof reportObj.FailuredMessages.text.text_font_family != 'undefined'){
+        delete bindedData.text.text_font_family;
+    }
+    
+    //text_font_size
+    if(typeof reportObj.FailuredMessages.text.text_font_size != 'undefined'){
+        delete bindedData.text.text_font_size;
+    }
+    
+    //text_fill
+    if(typeof reportObj.FailuredMessages.text.text_fill != 'undefined'){
+        delete bindedData.text.text_fill;
+    }
+    
+    //text_font_weight ?
+    if(typeof reportObj.FailuredMessages.text.text_font_weight != 'undefined'){
+        delete bindedData.text.text_font_weight;
+    }
+    
+    //text_font_style
+    if(typeof reportObj.FailuredMessages.text.text_font_style != 'undefined'){
+        delete bindedData.text.text_font_style;
+    }
+    
+    //text_text_decoration ?
+    if(typeof reportObj.FailuredMessages.text.text_text_decoration != 'undefined'){
+        delete bindedData.text.text_text_decoration;
+    }
+    
+    //frame_shape
+    if(typeof reportObj.FailuredMessages.text.frame_shape != 'undefined'){
+        bindedData.text.frame_shape = "rect";
+    }
+    
+    //frame_stroke
+    if(typeof reportObj.FailuredMessages.text.frame_stroke != 'undefined'){
+        delete bindedData.text.frame_stroke;
+    }
+    
+    //frame_stroke_width
+    if(typeof reportObj.FailuredMessages.text.frame_stroke_width != 'undefined'){
+        delete bindedData.text.frame_stroke_width;
+    }
+    
+    //frame_stroke_dasharray
+    if(typeof reportObj.FailuredMessages.text.frame_stroke_dasharray != 'undefined'){
+        delete bindedData.text.frame_stroke_dasharray;
+    }
+    
+    //frame_fill
+    if(typeof reportObj.FailuredMessages.text.frame_fill != 'undefined'){
+        delete bindedData.text.frame_fill;
+    }
+    
+}
+
+function rollbackTransaction(transaction){
     
     //引数チェック
     if(transaction.reportsArr.length == 0){ //トランザクションレポートが存在しない
