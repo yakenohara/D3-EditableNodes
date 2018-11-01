@@ -101,8 +101,9 @@ var dataset = [
 ];
 
 var UITrappedEvents = {
-    editSVGNode: "dblclick", //`d3.js` event
     selectSVGNode: "click", //`d3.js` event
+    editSVGNode: "dblclick", //`d3.js` event
+    editSVGNodes: "f2", //`Mousetrap` event
     submitEditingTextTypeSVGNode: "enter", //`Mousetrap` event
     insertLFWhenEditingTextTypeSVGNode: "alt+enter", //`Mousetrap` event
 };
@@ -135,6 +136,7 @@ var $3nodeEditConsoleElem = $3editableNodesTAG.append("div")
     .style("margin", 0)
     .style("border", 0)
     .style("padding", 0)
+    .style("display","none")
     .classed("nodeEditConsoleElem",true);
 
 var $nodeEditConsoleElem = $($3nodeEditConsoleElem.node());
@@ -149,42 +151,67 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
     //<register behavor>----------------------------------------------------------------------------------------------------------
 
     //<text_text_anchor>---------------------------------------------------------------
-    $nodeEditConsoleElem.find(".propertyEditor.textAnchor").children(".textAnchorType").on("click",function(){
+    var $propertyEditor_text_anchor_expMsg = $nodeEditConsoleElem.find(".propertyEditor.text_anchor").children(".message.explicitness").eq(0);
+    $nodeEditConsoleElem.find(".propertyEditor.text_anchor").children(".textAnchorType").on("click",function(){
         var clickedElem = this;
-        var specifiedType = clickedElem.getAttribute("data-textAnchorType");
-        switch(specifiedType){
-            case "start":
-            break;
 
-            case "middle":
-            break;
+        if(!($(clickedElem.parentNode).prop("disabled"))){ //プロパティエディタが有効の場合
 
-            case "end":
-            break;
-
-            default:
-            {
-                console.warn("Unknown style \`text-anchor:" + specifiedType + ";\` specified.");
-                return;
+            if(clickedElem.classList.contains(slctd)){ //既に選択済みの場合
+                return; //スキップする
             }
-            break;
-        }
 
-        console.log("\`text-anchor:" + specifiedType + ";\` specified.");
-        fireNodeEditConsoleEvent_renderSVG({text:{text_anchor: specifiedType}});
+            var specifiedType = clickedElem.getAttribute("data-textAnchorType");
+            switch(specifiedType){
+                case "start":
+                break;
 
-        //表示状態変更
-        var siblings = clickedElem.parentNode.children;
-        for(var i = 0 ; i < siblings.length ; i++){ //選択状態の解除ループ
-            siblings[i].classList.remove(slctd);
+                case "middle":
+                break;
+
+                case "end":
+                break;
+
+                default:
+                {
+                    console.warn("Unknown style \`text-anchor:" + specifiedType + ";\` specified.");
+                    return;
+                }
+                break;
+            }
+
+            var totalReport = fireNodeEditConsoleEvent_renderSVG({text:{text_anchor: specifiedType}});
+            if(!totalReport.allOK){ //適用失敗ノードがある場合
+                console.warn("Cannot apply style \`text-anchor:" + specifiedType + ";\` to following element(s).");
+                printRenderingFailuredSVGElements(totalReport);
+                rollbackTansaction(totalReport); // totalReport を使って変更前状態にロールバックする
+                fireNodeEditConsoleEvent_adjust(); //編集中の<textarea>を元に戻したSVGNodeに合わせる
+
+                //todo
+                //ロールバックしたノードに合わせてプロパティエディタを更新する
+
+            }else{ //適用成功の場合
+
+                totalReport.message = "text-anchor:" + specifiedType;
+                appendHistory(totalReport);
+                
+                //選択状態の解除ループ
+                var siblings = clickedElem.parentNode.children;
+                for(var i = 0 ; i < siblings.length ; i++){
+                    siblings[i].classList.remove(slctd);
+                }
+                clickedElem.classList.add(slctd); //クリックされた要素を"selected"状態にする
+
+                $propertyEditor_text_anchor_expMsg.text("explicit");
+            }
         }
-        clickedElem.classList.add(slctd);
     });
     //--------------------------------------------------------------</text_text_anchor>
 
     //<text_fill>---------------------------------------------------------------
-    var $pickerElem = $nodeEditConsoleElem.find(".propertyEditor.fill").children(".picker").eq(0);
-    var $inputElem = $nodeEditConsoleElem.find(".propertyEditor.fill").children(".pickedColorText").eq(0);
+    var $pickerElem = $nodeEditConsoleElem.find(".propertyEditor.text_fill").children(".picker").eq(0);
+    var $inputElem = $nodeEditConsoleElem.find(".propertyEditor.text_fill").children(".pickedColorText").eq(0);
+    var $expMsgElem = $nodeEditConsoleElem.find(".propertyEditor.text_fill").children(".message.explicitness").eq(0);
 
     var bufTotalReport_For_text_fill; //Rendering Report 用バッファ
 
@@ -209,6 +236,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
 
             $inputElem.val(latestTextFill); //最後に反映したカラーで<input>要素を更新
             $pickerElem.spectrum("set", latestTextFill); //カラーピッカーに反映
+            $expMsgElem.text("explicit");
 
         }
     }
@@ -233,7 +261,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
 
     func_clearBufTotalReport_For_text_fill(); //ログ用バッファ初期化
 
-    //<input>要素のキー押下イベント
+    //<input>要素内のキータイピングイベント
     $inputElem.get(0).oninput = function(){
 
         var iputStr = $inputElem.val();
@@ -270,7 +298,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
     //カラーピッカーのドラッグイベント
     $pickerElem.on('move.spectrum', function(e, tinycolorObj) {
         
-        if(tinycolorObj != null){ //nullチェック。カラーピッカー右上の「×」をクリックすると、nullが来る。
+        if(tinycolorObj !== null){ //nullチェック。カラーピッカー右上の「×」をクリックすると、nullが来る。
 
             var iputStr = tinycolorObj.toRgbString();
             $inputElem.val(iputStr); //<input>要素に値を設定する
@@ -302,7 +330,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
         //<input>要素をカラーピッカーの色に合わせる
         var tinycolorObj = $pickerElem.spectrum("get");
 
-        if( tinycolorObj == null){ //直前がnullの場合
+        if( tinycolorObj === null){ //直前がnullの場合
             $inputElem.val(""); //空文字にする
 
         }else{
@@ -423,23 +451,32 @@ var $3nodesGroup = $3svgGroup.append("g") //ノードグループの作成
 var $3selectionLayersGroup = $3svgGroup.append("g") //Selection Layer 用グループの作成
     .classed("selectionLayers",true);
 
-//Node選択用Brushの作成
-var ifFirstEndOfBrush = true;
-var $3NodeSelectingBrush = d3.brush()
-    .on("end", function(){ //選択終了イベント
-        if(ifFirstEndOfBrush){ //Avoid infinite loop
-            ifFirstEndOfBrush = false;
-            clearNodeSelectingBrush();
-            ifFirstEndOfBrush = true;
-        }
-    });
-    
-var $3NodeSelectingBrushGroup = $3selectionLayersGroup.append("g")
-    .call($3NodeSelectingBrush);
+// <TBD>--------------------------------------------------------------------------------
+// Node 内/外 に対する Click event を無視する方法が不明
 
-function clearNodeSelectingBrush(){
-    $3NodeSelectingBrushGroup.call($3NodeSelectingBrush.move, null); //Brush 選択範囲のクリア
-}
+//Node選択用Brushの作成
+// var isFirstEndOfBrush = true;
+// var $3NodeSelectingBrush = d3.brush()
+//     .on("end", function(){ //選択終了イベント
+//         if(isFirstEndOfBrush){ //Avoid infinite loop
+//             isFirstEndOfBrush = false;
+//             clearNodeSelectingBrush();
+//             isFirstEndOfBrush = true;
+//         }
+//     })
+//     .filter(function(){
+//         // Click event(Drag evet でない)場合に無視したい
+//         return !event.button;
+//     });
+    
+// var $3NodeSelectingBrushGroup = $3selectionLayersGroup.append("g")
+//     .call($3NodeSelectingBrush);
+
+// function clearNodeSelectingBrush(){
+//     $3NodeSelectingBrushGroup.call($3NodeSelectingBrush.move, null); //Brush 選択範囲のクリア
+// }
+
+// -------------------------------------------------------------------------------</TBD>
 
 // ノード追加
 var $3nodes = $3nodesGroup.selectAll("g")
@@ -479,8 +516,17 @@ transactionHistory.push(firstTotalReport);
 
 //<UI TRAP>---------------------------------------------------------------------
 
-//todo 編集モードのキック
-//$3nodes.on(UITrappedEvents.editSVGNode, function(d){editSVGNode(d);});
+// Node以外に対する選択
+$($3svgGroup.node()).on(UITrappedEvents.selectSVGNode, function(e){
+    if(d3.select(e.target).classed("SVGForNodesMapping")){ // SVG領域に対する選択
+                                                           // -> Node以外に対する選択の場合
+        //別ノードすべてを選択解除する
+        for(var i = 0 ; i < dataset.length ; i++){
+            dataset[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden"); //選択解除
+        }
+
+    }
+});
 
 //SVGノードの単一選択イベント
 $3nodes.on(UITrappedEvents.selectSVGNode, function(d){
@@ -495,7 +541,7 @@ $3nodes.on(UITrappedEvents.selectSVGNode, function(d){
         }
     }
 
-    var visib = d.$3bindedSelectionLayerSVGElement.style("visibility");
+    var visib = d.$3bindedSelectionLayerSVGElement.style("visibility").toLowerCase();
 
     //表示状態を切り替える
     if(visib == "hidden"){ //非表示状態の場合
@@ -505,6 +551,27 @@ $3nodes.on(UITrappedEvents.selectSVGNode, function(d){
         d.$3bindedSelectionLayerSVGElement.style("visibility","hidden"); //非表示にする
 
     }
+});
+
+// Nodeに対する単一編集イベント
+$3nodes.on(UITrappedEvents.editSVGNode, function(d){
+    
+    //別ノードすべてを選択解除して、自分のノードのみ選択状態にする
+    for(var i = 0 ; i < dataset.length ; i++){
+        if(dataset[i].key != d.key){ //自分のノードでない場合
+            dataset[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden"); //選択解除
+        
+        }else{ //自分のノードの場合
+            dataset[i].$3bindedSelectionLayerSVGElement.style("visibility",null); //選択
+        }
+    }
+    editSVGNodes();
+});
+
+// Nodeに対する複数編集イベント
+Mousetrap($3svgGroup.node()).bind(UITrappedEvents.editSVGNodes, function(e){
+    editSVGNodes();
+    disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
 });
 
 //--------------------------------------------------------------------</UI TRAP>
@@ -674,6 +741,10 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     var haveToUpdateFrame = false;
     var vacantStarted = false;
     var vacantEnded = false;
+
+    // todo
+    // styleをnullにする(ロールバック機能で???→nullに戻るような場合の為)
+    // 適用したstyleをdataset[]に反映する
 
     //テキスト更新
     if(typeof (renderByThisObj.text.text_content) != 'undefined'){ //textオブジェクトがある場合
@@ -1639,11 +1710,233 @@ function resizeTextTypeSVGNode_ellipseFrame($3ellipseFrame, textRectArea, pdng, 
 }
 
 //
-//SVGノードを編集する
+//SVGノード(複数)を編集する
+//
+function editSVGNodes(){
+
+    var computedStylesOfData = [];
+
+    //編集対象ノードの検索ループ
+    for(var i = 0 ; i < dataset.length ; i++){
+
+        var bindedData = dataset[i];
+
+        if(bindedData.$3bindedSelectionLayerSVGElement.style("visibility").toLowerCase() != "hidden"){ // 選択対象Nodeの場合
+            bindedData.$3bindedSelectionLayerSVGElement.style("visibility","hidden"); //非表示にする
+            var computedStlOfData = getComputedStyleOfData(bindedData); // Nodeに適用されたスタイルの取得
+            if( computedStlOfData !== null){
+                computedStylesOfData.push(computedStlOfData);
+                editSVGNode(bindedData); //SVGノード(単一)編集機能をキック
+            }
+        }
+    }
+
+    if(computedStylesOfData.length > 0){ //編集対象Nodeが存在する場合
+
+        var mergedStyles = {};
+        var mergedExplicitnesses = {};
+
+        // computedStylesOfData[]からスタイルをマージ
+        for(var i = 0 ; i < computedStylesOfData.length ; i++){
+            var computedStlOfData =  computedStylesOfData[i];
+            switch(computedStlOfData.type){
+                case "text":
+                {
+                    //text_content
+                    mergedStyles.text_content = calcMergedStyle(computedStlOfData.text.text_content, mergedStyles.text_content);
+                    mergedExplicitnesses.text_content = calcMergedStyle(computedStlOfData.explicitness.text_content, mergedExplicitnesses.text_content);
+
+                    //text_anchor
+                    mergedStyles.text_anchor = calcMergedStyle(computedStlOfData.text.text_anchor, mergedStyles.text_anchor);
+                    mergedExplicitnesses.text_anchor = calcMergedStyle(computedStlOfData.explicitness.text_anchor, mergedExplicitnesses.text_anchor);
+
+                    //text_font_family
+                    mergedStyles.text_font_family = calcMergedStyle(computedStlOfData.text.text_font_family, mergedStyles.text_font_family);
+                    mergedExplicitnesses.text_font_family = calcMergedStyle(computedStlOfData.explicitness.text_font_family, mergedExplicitnesses.text_font_family);
+
+                    //text_font_size
+                    mergedStyles.text_font_size = calcMergedStyle(computedStlOfData.text.text_font_size, mergedStyles.text_font_size);
+                    mergedExplicitnesses.text_font_size = calcMergedStyle(computedStlOfData.explicitness.text_font_size, mergedExplicitnesses.text_font_size);
+
+                    //text_fill
+                    mergedStyles.text_fill = calcMergedStyle(computedStlOfData.text.text_fill, mergedStyles.text_fill);
+                    mergedExplicitnesses.text_fill = calcMergedStyle(computedStlOfData.explicitness.text_fill, mergedExplicitnesses.text_fill);
+
+                    //text_font_weight
+                    mergedStyles.text_font_weight = calcMergedStyle(computedStlOfData.text.text_font_weight, mergedStyles.text_font_weight);
+                    mergedExplicitnesses.text_font_weight = calcMergedStyle(computedStlOfData.explicitness.text_font_weight, mergedExplicitnesses.text_font_weight);
+
+                    //text_font_style
+                    mergedStyles.text_font_style = calcMergedStyle(computedStlOfData.text.text_font_style, mergedStyles.text_font_style);
+                    mergedExplicitnesses.text_font_style = calcMergedStyle(computedStlOfData.explicitness.text_font_style, mergedExplicitnesses.text_font_style);
+
+                    //text_text_decoration
+                    mergedStyles.text_text_decoration = calcMergedStyle(computedStlOfData.text.text_text_decoration, mergedStyles.text_text_decoration);
+                    mergedExplicitnesses.text_text_decoration = calcMergedStyle(computedStlOfData.explicitness.text_text_decoration, mergedExplicitnesses.text_text_decoration);
+
+                    //frame_shape
+                    mergedStyles.frame_shape = calcMergedStyle(computedStlOfData.text.frame_shape, mergedStyles.frame_shape);
+                    mergedExplicitnesses.frame_shape = calcMergedStyle(computedStlOfData.explicitness.frame_shape, mergedExplicitnesses.frame_shape);
+
+                    //frame_stroke
+                    mergedStyles.frame_stroke = calcMergedStyle(computedStlOfData.text.frame_stroke, mergedStyles.frame_stroke);
+                    mergedExplicitnesses.frame_stroke = calcMergedStyle(computedStlOfData.explicitness.frame_stroke, mergedExplicitnesses.frame_stroke);
+
+                    //frame_stroke_width
+                    mergedStyles.frame_stroke_width = calcMergedStyle(computedStlOfData.text.frame_stroke_width, mergedStyles.frame_stroke_width);
+                    mergedExplicitnesses.frame_stroke_width = calcMergedStyle(computedStlOfData.explicitness.frame_stroke_width, mergedExplicitnesses.frame_stroke_width);
+
+                    //frame_stroke_dasharray
+                    mergedStyles.frame_stroke_dasharray = calcMergedStyle(computedStlOfData.text.frame_stroke_dasharray, mergedStyles.frame_stroke_dasharray);
+                    mergedExplicitnesses.frame_stroke_dasharray = calcMergedStyle(computedStlOfData.explicitness.frame_stroke_dasharray, mergedExplicitnesses.frame_stroke_dasharray);
+
+                    //frame_fill
+                    mergedStyles.frame_fill = calcMergedStyle(computedStlOfData.text.frame_fill, mergedStyles.frame_fill);
+                    mergedExplicitnesses.frame_fill = calcMergedStyle(computedStlOfData.explicitness.frame_fill, mergedExplicitnesses.frame_fill);
+                    
+                }
+                break;
+
+                default:
+                {
+                    //nothing to do
+                }
+                break;
+            }
+        }
+
+        //マージしたスタイルをNodeEditConsoleに反映
+
+        //text_content
+
+        //<text_anchor>-------------------------------------------------------------------------------------
+        var $propertyEditor_text_anchor = $nodeEditConsoleElem.find(".propertyEditor.text_anchor");
+        var $propertyEditor_text_anchor_expMsg = $propertyEditor_text_anchor.children(".message.explicitness").eq(0);
+        
+        if(typeof mergedStyles.text_anchor == 'undefined'){ //描画対象のNodeが存在しない
+
+            //対象プロパティエディタのグレーアウト
+            $propertyEditor_text_anchor.prop("disabled", true);
+            $propertyEditor_text_anchor_expMsg.text("no nodes");
+
+        }else{  //描画対象のスタイルが存在する
+
+            //対象プロパティエディタの有効化
+            $propertyEditor_text_anchor.prop("disabled", false);
+
+            if(mergedStyles.text_anchor !== null){// merged Styleが算出できた
+                var isKnownType = true;
+                switch(mergedStyles.text_anchor){
+                    case "start":
+                    break;
+    
+                    case "middle":
+                    break;
+    
+                    case "end":
+                    break;
+
+                    default:
+                    {
+                        console.warn("Unknown style \`text-anchor:" + specifiedType + ";\` specified.");
+                        isKnownType = false;
+                    }
+                    break
+                }
+
+                if(isKnownType){
+                    var selectorStr = '.textAnchorType[data-textanchortype="' + mergedStyles.text_anchor + '"]'
+                    $propertyEditor_text_anchor.children(selectorStr).eq(0).addClass(slctd); //指定text-anchorタイプを選択
+                }
+            }
+
+            if(mergedExplicitnesses.text_anchor === null){ // explicitly defined している Node は一部だけだった
+                $propertyEditor_text_anchor_expMsg.text("explicit (some part)");
+            }else if(mergedExplicitnesses.text_anchor){    // explicitly defined している Node は全部
+                $propertyEditor_text_anchor_expMsg.text("explicit");
+            }else{                                         // explicitly defined していない
+                $propertyEditor_text_anchor_expMsg.text("");
+            }
+
+        }
+
+        //------------------------------------------------------------------------------------</text_anchor>
+
+        //text_font_family
+        //text_font_size
+
+        //<text_fill>---------------------------------------------------------------------------------------
+        var $propertyEditor_text_fill = $nodeEditConsoleElem.find(".propertyEditor.text_fill");
+        var $propertyEditor_text_fill_picker = $propertyEditor_text_fill.children(".picker").eq(0);
+        var $propertyEditor_text_fill_inputElem = $propertyEditor_text_fill.children(".pickedColorText").eq(0);
+        var $propertyEditor_text_fill_expMsg = $propertyEditor_text_fill.children(".message.explicitness").eq(0);
+
+        if(typeof mergedStyles.text_fill == 'undefined'){ //描画対象のNodeが存在しない
+            
+            //対象プロパティエディタのグレーアウト
+            $propertyEditor_text_fill_picker.spectrum("disable"); //カラーピッカーを無効化
+            $propertyEditor_text_fill_inputElem.prop('disabled', true); //<input>要素を無効化
+
+            $propertyEditor_text_fill_expMsg.text("no nodes");
+
+        }else{  //描画対象のスタイルが存在する
+
+            //対象プロパティエディタの有効化
+            $propertyEditor_text_fill_picker.spectrum("enable"); //カラーピッカーを有効化
+            $propertyEditor_text_fill_inputElem.prop('disabled', false); //<input>要素を有効化
+
+            if(mergedStyles.text_fill !== null){ // merged Styleが算出できた
+                $propertyEditor_text_fill_inputElem.val(mergedStyles.text_fill);
+                $propertyEditor_text_fill_picker.spectrum("set",mergedStyles.text_fill);
+            }
+
+            if(mergedExplicitnesses.text_fill === null){ // explicitly defined している Node は一部だけだった
+                $propertyEditor_text_fill_expMsg.text("explicit (some part)");
+            }else if(mergedExplicitnesses.text_fill){    // explicitly defined している Node は全部
+                $propertyEditor_text_fill_expMsg.text("explicit");
+            }else{                                       // explicitly defined していない
+                $propertyEditor_text_fill_expMsg.text("");
+            }
+        }
+
+        //--------------------------------------------------------------------------------------</text_fill>
+
+        //text_font_weight
+        //text_font_style
+        //text_text_decoration
+        //frame_shape
+        //frame_stroke
+        //frame_stroke_width
+        //frame_stroke_dasharray
+        //frame_fill
+
+    
+        //NodeEditConsoleを表示
+        $nodeEditConsoleElem.slideDown(100);
+    }
+}
+
+function calcMergedStyle(fromThisStyle, toThisStyle){
+    var mergedStyle;
+    if(typeof toThisStyle == 'undefined'){
+        mergedStyle = fromThisStyle;
+    
+    }else{
+        if(toThisStyle !== fromThisStyle){
+            mergedStyle = null;
+        
+        }else{
+            mergedStyle = toThisStyle;
+        }
+    }
+
+    return mergedStyle;
+}
+
+//
+//SVGノード(単一)を編集する
 //
 function editSVGNode(bindedData){
-
-    var $3SVGnodeElem = bindedData.$3bindedSVGElement;
 
     //type指定チェック
     if(typeof (bindedData.type) == 'undefined'){
@@ -1893,6 +2186,110 @@ function adjustTextarea(bindedData, $3textareaElem){
 
 }
 
+function getComputedStyleOfData(bindedData){
+
+    //type指定チェック
+    if(typeof (bindedData.type) == 'undefined'){
+        console.warn("\"type\" property is not specified");
+        return; //存在しない場合場合は終了する
+    }
+
+    var computedStyleOfData = {};
+    computedStyleOfData.explicitness = {}; //dataset[]による明示的な指定かどうか
+    computedStyleOfData.key = bindedData.key;
+
+    switch(bindedData.type){
+        case "text":
+        {
+            computedStyleOfData.type = "text";
+            computedStyleOfData.text = {};
+
+            getComputedStyleOfTextTypeData(bindedData, computedStyleOfData);
+        }
+        break;
+
+        default:
+        {
+            console.warn("unknown data type"); //<-仮の処理
+            return;
+        }
+        break;
+    }
+
+    return computedStyleOfData;
+}
+
+function getComputedStyleOfTextTypeData(bindedData, computedStyleOfTextTypeData){
+    
+    var $3SVGnodeElem_text = bindedData.$3bindedSVGElement.select("text");
+    var computedStyleOf_SVGnodeElem_text = window.getComputedStyle($3SVGnodeElem_text.node());
+
+    //text_content
+    computedStyleOfTextTypeData.text.text_content = bindedData.text.text_content;
+    computedStyleOfTextTypeData.explicitness.text_content = true; //常に明示的な指定として扱う
+
+    //text_anchor
+    computedStyleOfTextTypeData.text.text_anchor = computedStyleOf_SVGnodeElem_text.getPropertyValue("text-anchor");;
+    computedStyleOfTextTypeData.explicitness.text_anchor = (typeof bindedData.text.text_anchor != 'undefined');
+
+    //text_font_family
+    computedStyleOfTextTypeData.text.text_font_family = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-family").replace(/\"/g, "'"); //スペースを含むフォントの引用符をsingle quoteに統一
+    computedStyleOfTextTypeData.explicitness.text_font_family = (typeof bindedData.text.text_font_family != 'undefined');
+
+    //text_font_size
+    computedStyleOfTextTypeData.text.text_font_size = parseFloat(computedStyleOf_SVGnodeElem_text.getPropertyValue("font-size"));
+    computedStyleOfTextTypeData.explicitness.text_font_size = (typeof bindedData.text.text_font_size != 'undefined');
+
+    //text_fill
+    computedStyleOfTextTypeData.text.text_fill = computedStyleOf_SVGnodeElem_text.getPropertyValue("fill");
+    computedStyleOfTextTypeData.explicitness.text_fill = (typeof bindedData.text.text_fill != 'undefined');
+
+    //text_font_weight
+    computedStyleOfTextTypeData.explicitness.text_font_weight = (typeof bindedData.text.text_font_weight != 'undefined');
+    if(computedStyleOfTextTypeData.explicitness.text_font_weight){ //明示的指定がある場合
+        computedStyleOfTextTypeData.text.text_font_weight = bindedData.text.text_font_weight; //明示的指定した方に合わせる('normal', '400' 等の違いを吸収する為)
+    }else{
+        computedStyleOfTextTypeData.text.text_font_weight = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-weight");
+    }
+
+    //text_font_style
+    computedStyleOfTextTypeData.text.text_font_style = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-style");
+    computedStyleOfTextTypeData.explicitness.text_font_style = (typeof bindedData.text.text_font_style != 'undefined');
+
+    //text_text_decoration
+    computedStyleOfTextTypeData.text.text_text_decoration = computedStyleOf_SVGnodeElem_text.getPropertyValue("text-decoration");
+    computedStyleOfTextTypeData.explicitness.text_text_decoration = (typeof bindedData.text.text_text_decoration != 'undefined');
+
+    var SVGnodeElem_DOTframe_frame = bindedData.$3bindedSVGElement.select(".frame").node().firstChild;
+
+    //frame_shape
+    computedStyleOfTextTypeData.text.frame_shape = SVGnodeElem_DOTframe_frame.tagName.toLowerCase();
+    computedStyleOfTextTypeData.explicitness.frame_shape = true; //常に明示的な指定として扱う
+
+    var computedStyleOf_SVGnodeElem_DOTframe_frame = window.getComputedStyle(SVGnodeElem_DOTframe_frame);
+
+    //frame_stroke
+    computedStyleOfTextTypeData.text.frame_stroke = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke");
+    computedStyleOfTextTypeData.explicitness.frame_stroke = (typeof bindedData.text.frame_stroke != 'undefined');
+
+    //frame_stroke_width
+    computedStyleOfTextTypeData.text.frame_stroke_width = parseFloat(computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-width"));
+    computedStyleOfTextTypeData.explicitness.frame_stroke_width = (typeof bindedData.text.frame_stroke_width != 'undefined');
+
+    //frame_stroke_dasharray
+    var frameStyle_strokeDashArray = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-dasharray");
+    //"px"とスペースは無視する
+    frameStyle_strokeDashArray = frameStyle_strokeDashArray.replace(/px/g, "");
+    frameStyle_strokeDashArray = frameStyle_strokeDashArray.replace(/ /g, "");
+    computedStyleOfTextTypeData.text.frame_stroke_dasharray = frameStyle_strokeDashArray;
+    computedStyleOfTextTypeData.explicitness.frame_stroke_dasharray = (typeof bindedData.text.frame_stroke_dasharray != 'undefined');
+
+    //frame_fill
+    computedStyleOfTextTypeData.text.frame_fill = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("fill");
+    computedStyleOfTextTypeData.explicitness.frame_fill = (typeof bindedData.text.frame_fill != 'undefined');
+
+}
+
 //
 //指定フォントのbaselineからtext-before-edgeまでの高さを求める
 //
@@ -2036,7 +2433,7 @@ function getDomPath(el) {
     
     var stack = [];
     
-    while ( el.parentNode != null ) {
+    while ( el.parentNode !== null ) {
         
         //console.log(el.nodeName);
         var sibCount = 0;
