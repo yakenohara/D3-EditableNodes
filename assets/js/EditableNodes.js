@@ -181,16 +181,11 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
             }
 
             var totalReport = fireNodeEditConsoleEvent_renderSVG({text:{text_anchor: specifiedType}});
-            if(!totalReport.allOK){ //適用失敗ノードがある場合
-                console.warn("Cannot apply style \`text-anchor:" + specifiedType + ";\` to following element(s).");
-                printRenderingFailuredSVGElements(totalReport);
-                rollbackTransaction(totalReport); // totalReport を使って変更前状態にロールバックする
-                fireNodeEditConsoleEvent_adjust(); //編集中の<textarea>を元に戻したSVGNodeに合わせる
-
-                //todo
-                //ロールバックしたノードに合わせてプロパティエディタを更新する
-
-            }else{ //適用成功の場合
+            if(totalReport.allNG){ //全てのNodeで適用失敗の場合
+                $propertyEditor_text_anchor_expMsg.text("failed to apply");
+                //note ロールバックは不要
+            
+            }else{ //適用成功 or 1部適用成功の場合
 
                 totalReport.message = "text-anchor:" + specifiedType;
                 appendHistory(totalReport);
@@ -202,7 +197,13 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
                 }
                 clickedElem.classList.add(slctd); //クリックされた要素を"selected"状態にする
 
-                $propertyEditor_text_anchor_expMsg.text("explicit");
+                if(totalReport.allOK){ //適用全部成功の場合
+                    $propertyEditor_text_anchor_expMsg.text("explicit");
+                
+                }else{ //適用一部失敗の場合
+                    $propertyEditor_text_anchor_expMsg.text("explicit (some part)");
+                    //note ロールバックは不要
+                }
             }
         }
     });
@@ -218,25 +219,30 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
     //Rendering Report 用バッファ クリア
     var func_clearBufTotalReport_For_text_fill = function clearBufTotalReport_For_text_fill(){
         bufTotalReport_For_text_fill = {};
-        bufTotalReport_For_text_fill.allOK = false; //本来はRendering時の成功・失敗を表すものだが、
-                                                    //成功時したRenderingReportがあった時だけTrueで上書き更新する事で、
-                                                    //ログに記録するべきRenderingReportが存在するかどうかを判定する条件として利用する
+        bufTotalReport_For_text_fill.allOK = false; 
+        bufTotalReport_For_text_fill.allNG = true; // <- falseとなった場合は、ログに残すべきTransactionが少なくとも1件以上存在する事を表す
         bufTotalReport_For_text_fill.reportsArr = [];
     }
 
     //バッファに積んだ Rendering Report を 確定させる
     var func_confirmBufTotalReport_For_text_fill = function confirmBufTotalReport_For_text_fill(){
-        if(bufTotalReport_For_text_fill.allOK){ //ログに記録するべきレポートが存在する場合
+        if(!bufTotalReport_For_text_fill.allNG){ //ログに記録するべきレポートが存在する場合
 
             //最後に反映したカラーをログから取得
             var latestTextFill = bufTotalReport_For_text_fill.reportsArr[0].RenderedObj.text.text_fill;
 
-            appendHistory(bufTotalReport_For_text_fill);
-            func_clearBufTotalReport_For_text_fill(); //ログ用バッファ初期化
-
             $inputElem.val(latestTextFill); //最後に反映したカラーで<input>要素を更新
             $pickerElem.spectrum("set", latestTextFill); //カラーピッカーに反映
-            $expMsgElem.text("explicit");
+
+            if(bufTotalReport_For_text_fill.allOK){ //全てのNodeで適用成功の場合
+                $expMsgElem.text("explicit");
+
+            }else{ //1部Nodeで適用失敗の場合
+                $expMsgElem.text("explicit (some part)");
+            }
+
+            appendHistory(bufTotalReport_For_text_fill);
+            func_clearBufTotalReport_For_text_fill(); //ログ用バッファ初期化
 
         }
     }
@@ -245,17 +251,10 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
     var func_renderAndMergeBufTotalReport_For_text_fill = function renderAndMergeBufTotalReport_For_text_fill(toFillStr){
         //SVGNodeへの反映
         var totalReport = fireNodeEditConsoleEvent_renderSVG({text:{text_fill:toFillStr}});
-        if(!totalReport.allOK){ //適用失敗ノードがある場合
-            console.warn("Cannot apply style \`fill:" + toFillStr + ";\` to following element(s).");
-            printRenderingFailuredSVGElements(totalReport);
-            rollbackTransaction(totalReport); // totalReport を使って変更前状態にロールバックする
-            fireNodeEditConsoleEvent_adjust(); //編集中の<textarea>を元に戻したSVGNodeに合わせる
 
-            //caution ロールバックしたカラーはカラーピッカーに反映されない
-        
-        }else{ //適用成功の場合
+        if(!totalReport.allNG){ //1つ以上のNodeで適用成功の場合
             totalReport.message = "text fill:" + toFillStr;
-            mergeTransactionToPrev(bufTotalReport_For_text_fill, totalReport);
+            overWriteScceededTransaction(totalReport, bufTotalReport_For_text_fill);
         }
     }
 
@@ -347,6 +346,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
 function fireNodeEditConsoleEvent_renderSVG(argObj){
     var totalReport = {};
     totalReport.allOK = true;
+    totalReport.allNG = true;
     totalReport.reportsArr = [];
 
     var eventObj = document.createEvent("Event");
@@ -358,6 +358,11 @@ function fireNodeEditConsoleEvent_renderSVG(argObj){
         //失敗が発生し場合は、totalReportも失敗とする
         if(!renderReport.allOK){
             totalReport.allOK = false;
+        }
+
+        //成功が一つ以上ある場合
+        if(!renderReport.allNG){
+            totalReport.allNG = false;
         }
 
         totalReport.reportsArr.push(renderReport);
@@ -372,6 +377,7 @@ function fireNodeEditConsoleEvent_renderSVG(argObj){
     //コールバックがなかった(=登録リスナがなかった)場合は、totalReportも失敗とする
     if(totalReport.reportsArr.length == 0){
         totalReport.allOK = false;
+        totalReport.allNG = true;
     }
 
     return totalReport;
@@ -717,6 +723,7 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     var reportObj = {
         key:bindedData.key,
         allOK:true,
+        allNG:true,
         PrevObj:{
             text: {},
             coordinate: {}
@@ -1720,48 +1727,134 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
        Object.keys(reportObj.FailuredMessages.coordinate).length > 0){ //警告が1つ以上ある場合
         reportObj.allOK = false;
     }
+    if(Object.keys(reportObj.RenderedObj.text).length > 0 ||
+       Object.keys(reportObj.RenderedObj.coordinate).length > 0){ //成功が1つ以上ある場合
+        reportObj.allNG = false;
+    }
 
     //変更レポートを返却
     return reportObj;
 }
 
-function mergeTransactionToPrev(prevTransaction, latestTransaction){
+//
+// caution renderringReport.allNG = falseな時だけコールする
+//
+function overWriteScceededTransaction(fromThisTransaction, toThisTransaction){
+
+    if(toThisTransaction.allNG){ //allNGの場合は、この関数がコールされないので、
+                                 //1回目のコールを表す
+        toThisTransaction.allNG = false;
+        toThisTransaction.allOK = fromThisTransaction.allOK;
+    }
+
+    if(!fromThisTransaction.allOK){ //1部NGがある場合
+        toThisTransaction.allOK = false;
+    }
+
+    if(typeof fromThisTransaction.message != 'undefined'){ //message指定がある場合
+        toThisTransaction.message = fromThisTransaction.message; //直近のmessageで更新
+    }
     
-    //引数チェック
-    if(latestTransaction.reportsArr.length == 0){ //マージするべきレポートが存在しない
-        console.warn("Specified trucsaction not contains SVG rendering report.");
-        return;
-    }
-
-    prevTransaction.allOK = latestTransaction.allOK; //直近の成功可否状態で更新
-
-    if(typeof (latestTransaction.message != 'undefined')){ //message指定がある場合
-        prevTransaction.message = latestTransaction.message; //直近のmessageで更新
-    }
-
     //レンダリングレポート網羅ループ
-    for(var i_l = 0 ; i_l < latestTransaction.reportsArr.length ; i_l++){
+    for(var i_f = 0 ; i_f < fromThisTransaction.reportsArr.length ; i_f++){
 
-        //マージ対象ノード検索ループ
-        var i_p = 0;
-        for( ; i_p < prevTransaction.reportsArr.length ; i_p++){
+        if(!fromThisTransaction.reportsArr[i_f].allNG){ //property全て失敗でなければ
+            
+            //マージ対象ノード検索ループ
+            var i_t = 0;
+            
+            for( ; i_t < toThisTransaction.reportsArr.length ; i_t++){
 
-            //マージ対象のノードkeyが見つかった場合
-            if(prevTransaction.reportsArr[i_p].key == latestTransaction.reportsArr[i_l].key){
-                break;
+                //マージ対象のノードkeyが見つかった場合
+                if(toThisTransaction.reportsArr[i_t].key == fromThisTransaction.reportsArr[i_f].key){
+                    break;
+                }
             }
+
+            if(i_t == toThisTransaction.reportsArr.length){ //マージ対象のノードkeyが見つからなかった場合
+                toThisTransaction.reportsArr.push({}); //空のオブジェクトを追加する
+                toThisTransaction.reportsArr[i_t].key = fromThisTransaction.reportsArr[i_f].key;
+
+                //allOK
+                toThisTransaction.reportsArr[i_t].allOK = fromThisTransaction.reportsArr[i_f].allOK;
+                //allNG
+                toThisTransaction.reportsArr[i_t].allNG = false;
+                //PrevObj
+                toThisTransaction.reportsArr[i_t].PrevObj = {};
+                mergeObj(fromThisTransaction.reportsArr[i_f].PrevObj, toThisTransaction.reportsArr[i_t].PrevObj,false);
+                //RenderedObj
+                toThisTransaction.reportsArr[i_t].RenderedObj = {};
+                //FailuredMessages
+                toThisTransaction.reportsArr[i_t].FailuredMessages = {};
+
+            }else{ //マージ対象のノードkeyが見つかった場合
+
+                //allOK
+                if(!fromThisTransaction.reportsArr[i_f].allOK){ //一部失敗がある場合
+                    toThisTransaction.reportsArr[i_t].allOK = false;
+                }
+                
+                //allNGは不要
+                
+                //PrevObj
+                mergeObj(fromThisTransaction.reportsArr[i_f].PrevObj, toThisTransaction.reportsArr[i_t].PrevObj,true); //toThisTransactionに存在しない時だけmerge
+                
+            }
+            
+            //RenderedObj
+            mergeObj(fromThisTransaction.reportsArr[i_f].RenderedObj, toThisTransaction.reportsArr[i_t].RenderedObj,false);
+            
+            //FailuredMessages
+            mergeObj(fromThisTransaction.reportsArr[i_f].FailuredMessages, toThisTransaction.reportsArr[i_t].FailuredMessages,false);
         }
 
-        if(i_p == prevTransaction.reportsArr.length){ //マージ対象のノードkeyが見つからなかった場合
-            prevTransaction.reportsArr.push(latestTransaction.reportsArr[i_l]); //直近のレポートを追加する
 
-        }else{ //マージ対象のノードkeyが見つかった場合
-
-            //直近のRenderedObjで更新する
-            prevTransaction.reportsArr[i_p].RenderedObj = latestTransaction.reportsArr[i_l].RenderedObj;
-
-        }        
     }
+
+}
+
+//
+//オブジェクトをマージする
+//
+function mergeObj(fromThisObj, toThisObj, ifOnlyNotExists){
+    
+    var propNames = Object.keys(fromThisObj);
+
+    //プロパティループ
+    propNames.forEach(function(propName, idx){
+
+        var isObj = false;
+
+        if(typeof fromThisObj[propName] == 'object'){ //`typeof` 判定が `object` の場合
+
+            if((fromThisObj[propName] === null) || //nullの場合
+               (Array.isArray(fromThisObj[propName]))){ //Arrayの場合
+                isObj = false;
+            }else{
+                isObj = true;
+            }
+
+        }
+
+        if(isObj){ //オブジェクトの場合
+            if(typeof toThisObj[propName] == 'undefined'){ //マージ先に未定義の場合
+                toThisObj[propName] = {}; //空オブジェクトを作る
+            }
+
+            mergeObj(fromThisObj[propName], toThisObj[propName], ifOnlyNotExists); //再帰処理
+
+        }else{ //オブジェクトでない場合
+
+            if(ifOnlyNotExists){ //マージ先にpropertyが存在しないときだけ上書きする指定の場合
+                if(typeof toThisObj[propName] == 'undefined'){ //マージ先に存在しない場合
+                    toThisObj[propName] = fromThisObj[propName];
+                }
+
+            }else{
+                toThisObj[propName] = fromThisObj[propName];
+            }
+        }
+    });
 }
 
 function backToDefaulIfWarn(reportObj, bindedData){
