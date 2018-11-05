@@ -150,7 +150,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
 
     //<register behavor>----------------------------------------------------------------------------------------------------------
 
-    //<text_text_anchor>---------------------------------------------------------------
+    //<text.text_anchor>---------------------------------------------------------------
     var $propertyEditor_text_anchor_expMsg = $nodeEditConsoleElem.find(".propertyEditor.text_anchor").children(".message.explicitness").eq(0);
     $nodeEditConsoleElem.find(".propertyEditor.text_anchor").children(".textAnchorType").on("click",function(){
         var clickedElem = this;
@@ -206,9 +206,9 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
             }
         }
     });
-    //--------------------------------------------------------------</text_text_anchor>
+    //--------------------------------------------------------------</text.text_anchor>
 
-    //<text_fill>---------------------------------------------------------------
+    //<text.text_fill>---------------------------------------------------------------
     var $pickerElem = $nodeEditConsoleElem.find(".propertyEditor.text_fill").children(".picker").eq(0);
     var $inputElem = $nodeEditConsoleElem.find(".propertyEditor.text_fill").children(".pickedColorText").eq(0);
     var $expMsgElem = $nodeEditConsoleElem.find(".propertyEditor.text_fill").children(".message.explicitness").eq(0);
@@ -339,7 +339,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
         }
     });
 
-    //--------------------------------------------------------------</text_fill>
+    //--------------------------------------------------------------</text.text_fill>
 
     //---------------------------------------------------------------------------------------------------------</register behavor>
 });
@@ -718,12 +718,10 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
         key:bindedData.key,
         allOK:true,
         PrevObj:{
-            type: bindedData.type,
             text: {},
             coordinate: {}
         },
         RenderedObj:{
-            type: "text",
             text: {},
             coordinate: {}
         },
@@ -744,6 +742,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
     var haveToUpdateFrame = false;
     var vacantStarted = false;
     var vacantEnded = false;
+
+    var untreatedPropertyNames = Object.keys(renderByThisObj.text); //未処理プロパティリスト
 
     //テキスト更新
     if(typeof (renderByThisObj.text.text_content) != 'undefined'){ //textオブジェクトがある場合
@@ -815,6 +815,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             bindedData.text.text_content = renderByThisObj.text.text_content;
             haveToUpdateFrame = true;
         }
+
+        untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("text_content"), 1); //未処理プロパティリストから削除
     }
 
     //テキスト座標更新
@@ -915,6 +917,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 haveToUpdateFrame = true;
             }
         }
+
+        untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("text_anchor"), 1); //未処理プロパティリストから削除
     }
 
     //font-family
@@ -961,6 +965,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 haveToUpdateFrame = true;
             }
         }
+
+        untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("text_font_family"), 1); //未処理プロパティリストから削除
     }
 
     //font-size
@@ -1027,6 +1033,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 }
             }
         }
+
+        untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("text_font_size"), 1); //未処理プロパティリストから削除
     }
 
     //font-weight
@@ -1087,6 +1095,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 haveToUpdateFrame = true;
             }
         }
+
+        untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("text_font_weight"), 1); //未処理プロパティリストから削除
     }
 
     //font-style
@@ -1131,6 +1141,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 haveToUpdateFrame = true;
             }
         }
+
+        untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("text_font_style"), 1); //未処理プロパティリストから削除
     }
 
     //text-decoration
@@ -1175,6 +1187,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 haveToUpdateFrame = true;
             }
         }
+
+        untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("text_text_decoration"), 1); //未処理プロパティリストから削除
     }
 
     //テキストの色
@@ -1219,6 +1233,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 //haveToUpdateFrame = true; //<- not needed
             }
         }
+
+        untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("text_fill"), 1); //未処理プロパティリストから削除
     }
 
     //frame存在チェック
@@ -1407,6 +1423,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 }
             }
 
+            untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("frame_shape"), 1); //未処理プロパティリストから削除
+
         }else{ //frame shape指定無し
             rerender = true;
         }
@@ -1544,6 +1562,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 }
             }
         }
+
+        untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("frame_stroke_width"), 1); //未処理プロパティリストから削除
     }
 
     //枠線の色
@@ -1587,6 +1607,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             }
 
         }
+
+        untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("frame_stroke"), 1); //未処理プロパティリストから削除
     }
     
     //枠線の破線パターン
@@ -1639,6 +1661,8 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
             }
 
         }
+
+        untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("frame_stroke_dasharray"), 1); //未処理プロパティリストから削除
     }
     
     //背景色
@@ -1680,7 +1704,16 @@ function renderTextTypeSVGNode(bindedData, renderByThisObj){
                 bindedData.text.frame_fill = renderByThisObj.text.frame_fill;
             }
         }
+
+        untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("frame_fill"), 1); //未処理プロパティリストから削除
     }
+
+    //Unkdown Propertyに対する警告
+    untreatedPropertyNames.forEach(function(propertyName,idx){
+        var wrn = "Unkdown Property \`text." + propertyName + "\` specified.";
+        console.warn(wrn);
+        reportObj.FailuredMessages.text[propertyName] = wrn;
+    });
 
     //変更レポート用警告チェック
     if(Object.keys(reportObj.FailuredMessages.text).length > 0 ||
@@ -1749,70 +1782,24 @@ function backToDefaulIfWarn(reportObj, bindedData){
 
 function backToDefaulIfWarn_TextType(reportObj, bindedData){
 
+    var propertyNames = Object.keys(reportObj.FailuredMessages.text); //Property Names Array to delete
+
     //text_content
     if(typeof reportObj.FailuredMessages.text.text_content != 'undefined'){
-        bindedData.text.text_content = "";
+        bindedData.text.text_content = ""; //プロパティ削除ではなく、空文字にする
+        propertyNames.splice("text_content",1); //プロパティ削除対象から外す
     }
 
-    //text_anchor
-    if(typeof reportObj.FailuredMessages.text.text_anchor != 'undefined'){
-        delete bindedData.text.text_anchor;
-    }
-    
-    //text_font_family
-    if(typeof reportObj.FailuredMessages.text.text_font_family != 'undefined'){
-        delete bindedData.text.text_font_family;
-    }
-    
-    //text_font_size
-    if(typeof reportObj.FailuredMessages.text.text_font_size != 'undefined'){
-        delete bindedData.text.text_font_size;
-    }
-    
-    //text_fill
-    if(typeof reportObj.FailuredMessages.text.text_fill != 'undefined'){
-        delete bindedData.text.text_fill;
-    }
-    
-    //text_font_weight ?
-    if(typeof reportObj.FailuredMessages.text.text_font_weight != 'undefined'){
-        delete bindedData.text.text_font_weight;
-    }
-    
-    //text_font_style
-    if(typeof reportObj.FailuredMessages.text.text_font_style != 'undefined'){
-        delete bindedData.text.text_font_style;
-    }
-    
-    //text_text_decoration ?
-    if(typeof reportObj.FailuredMessages.text.text_text_decoration != 'undefined'){
-        delete bindedData.text.text_text_decoration;
-    }
-    
     //frame_shape
     if(typeof reportObj.FailuredMessages.text.frame_shape != 'undefined'){
-        bindedData.text.frame_shape = "rect";
+        bindedData.text.frame_shape = "rect"; //プロパティ削除ではなく、"rect"にする
+        propertyNames.splice("frame_shape",1); //プロパティ削除対象から外す
     }
     
-    //frame_stroke
-    if(typeof reportObj.FailuredMessages.text.frame_stroke != 'undefined'){
-        delete bindedData.text.frame_stroke;
-    }
-    
-    //frame_stroke_width
-    if(typeof reportObj.FailuredMessages.text.frame_stroke_width != 'undefined'){
-        delete bindedData.text.frame_stroke_width;
-    }
-    
-    //frame_stroke_dasharray
-    if(typeof reportObj.FailuredMessages.text.frame_stroke_dasharray != 'undefined'){
-        delete bindedData.text.frame_stroke_dasharray;
-    }
-    
-    //frame_fill
-    if(typeof reportObj.FailuredMessages.text.frame_fill != 'undefined'){
-        delete bindedData.text.frame_fill;
-    }
+    //Property削除ループ
+    propertyNames.forEach(function(propertyName, idx){
+        delete bindedData.text[propertyName];
+    });
     
 }
 
@@ -1934,7 +1921,9 @@ function editSVGNodes(){
     if(computedStylesOfData.length > 0){ //編集対象Nodeが存在する場合
 
         var mergedStyles = {};
+        mergedStyles.text = {};
         var mergedExplicitnesses = {};
+        mergedExplicitnesses.text = {};
 
         // computedStylesOfData[]からスタイルをマージ
         for(var i = 0 ; i < computedStylesOfData.length ; i++){
@@ -1942,57 +1931,20 @@ function editSVGNodes(){
             switch(computedStlOfData.type){
                 case "text":
                 {
-                    //text_content
-                    mergedStyles.text_content = calcMergedStyle(computedStlOfData.text.text_content, mergedStyles.text_content);
-                    mergedExplicitnesses.text_content = calcMergedStyle(computedStlOfData.explicitness.text_content, mergedExplicitnesses.text_content);
-
-                    //text_anchor
-                    mergedStyles.text_anchor = calcMergedStyle(computedStlOfData.text.text_anchor, mergedStyles.text_anchor);
-                    mergedExplicitnesses.text_anchor = calcMergedStyle(computedStlOfData.explicitness.text_anchor, mergedExplicitnesses.text_anchor);
-
-                    //text_font_family
-                    mergedStyles.text_font_family = calcMergedStyle(computedStlOfData.text.text_font_family, mergedStyles.text_font_family);
-                    mergedExplicitnesses.text_font_family = calcMergedStyle(computedStlOfData.explicitness.text_font_family, mergedExplicitnesses.text_font_family);
-
-                    //text_font_size
-                    mergedStyles.text_font_size = calcMergedStyle(computedStlOfData.text.text_font_size, mergedStyles.text_font_size);
-                    mergedExplicitnesses.text_font_size = calcMergedStyle(computedStlOfData.explicitness.text_font_size, mergedExplicitnesses.text_font_size);
-
-                    //text_fill
-                    mergedStyles.text_fill = calcMergedStyle(computedStlOfData.text.text_fill, mergedStyles.text_fill);
-                    mergedExplicitnesses.text_fill = calcMergedStyle(computedStlOfData.explicitness.text_fill, mergedExplicitnesses.text_fill);
-
-                    //text_font_weight
-                    mergedStyles.text_font_weight = calcMergedStyle(computedStlOfData.text.text_font_weight, mergedStyles.text_font_weight);
-                    mergedExplicitnesses.text_font_weight = calcMergedStyle(computedStlOfData.explicitness.text_font_weight, mergedExplicitnesses.text_font_weight);
-
-                    //text_font_style
-                    mergedStyles.text_font_style = calcMergedStyle(computedStlOfData.text.text_font_style, mergedStyles.text_font_style);
-                    mergedExplicitnesses.text_font_style = calcMergedStyle(computedStlOfData.explicitness.text_font_style, mergedExplicitnesses.text_font_style);
-
-                    //text_text_decoration
-                    mergedStyles.text_text_decoration = calcMergedStyle(computedStlOfData.text.text_text_decoration, mergedStyles.text_text_decoration);
-                    mergedExplicitnesses.text_text_decoration = calcMergedStyle(computedStlOfData.explicitness.text_text_decoration, mergedExplicitnesses.text_text_decoration);
-
-                    //frame_shape
-                    mergedStyles.frame_shape = calcMergedStyle(computedStlOfData.text.frame_shape, mergedStyles.frame_shape);
-                    mergedExplicitnesses.frame_shape = calcMergedStyle(computedStlOfData.explicitness.frame_shape, mergedExplicitnesses.frame_shape);
-
-                    //frame_stroke
-                    mergedStyles.frame_stroke = calcMergedStyle(computedStlOfData.text.frame_stroke, mergedStyles.frame_stroke);
-                    mergedExplicitnesses.frame_stroke = calcMergedStyle(computedStlOfData.explicitness.frame_stroke, mergedExplicitnesses.frame_stroke);
-
-                    //frame_stroke_width
-                    mergedStyles.frame_stroke_width = calcMergedStyle(computedStlOfData.text.frame_stroke_width, mergedStyles.frame_stroke_width);
-                    mergedExplicitnesses.frame_stroke_width = calcMergedStyle(computedStlOfData.explicitness.frame_stroke_width, mergedExplicitnesses.frame_stroke_width);
-
-                    //frame_stroke_dasharray
-                    mergedStyles.frame_stroke_dasharray = calcMergedStyle(computedStlOfData.text.frame_stroke_dasharray, mergedStyles.frame_stroke_dasharray);
-                    mergedExplicitnesses.frame_stroke_dasharray = calcMergedStyle(computedStlOfData.explicitness.frame_stroke_dasharray, mergedExplicitnesses.frame_stroke_dasharray);
-
-                    //frame_fill
-                    mergedStyles.frame_fill = calcMergedStyle(computedStlOfData.text.frame_fill, mergedStyles.frame_fill);
-                    mergedExplicitnesses.frame_fill = calcMergedStyle(computedStlOfData.explicitness.frame_fill, mergedExplicitnesses.frame_fill);
+                    //各Propertyのマージ
+                    mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "text_content");
+                    mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "text_anchor");
+                    mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "text_font_family");
+                    mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "text_font_size");
+                    mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "text_fill");
+                    mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "text_font_weight");
+                    mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "text_font_style");
+                    mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "text_text_decoration");
+                    mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "frame_shape");
+                    mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "frame_stroke");
+                    mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "frame_stroke_width");
+                    mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "frame_stroke_dasharray");
+                    mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "frame_fill");
                     
                 }
                 break;
@@ -2009,11 +1961,11 @@ function editSVGNodes(){
 
         //text_content
 
-        //<text_anchor>-------------------------------------------------------------------------------------
+        //<text.text_anchor>-------------------------------------------------------------------------------------
         var $propertyEditor_text_anchor = $nodeEditConsoleElem.find(".propertyEditor.text_anchor");
         var $propertyEditor_text_anchor_expMsg = $propertyEditor_text_anchor.children(".message.explicitness").eq(0);
         
-        if(typeof mergedStyles.text_anchor == 'undefined'){ //描画対象のNodeが存在しない
+        if(typeof mergedStyles.text.text_anchor == 'undefined'){ //描画対象のNodeが存在しない
 
             //対象プロパティエディタのグレーアウト
             $propertyEditor_text_anchor.prop("disabled", true);
@@ -2024,9 +1976,9 @@ function editSVGNodes(){
             //対象プロパティエディタの有効化
             $propertyEditor_text_anchor.prop("disabled", false);
 
-            if(mergedStyles.text_anchor !== null){// merged Styleが算出できた
+            if(mergedStyles.text.text_anchor !== null){// merged Styleが算出できた
                 var isKnownType = true;
-                switch(mergedStyles.text_anchor){
+                switch(mergedStyles.text.text_anchor){
                     case "start":
                     break;
     
@@ -2045,14 +1997,14 @@ function editSVGNodes(){
                 }
 
                 if(isKnownType){
-                    var selectorStr = '.textAnchorType[data-textanchortype="' + mergedStyles.text_anchor + '"]'
+                    var selectorStr = '.textAnchorType[data-textanchortype="' + mergedStyles.text.text_anchor + '"]'
                     $propertyEditor_text_anchor.children(selectorStr).eq(0).addClass(slctd); //指定text-anchorタイプを選択
                 }
             }
 
-            if(mergedExplicitnesses.text_anchor === null){ // explicitly defined している Node は一部だけだった
+            if(mergedExplicitnesses.text.text_anchor === null){ // explicitly defined している Node は一部だけだった
                 $propertyEditor_text_anchor_expMsg.text("explicit (some part)");
-            }else if(mergedExplicitnesses.text_anchor){    // explicitly defined している Node は全部
+            }else if(mergedExplicitnesses.text.text_anchor){    // explicitly defined している Node は全部
                 $propertyEditor_text_anchor_expMsg.text("explicit");
             }else{                                         // explicitly defined していない
                 $propertyEditor_text_anchor_expMsg.text("");
@@ -2060,18 +2012,18 @@ function editSVGNodes(){
 
         }
 
-        //------------------------------------------------------------------------------------</text_anchor>
+        //------------------------------------------------------------------------------------</text.text_anchor>
 
         //text_font_family
         //text_font_size
 
-        //<text_fill>---------------------------------------------------------------------------------------
+        //<text.text_fill>---------------------------------------------------------------------------------------
         var $propertyEditor_text_fill = $nodeEditConsoleElem.find(".propertyEditor.text_fill");
         var $propertyEditor_text_fill_picker = $propertyEditor_text_fill.children(".picker").eq(0);
         var $propertyEditor_text_fill_inputElem = $propertyEditor_text_fill.children(".pickedColorText").eq(0);
         var $propertyEditor_text_fill_expMsg = $propertyEditor_text_fill.children(".message.explicitness").eq(0);
 
-        if(typeof mergedStyles.text_fill == 'undefined'){ //描画対象のNodeが存在しない
+        if(typeof mergedStyles.text.text_fill == 'undefined'){ //描画対象のNodeが存在しない
             
             //対象プロパティエディタのグレーアウト
             $propertyEditor_text_fill_picker.spectrum("disable"); //カラーピッカーを無効化
@@ -2085,21 +2037,21 @@ function editSVGNodes(){
             $propertyEditor_text_fill_picker.spectrum("enable"); //カラーピッカーを有効化
             $propertyEditor_text_fill_inputElem.prop('disabled', false); //<input>要素を有効化
 
-            if(mergedStyles.text_fill !== null){ // merged Styleが算出できた
-                $propertyEditor_text_fill_inputElem.val(mergedStyles.text_fill);
-                $propertyEditor_text_fill_picker.spectrum("set",mergedStyles.text_fill);
+            if(mergedStyles.text.text_fill !== null){ // merged Styleが算出できた
+                $propertyEditor_text_fill_inputElem.val(mergedStyles.text.text_fill);
+                $propertyEditor_text_fill_picker.spectrum("set",mergedStyles.text.text_fill);
             }
 
-            if(mergedExplicitnesses.text_fill === null){ // explicitly defined している Node は一部だけだった
+            if(mergedExplicitnesses.text.text_fill === null){ // explicitly defined している Node は一部だけだった
                 $propertyEditor_text_fill_expMsg.text("explicit (some part)");
-            }else if(mergedExplicitnesses.text_fill){    // explicitly defined している Node は全部
+            }else if(mergedExplicitnesses.text.text_fill){    // explicitly defined している Node は全部
                 $propertyEditor_text_fill_expMsg.text("explicit");
             }else{                                       // explicitly defined していない
                 $propertyEditor_text_fill_expMsg.text("");
             }
         }
 
-        //--------------------------------------------------------------------------------------</text_fill>
+        //--------------------------------------------------------------------------------------</text.text_fill>
 
         //text_font_weight
         //text_font_style
@@ -2116,21 +2068,19 @@ function editSVGNodes(){
     }
 }
 
-function calcMergedStyle(fromThisStyle, toThisStyle){
-    var mergedStyle;
-    if(typeof toThisStyle == 'undefined'){
-        mergedStyle = fromThisStyle;
-    
+function mergeStyles(fromThisStlObj, fromThisExpObj, toThisStlObj, toThisExpObj, propertyName){
+    mergeProperties(fromThisStlObj, toThisStlObj, propertyName);
+    mergeProperties(fromThisExpObj, toThisExpObj, propertyName);
+}
+
+function mergeProperties(fromThisObj, toThisObj, propertyName){
+    if(typeof toThisObj[propertyName] == 'undefined'){ //マージ先Objectに存在しない場合
+        toThisObj[propertyName] = fromThisObj[propertyName];
     }else{
-        if(toThisStyle !== fromThisStyle){
-            mergedStyle = null;
-        
-        }else{
-            mergedStyle = toThisStyle;
+        if(toThisObj[propertyName] !== fromThisObj[propertyName]){ //マージ済みの値と異なる場合
+            toThisObj[propertyName] = null;
         }
     }
-
-    return mergedStyle;
 }
 
 //
