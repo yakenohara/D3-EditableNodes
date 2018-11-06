@@ -676,7 +676,7 @@ $3nodes.on(UITrappedEvents.editSVGNode, function(d){
 });
 
 // Nodeに対する複数編集イベント
-Mousetrap($3svgGroup.node()).bind(UITrappedEvents.editSVGNodes, function(e){ //todo firefox, chrome でイベントを拾えない
+Mousetrap.bind(UITrappedEvents.editSVGNodes, function(e){
 
     if(nowEditng){ // 編集中の場合
         //nothing to do
