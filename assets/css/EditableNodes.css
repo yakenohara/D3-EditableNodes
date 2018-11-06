@@ -43,7 +43,7 @@
 
 /* <構造定義>------------------------------------------------------ */
 
-#editableNode .nodeEditConsoleElem .propertyEditor.textAnchor{
+#editableNode .nodeEditConsoleElem .propertyEditor.text_anchor{
     font-size:0;
 }
 
@@ -51,6 +51,11 @@
     display: inline-block;
     padding: 2px;
 }
+
+#editableNode .nodeEditConsoleElem .propertyEditor .message.explicitness{
+    font-size:small;
+}
+
 
 #editableNode .nodeEditConsoleElem .propertyEditor.fill .pickedColorText{
     vertical-align: middle;

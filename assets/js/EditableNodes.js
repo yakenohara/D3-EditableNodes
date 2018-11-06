@@ -165,64 +165,100 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
     //<register behavor>----------------------------------------------------------------------------------------------------------
 
     //<text.text_anchor>---------------------------------------------------------------
+    var haveToRollBack = true;
+    var bufTotalReport_For_text_anchor = null; //Rendering Report 用バッファ
+    var beforeText = "";
+    var beforeTextAnchor = "";
+    
     var $propertyEditor_text_anchor_expMsg = $nodeEditConsoleElem.find(".propertyEditor.text_anchor").children(".message.explicitness").eq(0);
     $nodeEditConsoleElem.find(".propertyEditor.text_anchor").children(".textAnchorType").on("click",function(){
         var clickedElem = this;
 
         if(!($(clickedElem.parentNode).prop("disabled"))){ //プロパティエディタが有効の場合
 
-            if(clickedElem.classList.contains(slctd)){ //既に選択済みの場合
-                return; //スキップする
-            }
-
-            var specifiedType = clickedElem.getAttribute("data-text_anchor_type");
-            switch(specifiedType){
-                case "start":
-                break;
-
-                case "middle":
-                break;
-
-                case "end":
-                break;
-
-                default:
-                {
-                    console.warn("Unknown style \`text-anchor:" + specifiedType + ";\` specified.");
-                    return;
-                }
-                break;
-            }
-
-            var totalReport = fireNodeEditConsoleEvent_renderSVG({text:{text_anchor: specifiedType}});
-            fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust");
-
-            if(totalReport.allNG){ //全てのNodeで適用失敗の場合
-                $propertyEditor_text_anchor_expMsg.text("failed to apply");
-                //note ロールバックは不要
+            appendHistory(bufTotalReport_For_text_anchor);
+            haveToRollBack = false;
+        }
+    });
+    
+    $nodeEditConsoleElem.find(".propertyEditor.text_anchor").children(".textAnchorType").hover(
+        
+        function(){ //mouseenter
             
-            }else{ //適用成功 or 1部適用成功の場合
+            var clickedElem = this;
 
-                totalReport.message = "text-anchor:" + specifiedType;
-                appendHistory(totalReport);
+            if(!($(clickedElem.parentNode).prop("disabled"))){ //プロパティエディタが有効の場合
                 
+                var specifiedType = clickedElem.getAttribute("data-text_anchor_type");
+                switch(specifiedType){
+                    case "start":
+                    break;
+
+                    case "middle":
+                    break;
+
+                    case "end":
+                    break;
+
+                    default:
+                    {
+                        console.warn("Unknown style \`text-anchor:" + specifiedType + ";\` specified.");
+                        return;
+                    }
+                    break;
+                }
+
+                haveToRollBack = true;
+                beforeText = $propertyEditor_text_anchor_expMsg.text();
+
+                bufTotalReport_For_text_anchor = fireNodeEditConsoleEvent_renderSVG({text:{text_anchor: specifiedType}});
+                fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust");
+
+                bufTotalReport_For_text_anchor.message = "text-anchor:" + specifiedType;
+   
                 //選択状態の解除ループ
                 var siblings = clickedElem.parentNode.children;
+                beforeTextAnchor = "";
                 for(var i = 0 ; i < siblings.length ; i++){
+                    if($(siblings[i]).hasClass(slctd)){ //選択状態だったら
+                        beforeTextAnchor = siblings[i].getAttribute("data-text_anchor_type");
+                    }
                     siblings[i].classList.remove(slctd);
                 }
                 clickedElem.classList.add(slctd); //クリックされた要素を"selected"状態にする
 
-                if(totalReport.allOK){ //適用全部成功の場合
+                if(bufTotalReport_For_text_anchor.allOK){ //適用全部成功の場合
                     $propertyEditor_text_anchor_expMsg.text("explicit");
                 
                 }else{ //適用一部失敗の場合
                     $propertyEditor_text_anchor_expMsg.text("explicit (some part)");
                     //note ロールバックは不要
                 }
+                
             }
+
+        },function(){ //mouseleave
+
+            var clickedElem = this;
+            
+            if(!($(clickedElem.parentNode).prop("disabled"))){ //プロパティエディタが有効の場合
+                if(haveToRollBack){
+                    rollbackTransaction(bufTotalReport_For_text_anchor); //元に戻す
+                    fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust");
+                    $propertyEditor_text_anchor_expMsg.text(beforeText);
+                    clickedElem.classList.remove(slctd);
+                    if(beforeTextAnchor != ""){
+                        var selectorStr = '.textAnchorType[data-text_anchor_type="' + beforeTextAnchor + '"]';
+                        $(clickedElem.parentNode).children(selectorStr).eq(0).addClass(slctd);
+                    }                    
+                }
+            }
+
+            bufTotalReport_For_text_anchor = null;
+            beforeText = "";
+            haveToRollBack = true;
         }
-    });
+    )
     //--------------------------------------------------------------</text.text_anchor>
 
     //<text.text_fill>---------------------------------------------------------------
@@ -2220,7 +2256,7 @@ function editSVGNodes(){
                 }
 
                 if(isKnownType){
-                    var selectorStr = '.textAnchorType[data-text_anchor_type="' + mergedStyles.text.text_anchor + '"]'
+                    var selectorStr = '.textAnchorType[data-text_anchor_type="' + mergedStyles.text.text_anchor + '"]';
                     $propertyEditor_text_anchor.children(selectorStr).eq(0).addClass(slctd); //指定text-anchorタイプを選択
                 }
             }
