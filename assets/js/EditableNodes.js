@@ -108,7 +108,8 @@ var UITrappedEvents = {
     insertLFWhenEditingTextTypeSVGNode: "alt+enter", //`Mousetrap` event
 };
 
-var $3editableNodesTAG = d3.select("#editableNode").style("position", "relative");
+var $3editableNodesTAG = d3.select("#editableNode")
+    .style("position", "relative");
 
 var padding = 5;
 var valOfEm = 1.3;
@@ -127,7 +128,20 @@ var defaultFontSizeForTextArea = "11px";
 //text type node 編集時にtext-anchorを抽出できなかった場合に仮設定するtext-align
 var defaultTextAlignForTextArea = "left";
 
+var nowEditng = false;
+var lastSelectedData = null;
 var transactionHistory = [];
+
+var bufTotalReport_For_text_content; //Rendering Report 用バッファ
+clearbufTotalReport_For_text_content();
+
+//Rendering Report 用バッファ クリア
+function clearbufTotalReport_For_text_content(){
+    bufTotalReport_For_text_content = {};
+    bufTotalReport_For_text_content.allOK = false; 
+    bufTotalReport_For_text_content.allNG = true; // <- falseとなった場合は、ログに残すべきTransactionが少なくとも1件以上存在する事を表す
+    bufTotalReport_For_text_content.reportsArr = [];
+}
 
 var $3nodeEditConsoleElem = $3editableNodesTAG.append("div")
     // .style("visibility", "hidden")
@@ -181,6 +195,8 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
             }
 
             var totalReport = fireNodeEditConsoleEvent_renderSVG({text:{text_anchor: specifiedType}});
+            fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust");
+
             if(totalReport.allNG){ //全てのNodeで適用失敗の場合
                 $propertyEditor_text_anchor_expMsg.text("failed to apply");
                 //note ロールバックは不要
@@ -251,6 +267,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
     var func_renderAndMergeBufTotalReport_For_text_fill = function renderAndMergeBufTotalReport_For_text_fill(toFillStr){
         //SVGNodeへの反映
         var totalReport = fireNodeEditConsoleEvent_renderSVG({text:{text_fill:toFillStr}});
+        fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust");
 
         if(!totalReport.allNG){ //1つ以上のNodeで適用成功の場合
             totalReport.message = "text fill:" + toFillStr;
@@ -322,7 +339,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
         
         if(bufTotalReport_For_text_fill.allOK){ //成功したRenderingReportが存在する場合
             rollbackTransaction(bufTotalReport_For_text_fill); //元に戻す
-            fireNodeEditConsoleEvent_adjust(); //編集中の<textarea>を元に戻したSVGNodeに合わせる
+            fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust"); //編集中の<textarea>を元に戻したSVGNodeに合わせる
             func_clearBufTotalReport_For_text_fill(); //ログ用バッファ初期化
         }
 
@@ -383,9 +400,13 @@ function fireNodeEditConsoleEvent_renderSVG(argObj){
     return totalReport;
 }
 
-function fireNodeEditConsoleEvent_adjust(){
+function fireNodeEditConsoleEvent(eventName, attachThisArgObj){
     var eventObj = document.createEvent("Event");
-    eventObj.initEvent("NodeEditConsoleEvent_adjust", false, false);
+    eventObj.initEvent(eventName, false, false);
+
+    if(typeof attachThisArgObj != 'undefined'){
+        eventObj.argObj = attachThisArgObj;
+    }
 
     //すべてのnode要素にイベントを発行する
     var nodes = $3nodes.nodes();
@@ -492,6 +513,7 @@ var $3nodes = $3nodesGroup.selectAll("g")
     .classed("node", true)
     .each(function(d ,i){
 
+        var bindedSVGElement = this;
         d.$3bindedSVGElement = d3.select(this);
 
         d.$3bindedSelectionLayerSVGElement = $3selectionLayersGroup.append("g")
@@ -517,6 +539,30 @@ var $3nodes = $3nodesGroup.selectAll("g")
         }
 
         firstTotalReport.reportsArr.push(renderReport);
+
+        //EventListener登録
+        bindedSVGElement.addEventListener("NodeEditConsoleEvent_renderSVG",function(eventObj){
+
+            if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //自分のNodeが選択中の場合
+        
+                //引数チェック
+                if(typeof eventObj.argObj == 'undefined'){ //引数なし
+                    console.warn("NodeEditConsoleEvent_renderSVG was not specified \`argObj\`.");
+                    return;
+                }
+                if(typeof eventObj.argObj.renderByThisObj != 'object'){ //nodeレンダリング用objが存在しない
+                    console.warn("NodeEditConsoleEvent_renderSVG was not specified \`argObj.renderByThisObj\`.");
+                    return;
+                }
+        
+                var renderReport = renderTextTypeSVGNode(d, eventObj.argObj.renderByThisObj);
+        
+                if(typeof eventObj.argObj.clbkFunc == 'function'){ //コールバック関数が存在する
+                    eventObj.argObj.clbkFunc(renderReport);
+                }
+            }
+            
+        });
     });
 
 //Append History
@@ -528,46 +574,90 @@ transactionHistory.push(firstTotalReport);
 $($3svgGroup.node()).on(UITrappedEvents.selectSVGNode, function(e){
     if(d3.select(e.target).classed("SVGForNodesMapping")){ // SVG領域に対する選択
                                                            // -> Node以外に対する選択の場合
-        //別ノードすべてを選択解除する
-        for(var i = 0 ; i < dataset.length ; i++){
-            dataset[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
-                .attr("data-selected", "false"); //選択解除
-        }
+        
+        if(nowEditng){ // 編集中の場合
 
+            fireNodeEditConsoleEvent("NodeEditConsoleEvent_exit", {confirm:true}); //バッファを確定させて<textarea>を終了
+            exitEditing(); //編集モードの終了
+        
+        }else{  // 編集中でない場合
+            
+            //Nodeすべてを選択解除する
+            for(var i = 0 ; i < dataset.length ; i++){
+                dataset[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
+                    .attr("data-selected", "false"); //選択解除
+            }
+            lastSelectedData = null;
+        }
     }
 });
 
 //SVGノードの単一選択イベント
 $3nodes.on(UITrappedEvents.selectSVGNode, function(d){
 
-    if(!(d3.event.ctrlKey)){ //ctrl key 押下でない場合
+    var selectOnlyMe = false;
 
-        //別ノードすべてを選択解除する
-        for(var i = 0 ; i < dataset.length ; i++){
-            if(dataset[i].key != d.key){ //自分のノードでない場合
-                dataset[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
-                    .attr("data-selected", "false"); //選択解除
+    if(nowEditng){ // 編集中の場合
+        
+        if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択中Nodeの場合
+            fireNodeEditConsoleEvent("NodeEditConsoleEvent_exit", {confirm:false}); //バッファを残したまま<textarea>を終了
+            lastSelectedData = d; //最終選択Nodeの記憶
+            editSVGNode(lastSelectedData); //SVGノード(単一)編集機能をキック
+
+        }else{ //選択中Nodeでない場合
+
+            fireNodeEditConsoleEvent("NodeEditConsoleEvent_exit", {confirm:true}); //バッファを確定させて<textarea>を終了
+            exitEditing(); //編集モードの終了
+            
+            selectOnlyMe = true;
+        }
+
+    }else{ // 編集中でない場合
+        selectOnlyMe = true;
+    }
+
+    if(selectOnlyMe){
+        if(!(d3.event.ctrlKey)){ //ctrl key 押下でない場合
+
+            //別ノードすべてを選択解除する
+            for(var i = 0 ; i < dataset.length ; i++){
+                if(dataset[i].key != d.key){ //自分のノードでない場合
+                    dataset[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
+                        .attr("data-selected", "false"); //選択解除
+                }
             }
+        }
+
+        var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
+
+        //選択状態を切り替える
+        if(isSelected){ //選択状態の場合
+            d.$3bindedSelectionLayerSVGElement.style("visibility","hidden") //非表示にする
+                .attr("data-selected", "false"); //選択解除
+            lastSelectedData = null; //最終選択Nodeをnullにする(すべてのNodeが非選択になる為)
+
+        }else{ //非選択状態の場合
+            d.$3bindedSelectionLayerSVGElement.style("visibility",null) //表示状態にする
+                .attr("data-selected", "true"); //選択解除
+            
+            lastSelectedData = d; //最終選択Nodeの記憶
         }
     }
 
-    var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true')
-
-    //選択状態を切り替える
-    if(isSelected){ //選択状態の場合
-        d.$3bindedSelectionLayerSVGElement.style("visibility","hidden") //非表示にする
-            .attr("data-selected", "false"); //選択解除
-
-    }else{ //非選択状態の場合
-        d.$3bindedSelectionLayerSVGElement.style("visibility",null) //表示状態にする
-            .attr("data-selected", "true"); //選択解除
-
-    }
 });
 
 // Nodeに対する単一編集イベント
 $3nodes.on(UITrappedEvents.editSVGNode, function(d){
+
+    if(nowEditng){ // 編集中の場合
+                   // -> 発生し得ないルート
+                   //    (直前に呼ばれる単一選択イベントによって、対象Nodeの上に<textarea>が生成される為)
+
+        fireNodeEditConsoleEvent("NodeEditConsoleEvent_exit", {confirm:true}); //バッファを確定させて<textarea>を終了
+        exitEditing(); //編集モードの終了
     
+    }
+
     //別ノードすべてを選択解除して、自分のノードのみ選択状態にする
     for(var i = 0 ; i < dataset.length ; i++){
         if(dataset[i].key != d.key){ //自分のノードでない場合
@@ -580,12 +670,24 @@ $3nodes.on(UITrappedEvents.editSVGNode, function(d){
         }
     }
     editSVGNodes();
+    lastSelectedData = d; //最終選択Nodeの記憶
+    editSVGNode(lastSelectedData); //SVGノード(単一)編集機能をキック
+    
 });
 
 // Nodeに対する複数編集イベント
-Mousetrap($3svgGroup.node()).bind(UITrappedEvents.editSVGNodes, function(e){
-    editSVGNodes();
-    disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+Mousetrap($3svgGroup.node()).bind(UITrappedEvents.editSVGNodes, function(e){ //todo firefox, chrome でイベントを拾えない
+
+    if(nowEditng){ // 編集中の場合
+        //nothing to do
+    
+    }else{ // 編集中でない場合
+        if(lastSelectedData !== null){ //選択対象Nodeが存在する場合
+            editSVGNodes();
+            editSVGNode(lastSelectedData); //SVGノード(単一)編集機能をキック
+            disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+        }
+    }
 });
 
 //--------------------------------------------------------------------</UI TRAP>
@@ -1814,10 +1916,7 @@ function overWriteScceededTransaction(fromThisTransaction, toThisTransaction){
             //FailuredMessages
             mergeObj(fromThisTransaction.reportsArr[i_f].FailuredMessages, toThisTransaction.reportsArr[i_t].FailuredMessages,false);
         }
-
-
     }
-
 }
 
 //
@@ -1996,6 +2095,23 @@ function resizeTextTypeSVGNode_ellipseFrame($3ellipseFrame, textRectArea, pdng, 
         .attr("ry", ry);
 }
 
+function exitEditing(){
+    
+    //Node選択状態の表示化ループ
+    for(var i = 0 ; i < dataset.length ; i++){
+
+        var bindedData = dataset[i];
+
+        if(bindedData.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == "true"){ // 選択対象Nodeの場合
+            bindedData.$3bindedSelectionLayerSVGElement.style("visibility",null); //選択状態にする
+        }
+    }
+
+    $nodeEditConsoleElem.slideUp(100); //edit consoleの終了
+
+    nowEditng = false; //編集モードの終了
+}
+
 //
 //SVGノード(複数)を編集する
 //
@@ -2003,7 +2119,7 @@ function editSVGNodes(){
 
     var computedStylesOfData = [];
 
-    //編集対象ノードの検索ループ
+    //Node選択状態の非表示化ループ
     for(var i = 0 ; i < dataset.length ; i++){
 
         var bindedData = dataset[i];
@@ -2013,7 +2129,7 @@ function editSVGNodes(){
             var computedStlOfData = getComputedStyleOfData(bindedData); // Nodeに適用されたスタイルの取得
             if( computedStlOfData !== null){
                 computedStylesOfData.push(computedStlOfData);
-                editSVGNode(bindedData); //SVGノード(単一)編集機能をキック
+                
             }
         }
     }
@@ -2064,7 +2180,14 @@ function editSVGNodes(){
         //<text.text_anchor>-------------------------------------------------------------------------------------
         var $propertyEditor_text_anchor = $nodeEditConsoleElem.find(".propertyEditor.text_anchor");
         var $propertyEditor_text_anchor_expMsg = $propertyEditor_text_anchor.children(".message.explicitness").eq(0);
-        
+
+        //選択状態の初期化
+        var buttons = $propertyEditor_text_anchor.children();
+        for(var i = 0 ; i < buttons.length; i++){
+            buttons.eq(i).removeClass(slctd); //ボタン選択状態の初期化
+        }
+        $propertyEditor_text_anchor_expMsg.text("");
+
         if(typeof mergedStyles.text.text_anchor == 'undefined'){ //描画対象のNodeが存在しない
 
             //対象プロパティエディタのグレーアウト
@@ -2123,6 +2246,9 @@ function editSVGNodes(){
         var $propertyEditor_text_fill_inputElem = $propertyEditor_text_fill.children(".pickedColorText").eq(0);
         var $propertyEditor_text_fill_expMsg = $propertyEditor_text_fill.children(".message.explicitness").eq(0);
 
+        //初期化
+        $propertyEditor_text_fill_expMsg.text("");
+
         if(typeof mergedStyles.text.text_fill == 'undefined'){ //描画対象のNodeが存在しない
             
             //対象プロパティエディタのグレーアウト
@@ -2165,6 +2291,8 @@ function editSVGNodes(){
     
         //NodeEditConsoleを表示
         $nodeEditConsoleElem.slideDown(100);
+
+        nowEditng = true;
     }
 }
 
@@ -2244,35 +2372,40 @@ function editTextTypeSVGNode(bindedData){
 
     //<textarea>のサイズ自動調整リスナ登録
     $3textareaElem.node().oninput = function(){
-        renderTextTypeSVGNode(bindedData, {text:{text_content:$3textareaElem.node().value}});
+        func_renderAndMergeBufTotalReport_For_text_content($3textareaElem.node().value, bindedData); //SVGNodeへの反映&<textarea>調整
+    }
+
+    $3SVGnodeElem.node().addEventListener("NodeEditConsoleEvent_adjust",call_adjustTextarea);
+    $3SVGnodeElem.node().addEventListener("NodeEditConsoleEvent_exit",remove_exitListener);
+    
+    function call_adjustTextarea(evetnObj){
         adjustTextarea(bindedData, $3textareaElem);
     }
 
-    //NodeEditConsoleからイベントを受け取るリスナ登録
-    $3SVGnodeElem.node().addEventListener("NodeEditConsoleEvent_renderSVG",function(eventObj){
-        
-        //引数チェック
-        if(typeof eventObj.argObj == 'undefined'){ //引数なし
-            console.warn("NodeEditConsoleEvent_renderSVG was not specified \`argObj\`.");
-            return;
-        }
-        if(typeof eventObj.argObj.renderByThisObj != 'object'){ //nodeレンダリング用objが存在しない
-            console.warn("NodeEditConsoleEvent_renderSVG was not specified \`argObj.renderByThisObj\`.");
-            return;
+    function remove_adjustListener(){
+        $3SVGnodeElem.node().removeEventListener("NodeEditConsoleEvent_adjust",call_adjustTextarea);
+    }
+
+    function remove_exitListener(eventObj){
+
+        if((typeof eventObj.argObj != 'undefined') && (eventObj.argObj.confirm)){
+            exitTextEdit(true);
+        }else{
+            exitTextEdit(false);
         }
 
-        var renderReport = renderTextTypeSVGNode(bindedData, eventObj.argObj.renderByThisObj);
-        adjustTextarea(bindedData, $3textareaElem);
+        remove_adjustListener();
+        $3SVGnodeElem.node().removeEventListener("NodeEditConsoleEvent_exit",remove_exitListener);
+    }
 
-        if(typeof eventObj.argObj.clbkFunc == 'function'){ //コールバック関数が存在する
-            eventObj.argObj.clbkFunc(renderReport);
+    function exitTextEdit(confirm){
+        $3SVGnodeElem_text.style("visibility", null); //編集先Nodeの<text>を非表示から元に戻す
+        $3textareaElem.remove(); //<textarea>を削除
+
+        if(confirm){
+            func_confirmBufTotalReport_For_text_content(); //バッファに積んだtext_content更新Reportを確定させる
         }
-        
-    });
-
-    $3SVGnodeElem.node().addEventListener("NodeEditConsoleEvent_adjust",function(eventObj){
-        adjustTextarea(bindedData, $3textareaElem);
-    });
+    }
 
     //<textarea>にキャレットをフォーカス
     $3textareaElem.node().focus();
@@ -2280,7 +2413,7 @@ function editTextTypeSVGNode(bindedData){
     textareaElem = $3textareaElem.node();
 
     //UI TRAP
-    Mousetrap(textareaElem).bind(UITrappedEvents.insertLFWhenEditingTextTypeSVGNode, function(e){
+    Mousetrap(textareaElem).bind(UITrappedEvents.insertLFWhenEditingTextTypeSVGNode, function(e){ //<textarea>の改行挿入イベント
         //LFを挿入する
         var txt = textareaElem.value;
         var toSelect = textareaElem.selectionStart + 1;
@@ -2290,17 +2423,40 @@ function editTextTypeSVGNode(bindedData){
         textareaElem.selectionStart = toSelect;
         textareaElem.selectionEnd = toSelect;
 
-        //<textarea>の表示調整
-        renderTextTypeSVGNode(bindedData, {text:{text_content:textareaElem.value}});
+        //SVGNodeへの反映&<textarea>調整
+        func_renderAndMergeBufTotalReport_For_text_content(textareaElem.value, bindedData);
+
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+    Mousetrap(textareaElem).bind(UITrappedEvents.submitEditingTextTypeSVGNode, function(e){ //<textarea>の確定イベント
+
+        remove_exitListener({argObj:{confirm:true}});
+        exitEditing(); //編集モードの終了
+        
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+    //SVGNodeへの反映 & Rendering Reportをバッファに積む
+    var func_renderAndMergeBufTotalReport_For_text_content = function renderAndMergeBufTotalReport_For_text_content(text_content, bindedData){
+        //SVGNodeへの反映
+        var totalReport = fireNodeEditConsoleEvent_renderSVG({text:{text_content:text_content}});
         adjustTextarea(bindedData, $3textareaElem);
 
-        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
-    });
+        if(!totalReport.allNG){ //1つ以上のNodeで適用成功の場合
+            totalReport.message = "text content:" + text_content;
+            overWriteScceededTransaction(totalReport, bufTotalReport_For_text_content);
+        }
+    }
 
-    Mousetrap(textareaElem).bind(UITrappedEvents.submitEditingTextTypeSVGNode, function(e){
-        console.log("<textarea> submitted");
-        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
-    });
+    //バッファに積んだ Rendering Report を 確定させる
+    var func_confirmBufTotalReport_For_text_content = function confirmBufTotalReport_For_text_content(){
+        if(!bufTotalReport_For_text_content.allNG){ //ログに記録するべきレポートが存在する場合
+
+            appendHistory(bufTotalReport_For_text_content);
+            clearbufTotalReport_For_text_content();
+        }
+    }
 
 }
 
