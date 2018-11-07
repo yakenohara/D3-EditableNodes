@@ -546,7 +546,31 @@ function appendHistory(transactionObj){
         
         $(clickedElem).attr("data-rollbacked","true"); //rollback実行済み状態をtrueに設定
 
-        //todo history[]から削除 & div削除
+        //history[]から historyIndex+1 以降を削除
+        transactionHistory.splice(historyIndex+1, transactionHistory.length - (historyIndex + 1));
+
+        //history表示の削除ループ
+        var siblings = clickedElem.parentNode.children;
+        var lenOfSiblings = siblings.length;
+
+        //todo 以下2通りの方法でNG
+
+        // for(var i = 0 ; i < lenOfSiblings ; i++){
+        //     var historyIndexOfItr = parseInt($(siblings[i]).attr("data-history_index"));
+        //     if(historyIndexOfItr > historyIndex){ //選択したtransactionより後のhistoryだった場合
+        //         $(siblings[i]).remove(); //history表示の削除
+        //     }
+        // }
+
+
+         
+        // siblings.forEach(function(sibling,idx){
+        //     var historyIndexOfItr = parseInt($(sibling).attr("data-history_index"));
+        //     if(historyIndexOfItr > historyIndex){ //選択したtransactionより後のhistoryだった場合
+        //         $(sibling).remove();
+        //     }
+        // })
+
     });
 }
 
