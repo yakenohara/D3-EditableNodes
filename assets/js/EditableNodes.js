@@ -501,7 +501,8 @@ function appendHistory(transactionObj){
 
     var $3historyMessageElem = $3historyElem.append("div")
         .classed("transaction",true)
-        .attr("data-history_index", appendedIndex.toString());
+        .attr("data-history_index", appendedIndex.toString())
+        .attr("data-rollbacked","false");
 
     $3historyMessageElem.append("small")
         .text(transactionObj.message);
@@ -510,26 +511,42 @@ function appendHistory(transactionObj){
     var $historyMessageElem  = $($3historyMessageElem.node());
     $historyMessageElem.hover(
 
-        function(){ //mouseenter
+        //transactionに対するMouseEnterイベント
+        function(){
             var clickedElem = this;
-            clickedElem.classList.add(slctd);
-            var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
-            console.log("history mouseenter" + historyIndex.toString());
+            clickedElem.classList.add(slctd); //選択状態を表すクラス追加
+            $(clickedElem).attr("data-rollbacked","false"); //rollback実行済み状態をfalseに設定
 
-        },function(){ //mouseleave
-            var clickedElem = this;
-            clickedElem.classList.remove(slctd);
             var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
-            console.log("history mouseleave" + historyIndex.toString());
+            rollbackHistory(historyIndex, false);
+
+            //todo nowEditingの場合は、NodeEditConsoleをロールバックした状態に合わせる
+            
+        //transactionに対するMouseELeaveイベント
+        },function(){
+            var clickedElem = this;
+            clickedElem.classList.remove(slctd); //選択状態を表すクラス削除
+
+            if($(clickedElem).attr("data-rollbacked") != 'true'){
+                var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
+                replayHistory(historyIndex + 1);
+
+                //todo nowEditingの場合は、NodeEditConsoleをロールバックした状態に合わせる
+            }
+            
+            $(clickedElem).attr("data-rollbacked","false"); //rollback実行済み状態をfalseに設定
 
         }
     );
 
+    //transactionに対するクリックイベント
     $historyMessageElem.on("click",function(){
         var clickedElem = this;
         var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
-        console.log("history click" + historyIndex.toString());
-        rollbackHistory(historyIndex);
+        
+        $(clickedElem).attr("data-rollbacked","true"); //rollback実行済み状態をtrueに設定
+
+        //todo history[]から削除 & div削除
     });
 }
 
@@ -2074,18 +2091,39 @@ function backToDefaulIfWarn_TextType(reportObj, bindedData){
     
 }
 
-function rollbackHistory(historyIndex){
+function rollbackHistory(historyIndex, haveToPopTransaction){
 
     if(transactionHistory.length < 1){ //Historyが存在しない場合
-        return;
+        return; //処理をハネる
     }
     
+    //指定indexまでのrollbackループ
     for(var i = transactionHistory.length - 1 ; i > historyIndex ; i--){
-        console.log(i);
+        rollbackTransaction(transactionHistory[i]);
+        
+        if(haveToPopTransaction){ //transactionHistoryから削除`要`の場合
+            transactionHistory.pop(); //
+        }
+    }
+}
+
+function replayHistory(fromThisIndex){
+
+    //指定index以降を再度実行するループ
+    for(var i = fromThisIndex ; i < transactionHistory.length ; i ++){
+        replayTransaction(transactionHistory[i]);
     }
 }
 
 function rollbackTransaction(transaction){
+    rollbackOrReplayTransaction(transaction, "PrevObj");
+}
+
+function replayTransaction(transaction){
+    rollbackOrReplayTransaction(transaction, "RenderedObj");
+}
+
+function rollbackOrReplayTransaction(transaction, toApplyObjName){
     
     //引数チェック
     if(transaction.reportsArr.length == 0){ //トランザクションレポートが存在しない
@@ -2102,14 +2140,13 @@ function rollbackTransaction(transaction){
             console.error("\`key:" + reportObj.key + "\` not found in D3.js binded data array.");
 
         }else{ //対象のノードデータが存在する場合
-            var rollbackRenderringReport = renderSVGNode(bindedData, reportObj.PrevObj);
+            var rollbackRenderringReport = renderSVGNode(bindedData, reportObj[toApplyObjName]);
 
             if(!rollbackRenderringReport.allOK){ //ロールバックに失敗した場合
                 console.error("Cannot roll back \`" + getDomPath(bindedData.$3bindedSVGElement.node()).join('/') + "\`");
             }
         }
     }
-
 }
 
 //
