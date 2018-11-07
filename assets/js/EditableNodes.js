@@ -165,10 +165,10 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
     //<register behavor>----------------------------------------------------------------------------------------------------------
 
     //<text.text_anchor>---------------------------------------------------------------
-    var haveToRollBack = true;
+    var haveToRollBack_text_anchor = true;
     var bufTotalReport_For_text_anchor = null; //Rendering Report 用バッファ
-    var beforeText = "";
-    var beforeTextAnchor = "";
+    var beforeExpMessage_For_text_anchor = "";
+    var before_text_anchor = "";
     
     var $propertyEditor_text_anchor_expMsg = $nodeEditConsoleElem.find(".propertyEditor.text_anchor").children(".message.explicitness").eq(0);
     $nodeEditConsoleElem.find(".propertyEditor.text_anchor").children(".textAnchorType").on("click",function(){
@@ -177,7 +177,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
         if(!($(clickedElem.parentNode).prop("disabled"))){ //プロパティエディタが有効の場合
 
             appendHistory(bufTotalReport_For_text_anchor);
-            haveToRollBack = false;
+            haveToRollBack_text_anchor = false;
         }
     });
     
@@ -208,8 +208,8 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
                     break;
                 }
 
-                haveToRollBack = true;
-                beforeText = $propertyEditor_text_anchor_expMsg.text();
+                haveToRollBack_text_anchor = true;
+                beforeExpMessage_For_text_anchor = $propertyEditor_text_anchor_expMsg.text();
 
                 bufTotalReport_For_text_anchor = fireNodeEditConsoleEvent_renderSVG({text:{text_anchor: specifiedType}});
                 fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust");
@@ -218,10 +218,10 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
    
                 //選択状態の解除ループ
                 var siblings = clickedElem.parentNode.children;
-                beforeTextAnchor = "";
+                before_text_anchor = "";
                 for(var i = 0 ; i < siblings.length ; i++){
                     if($(siblings[i]).hasClass(slctd)){ //選択状態だったら
-                        beforeTextAnchor = siblings[i].getAttribute("data-text_anchor_type");
+                        before_text_anchor = siblings[i].getAttribute("data-text_anchor_type");
                     }
                     siblings[i].classList.remove(slctd);
                 }
@@ -242,21 +242,21 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
             var clickedElem = this;
             
             if(!($(clickedElem.parentNode).prop("disabled"))){ //プロパティエディタが有効の場合
-                if(haveToRollBack){
+                if(haveToRollBack_text_anchor){
                     rollbackTransaction(bufTotalReport_For_text_anchor); //元に戻す
                     fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust");
-                    $propertyEditor_text_anchor_expMsg.text(beforeText);
+                    $propertyEditor_text_anchor_expMsg.text(beforeExpMessage_For_text_anchor);
                     clickedElem.classList.remove(slctd);
-                    if(beforeTextAnchor != ""){
-                        var selectorStr = '.textAnchorType[data-text_anchor_type="' + beforeTextAnchor + '"]';
+                    if(before_text_anchor != ""){
+                        var selectorStr = '.textAnchorType[data-text_anchor_type="' + before_text_anchor + '"]';
                         $(clickedElem.parentNode).children(selectorStr).eq(0).addClass(slctd);
                     }                    
                 }
             }
 
             bufTotalReport_For_text_anchor = null;
-            beforeText = "";
-            haveToRollBack = true;
+            beforeExpMessage_For_text_anchor = "";
+            haveToRollBack_text_anchor = true;
         }
     )
     //--------------------------------------------------------------</text.text_anchor>
@@ -267,7 +267,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
     var $expMsgElem = $nodeEditConsoleElem.find(".propertyEditor.text_fill").children(".message.explicitness").eq(0);
 
     var bufTotalReport_For_text_fill; //Rendering Report 用バッファ
-
+    
     //Rendering Report 用バッファ クリア
     var func_clearBufTotalReport_For_text_fill = function clearBufTotalReport_For_text_fill(){
         bufTotalReport_For_text_fill = {};
@@ -337,7 +337,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
     //register spectrum
     $pickerElem.spectrum({
         showAlpha: true,
-        allowEmpty: true,
+        allowEmpty: false,
         showInitial: true,
         clickoutFiresChange: true, // <- カラーピッカーの範囲外をクリックする or ESC押下時に、
                                    //    最後に入力されていたtinyColorObjを、
@@ -480,8 +480,6 @@ var $3historyElem = $3editableNodesTAG.append("div")
     .style("border", 0)
     .style("padding", 0)
     .style("right",0)
-    .style("max-width", "300px") //<- 仮の数値
-    .style("max-height", "300px") //<- 仮の数値
     .style("white-space","nowrap")
     .style("overflow","auto")
     .classed("historyElem",true)
@@ -489,12 +487,41 @@ var $3historyElem = $3editableNodesTAG.append("div")
 
 function appendHistory(transactionObj){
 
-    $3historyElem.append("div")
-        .append("p")
-        .text(transactionObj.message); //仮の処理
+    var appendedIndex = transactionHistory.length;
+    transactionHistory.push(transactionObj); //Append History
 
-    //Append History
-    transactionHistory.push(transactionObj);
+    var $3historyMessageElem = $3historyElem.append("div")
+        .classed("transaction",true)
+        .attr("data-history_index", appendedIndex.toString());
+
+    $3historyMessageElem.append("small")
+        .text(transactionObj.message);
+        
+    
+    var $historyMessageElem  = $($3historyMessageElem.node());
+    $historyMessageElem.hover(
+
+        function(){ //mouseenter
+            var clickedElem = this;
+            clickedElem.classList.add(slctd);
+            var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
+            console.log("history mouseenter" + historyIndex.toString());
+
+        },function(){ //mouseleave
+            var clickedElem = this;
+            clickedElem.classList.remove(slctd);
+            var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
+            console.log("history mouseleave" + historyIndex.toString());
+
+        }
+    );
+
+    $historyMessageElem.on("click",function(){
+        var clickedElem = this;
+        var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
+        console.log("history click" + historyIndex.toString());
+        rollbackHistory(historyIndex);
+    });
 }
 
 var firstTotalReport = {};
@@ -2036,6 +2063,17 @@ function backToDefaulIfWarn_TextType(reportObj, bindedData){
         delete bindedData.text[propertyName];
     });
     
+}
+
+function rollbackHistory(historyIndex){
+
+    if(transactionHistory.length < 1){ //Historyが存在しない場合
+        return;
+    }
+    
+    for(var i = transactionHistory.length - 1 ; i > historyIndex ; i--){
+        console.log(i);
+    }
 }
 
 function rollbackTransaction(transaction){

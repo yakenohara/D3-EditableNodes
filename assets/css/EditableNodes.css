@@ -39,6 +39,10 @@
     background-color: rgb(160, 160, 160);
 }
 
+#editableNode .historyElem .selected{
+    background-color: rgb(77, 74, 255);
+}
+
 /* -----------------------------------------------------</ユーザーが好みで変更する定義> */
 
 /* <構造定義>------------------------------------------------------ */
@@ -67,6 +71,15 @@
     border-width: 1px;
     border-color: rgb(145, 118, 93);
     padding:4px;
+}
+
+#editableNode .historyElem{
+    max-width: 200px;
+    max-height: 300px;
+}
+
+#editableNode .historyElem .transaction{
+    padding: 3px 5px;
 }
 
 /* -----------------------------------------------------</構造定義> */
