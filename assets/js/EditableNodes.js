@@ -267,6 +267,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
     var $expMsgElem = $nodeEditConsoleElem.find(".propertyEditor.text_fill").children(".message.explicitness").eq(0);
 
     var bufTotalReport_For_text_fill; //Rendering Report 用バッファ
+    var beforeExpMessage_For_text_fill = null;
     
     //Rendering Report 用バッファ クリア
     var func_clearBufTotalReport_For_text_fill = function clearBufTotalReport_For_text_fill(){
@@ -286,21 +287,20 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
             $inputElem.val(latestTextFill); //最後に反映したカラーで<input>要素を更新
             $pickerElem.spectrum("set", latestTextFill); //カラーピッカーに反映
 
-            if(bufTotalReport_For_text_fill.allOK){ //全てのNodeで適用成功の場合
-                $expMsgElem.text("explicit");
-
-            }else{ //1部Nodeで適用失敗の場合
-                $expMsgElem.text("explicit (some part)");
-            }
-
             appendHistory(bufTotalReport_For_text_fill);
             func_clearBufTotalReport_For_text_fill(); //ログ用バッファ初期化
 
         }
+        beforeExpMessage_For_text_fill = null;
     }
 
     //SVGNodeへの反映 & Rendering Reportをバッファに積む
     var func_renderAndMergeBufTotalReport_For_text_fill = function renderAndMergeBufTotalReport_For_text_fill(toFillStr){
+
+        if(beforeExpMessage_For_text_fill === null){ //初回の場合(Buffering 1回目の場合)
+            beforeExpMessage_For_text_fill = $expMsgElem.text(); //現在の表示状態を保存
+        }
+
         //SVGNodeへの反映
         var totalReport = fireNodeEditConsoleEvent_renderSVG({text:{text_fill:toFillStr}});
         fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust");
@@ -308,6 +308,13 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
         if(!totalReport.allNG){ //1つ以上のNodeで適用成功の場合
             totalReport.message = "text fill:" + toFillStr;
             overWriteScceededTransaction(totalReport, bufTotalReport_For_text_fill);
+
+            if(totalReport.allOK){ //全てのNodeで適用成功の場合
+                $expMsgElem.text("explicit");
+
+            }else{ //1部Nodeで適用失敗の場合
+                $expMsgElem.text("explicit (some part)");
+            }
         }
     }
 
@@ -377,6 +384,8 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
             rollbackTransaction(bufTotalReport_For_text_fill); //元に戻す
             fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust"); //編集中の<textarea>を元に戻したSVGNodeに合わせる
             func_clearBufTotalReport_For_text_fill(); //ログ用バッファ初期化
+            $expMsgElem.text(beforeExpMessage_For_text_fill);
+            beforeExpMessage_For_text_fill = null;
         }
 
         //<input>要素をカラーピッカーの色に合わせる
