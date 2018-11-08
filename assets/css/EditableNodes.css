@@ -54,6 +54,7 @@
 #editableNode .nodeEditConsoleElem .propertyEditor .textAnchorType{
     display: inline-block;
     padding: 2px;
+    cursor: pointer;
 }
 
 #editableNode .nodeEditConsoleElem .propertyEditor .message.explicitness{
@@ -80,6 +81,7 @@
 
 #editableNode .historyElem .transaction{
     padding: 3px 5px;
+    cursor: pointer;
 }
 
 /* -----------------------------------------------------</構造定義> */

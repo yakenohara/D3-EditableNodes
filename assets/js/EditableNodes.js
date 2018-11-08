@@ -101,8 +101,6 @@ var dataset = [
 ];
 
 var UITrappedEvents = {
-    selectSVGNode: "click", //`d3.js` event
-    editSVGNode: "dblclick", //`d3.js` event
     editSVGNodes: "f2", //`Mousetrap` event
     submitEditingTextTypeSVGNode: "enter", //`Mousetrap` event
     insertLFWhenEditingTextTypeSVGNode: "alt+enter", //`Mousetrap` event
@@ -369,6 +367,16 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
         }
     });
 
+    var initialOfColorPicker = "";
+    $pickerElem.on('show.spectrum', function(e, tinycolorObj) {
+        colObj = $pickerElem.spectrum("get");
+        if(colObj === null){
+            initialOfColorPicker = "";
+        }else{
+            initialOfColorPicker = colObj.toRgbString();
+        }
+    });
+
     var changed_text_text_fill = false;
 
     //カラーピッカーの `chooseボタンクリック` or `範囲外クリック` イベント
@@ -392,16 +400,11 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
         clearBufOf_text_text_fill();
         fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust"); //編集中の<textarea>を元に戻したSVGNodeに合わせる
 
-        //<input>要素をカラーピッカーの色に合わせる
-        var tinycolorObj = $pickerElem.spectrum("get");
-
-        if( tinycolorObj === null){ //直前がnullの場合
-            $inputElem.val(""); //空文字にする
-
-        }else{
-            var rgbstr = tinycolorObj.toRgbString();
-            $inputElem.val(rgbstr);
+        if(tinycolor(initialOfColorPicker).isValid()){ //パース可能な場合
+            $pickerElem.spectrum("set", initialOfColorPicker);
         }
+        //<input>要素をカラーピッカーの色に合わせる
+        $inputElem.val(initialOfColorPicker);
 
     }
 
@@ -424,7 +427,7 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
             clearBufOf_text_text_fill();
             
         }else{ //text.text_fill の colorpicker が表示中だった場合
-            $(".editableNode-spectrum_container .sp-cancel").click(); //'cancel'ボタンを押す
+            $pickerElem.spectrum("hide"); //colorpickerをcancelする
         }
     }
 
@@ -708,7 +711,7 @@ transactionHistory.push(firstTotalReport);
 //<UI TRAP>---------------------------------------------------------------------
 
 // Node以外に対する選択
-$($3svgGroup.node()).on(UITrappedEvents.selectSVGNode, function(e){
+$($3svgGroup.node()).on('click', function(e){
     if(d3.select(e.target).classed("SVGForNodesMapping")){ // SVG領域に対する選択
                                                            // -> Node以外に対する選択の場合
         
@@ -730,7 +733,7 @@ $($3svgGroup.node()).on(UITrappedEvents.selectSVGNode, function(e){
 });
 
 //SVGノードの単一選択イベント
-$3nodes.on(UITrappedEvents.selectSVGNode, function(d){
+$3nodes.on('click', function(d){
 
     var selectOnlyMe = false;
 
@@ -784,7 +787,7 @@ $3nodes.on(UITrappedEvents.selectSVGNode, function(d){
 });
 
 // Nodeに対する単一編集イベント
-$3nodes.on(UITrappedEvents.editSVGNode, function(d){
+$3nodes.on('dblclick', function(d){
 
     if(nowEditng){ // 編集中の場合
                    // -> 発生し得ないルート
@@ -3016,7 +3019,6 @@ function getDomPath(el) {
     
     while ( el.parentNode !== null ) {
         
-        //console.log(el.nodeName);
         var sibCount = 0;
         var sibIndex = 0;
         
