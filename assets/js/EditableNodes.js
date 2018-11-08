@@ -135,6 +135,8 @@ var transactionHistory = [];
 var bufTotalReport_For_text_content; //Rendering Report 用バッファ
 clearbufTotalReport_For_text_content();
 
+var func_clearBuf_forPropertyEditor;
+
 //Rendering Report 用バッファ クリア
 function clearbufTotalReport_For_text_content(){
     bufTotalReport_For_text_content = {};
@@ -367,26 +369,28 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
         }
     });
 
-    //カラーピッカーの `chooseボタンクリック` or `範囲外クリック` or `ESC押下` イベント
+    var changed_text_text_fill = false;
+
+    //カラーピッカーの `chooseボタンクリック` or `範囲外クリック` イベント
     $pickerElem.on('change.spectrum', function(e, tinycolorObj) {
         func_confirmBufTotalReport_For_text_fill(); //バッファに積んだ Rendering Report を 確定させる
+        changed_text_text_fill = true;
     });
 
-    //カラーピッカーの非表示イベント
+    //カラーピッカーの`cancel` or `ESC押下` or `▽押下`イベント
+    // note `chooseボタンクリック` or `範囲外クリック`でも発火する
     $pickerElem.on('hide.spectrum', function(e, tinycolorObj) {
-        // nothing to do
+
+        if(!changed_text_text_fill){ //`chooseボタンクリック` or `範囲外クリック`を押下していない場合
+            clear_bufTotalReport_For_text_fill();
+        }
+        changed_text_text_fill = false;
     });
 
-    //cancelボタンクリックイベント
-    $(".editableNode-spectrum_container .sp-cancel").on('click',function(){
-        
-        if(bufTotalReport_For_text_fill.allOK){ //成功したRenderingReportが存在する場合
-            rollbackTransaction(bufTotalReport_For_text_fill); //元に戻す
-            fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust"); //編集中の<textarea>を元に戻したSVGNodeに合わせる
-            func_clearBufTotalReport_For_text_fill(); //ログ用バッファ初期化
-            $expMsgElem.text(beforeExpMessage_For_text_fill);
-            beforeExpMessage_For_text_fill = null;
-        }
+    function clear_bufTotalReport_For_text_fill(){
+
+        clearBufOf_text_text_fill();
+        fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust"); //編集中の<textarea>を元に戻したSVGNodeに合わせる
 
         //<input>要素をカラーピッカーの色に合わせる
         var tinycolorObj = $pickerElem.spectrum("get");
@@ -398,9 +402,31 @@ $nodeEditConsoleElem.load(urlOf_EditableNodes_components_html,function(responseT
             var rgbstr = tinycolorObj.toRgbString();
             $inputElem.val(rgbstr);
         }
-    });
+
+    }
+
+    function clearBufOf_text_text_fill(){
+        if(!bufTotalReport_For_text_fill.allNG){ //成功したRenderingReportが存在する場合
+            rollbackTransaction(bufTotalReport_For_text_fill); //元に戻す
+            func_clearBufTotalReport_For_text_fill(); //ログ用バッファ初期化
+            $expMsgElem.text(beforeExpMessage_For_text_fill);
+            beforeExpMessage_For_text_fill = null;
+        }
+    }
 
     //--------------------------------------------------------------</text.text_fill>
+
+    func_clearBuf_forPropertyEditor = function text(){
+
+        //text.text_fill
+        var isColorpickerHidden = $(".editableNode-spectrum_container").hasClass("sp-hidden");
+        if(isColorpickerHidden){ //text.text_fill の colorpicker が非表示だった場合
+            clearBufOf_text_text_fill();
+            
+        }else{ //text.text_fill の colorpicker が表示中だった場合
+            $(".editableNode-spectrum_container .sp-cancel").click(); //'cancel'ボタンを押す
+        }
+    }
 
     //---------------------------------------------------------------------------------------------------------</register behavor>
 });
@@ -521,8 +547,15 @@ function appendHistory(transactionObj){
             rollbackHistory(historyIndex, false);
 
             //todo nowEditingの場合は、NodeEditConsoleをロールバックした状態に合わせる
+            if(typeof func_clearBuf_forPropertyEditor == 'function'){
+                func_clearBuf_forPropertyEditor();
+                applyRenderdStyleToPropertyEditor();
+                fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust"); //編集中の<textarea>を元に戻したSVGNodeに合わせる
+            }else{
+                console.warn("Cannot clear Property Editor's Buffer");
+            }
             
-        //transactionに対するMouseELeaveイベント
+        //transactionに対するMouseLeaveイベント
         },function(){
             var clickedElem = this;
             clickedElem.classList.remove(slctd); //選択状態を表すクラス削除
@@ -530,6 +563,8 @@ function appendHistory(transactionObj){
             if($(clickedElem).attr("data-rollbacked") != 'true'){
                 var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
                 replayHistory(historyIndex + 1);
+                applyRenderdStyleToPropertyEditor();
+                fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust"); //編集中の<textarea>を元に戻したSVGNodeに合わせる
 
                 //todo nowEditingの場合は、NodeEditConsoleをロールバックした状態に合わせる
             }
@@ -551,25 +586,14 @@ function appendHistory(transactionObj){
 
         //history表示の削除ループ
         var siblings = clickedElem.parentNode.children;
-        var lenOfSiblings = siblings.length;
-
-        //todo 以下2通りの方法でNG
-
-        // for(var i = 0 ; i < lenOfSiblings ; i++){
-        //     var historyIndexOfItr = parseInt($(siblings[i]).attr("data-history_index"));
-        //     if(historyIndexOfItr > historyIndex){ //選択したtransactionより後のhistoryだった場合
-        //         $(siblings[i]).remove(); //history表示の削除
-        //     }
-        // }
-
-
-         
-        // siblings.forEach(function(sibling,idx){
-        //     var historyIndexOfItr = parseInt($(sibling).attr("data-history_index"));
-        //     if(historyIndexOfItr > historyIndex){ //選択したtransactionより後のhistoryだった場合
-        //         $(sibling).remove();
-        //     }
-        // })
+        for(var i = siblings.length - 1 ; i >= 0 ; i--){ //最終indexからデクリメントで網羅
+            var historyIndexOfItr = parseInt($(siblings[i]).attr("data-history_index"));
+            if(historyIndexOfItr > historyIndex){ //選択したtransactionより後のhistoryだった場合
+                $(siblings[i]).remove(); //history表示の削除
+            }else{
+                break;
+            }
+        }
 
     });
 }
@@ -2261,6 +2285,16 @@ function exitEditing(){
 //
 function editSVGNodes(){
 
+    //選択Nodeを元にPropertyEditorに反映
+    var computedStylesOfData = applyRenderdStyleToPropertyEditor();
+    
+    if(computedStylesOfData.length > 0){ //編集対象Nodeが存在する場合
+        $nodeEditConsoleElem.slideDown(100); //PropertyEditorを表示
+        nowEditng = true; //`編集中`状態にする
+    }
+}
+
+function applyRenderdStyleToPropertyEditor(){
     var computedStylesOfData = [];
 
     //Node選択状態の非表示化ループ
@@ -2268,7 +2302,7 @@ function editSVGNodes(){
 
         var bindedData = dataset[i];
 
-        if(bindedData.$3bindedSelectionLayerSVGElement.style("visibility").toLowerCase() != "hidden"){ // 選択対象Nodeの場合
+        if(bindedData.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ // 選択対象Nodeの場合
             bindedData.$3bindedSelectionLayerSVGElement.style("visibility","hidden"); //非表示にする
             var computedStlOfData = getComputedStyleOfData(bindedData); // Nodeに適用されたスタイルの取得
             if( computedStlOfData !== null){
@@ -2432,12 +2466,9 @@ function editSVGNodes(){
         //frame_stroke_dasharray
         //frame_fill
 
-    
-        //NodeEditConsoleを表示
-        $nodeEditConsoleElem.slideDown(100);
-
-        nowEditng = true;
     }
+
+    return computedStylesOfData;
 }
 
 function mergeStyles(fromThisStlObj, fromThisExpObj, toThisStlObj, toThisExpObj, propertyName){
