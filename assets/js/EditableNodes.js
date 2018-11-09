@@ -159,6 +159,7 @@
     
     /* ---------------------------------------------------------------------------------------------</Hard cords> */
     
+    var succeededLoadOf_ExternalComponent = false;
     var nowEditng = false;　      //Property Editorが起動中かどうか
     var lastSelectedData = null;　//最後に選択状態にしたNode
     var transactionHistory = [];  //history
@@ -490,7 +491,7 @@
 
         //--------------------------------------------------------------</text.text_fill>
 
-        func_clearBuf_forPropertyEditor = function text(){
+        func_clearBuf_forPropertyEditor = function(){
 
             //text.text_fill
             var isColorpickerHidden = $propertyEditor_text_text_fill_picker_spectrum.hasClass("sp-hidden");
@@ -503,6 +504,8 @@
         }
 
         //---------------------------------------------------------------------------------------------------------</register behavor>
+
+        succeededLoadOf_ExternalComponent = true; //load完了
     });
 
     $3transactionHistoryElement = $3superElement.append("div") //transaction history
@@ -593,31 +596,42 @@
 
     //<UI TRAP>---------------------------------------------------------------------
 
-    // Node以外に対する選択
+    // Node以外に対する click event
     $SVGDrawingAreaElement.on('click', function(e){
-        if(d3.select(e.target).classed(className_SVGElementForNodesMapping)){ // SVG領域に対する選択
-                                                                              // -> Node以外に対する選択の場合
-            
-            if(nowEditng){ // 編集中の場合
 
-                fireEvent_PropertyEditConsole("propertyEditConsole_exit", {confirm:true}); //バッファを確定させて<textarea>を終了
-                exitEditing(); //編集モードの終了
+        // SVG領域に対する選択でない場合(Node等)はハジく
+        if(!((e.target).classList.contains(className_SVGElementForNodesMapping))){return;}
+
+        //External Componentが未loadの場合はハジく
+        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
+        
+        if(nowEditng){ // 編集中の場合
+
+            fireEvent_PropertyEditConsole("propertyEditConsole_exit", {confirm:true}); //バッファを確定させて<textarea>を終了
+            exitEditing(); //編集モードの終了
+        
+        }else{  // 編集中でない場合
             
-            }else{  // 編集中でない場合
-                
-                //Nodeすべてを選択解除する
-                for(var i = 0 ; i < dataset.length ; i++){
-                    dataset[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
-                        .attr("data-selected", "false"); //選択解除
-                }
-                lastSelectedData = null;
+            //Nodeすべてを選択解除する
+            for(var i = 0 ; i < dataset.length ; i++){
+                dataset[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
+                    .attr("data-selected", "false"); //選択解除
             }
+            lastSelectedData = null;
         }
     });
 
-    //SVGノードの単一選択イベント
+    //
+    // SVGノードの単一選択イベント 
+    //
+    // note doubleclick時に2回呼ばれて不要がTogglingが発生するが、
+    //      .on('dblclick', function()~ によって強制的に選択状態にされる
+    //
     $3nodes.on('click', function(d){
 
+        //External Componentが未loadの場合はハジく
+        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
+        
         var selectOnlyMe = false;
 
         if(nowEditng){ // 編集中の場合
@@ -672,6 +686,9 @@
     // Nodeに対する単一編集イベント
     $3nodes.on('dblclick', function(d){
 
+        //External Componentが未loadの場合はハジく
+        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
+        
         if(nowEditng){ // 編集中の場合
                     // -> 発生し得ないルート
                     //    (直前に呼ばれる単一選択イベントによって、対象Nodeの上に<textarea>が生成される為)
@@ -701,6 +718,9 @@
     // Nodeに対する複数編集イベント
     Mousetrap.bind(keySettings.editSVGNodes, function(e){
 
+        //External Componentが未loadの場合はハジく
+        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
+        
         if(nowEditng){ // 編集中の場合
             //nothing to do
         
@@ -845,13 +865,11 @@
                 var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
                 rollbackHistory(historyIndex, false);
 
-                //todo nowEditingの場合は、NodeEditConsoleをロールバックした状態に合わせる
-                if(typeof func_clearBuf_forPropertyEditor == 'function'){
+                //property editor内の値をロールバックしたNode状態に合わせる
+                if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
                     func_clearBuf_forPropertyEditor();
                     adjustPropertyEditConsole();
                     fireEvent_PropertyEditConsole("propertyEditConsole_adjust"); //編集中の<textarea>を元に戻したSVGNodeに合わせる
-                }else{
-                    console.warn("Cannot clear Property Editor's Buffer");
                 }
                 
             //transactionに対するMouseLeaveイベント
@@ -2360,6 +2378,15 @@
         }
     }
 
+    function checkSucceededLoadOf_ExternalComponent(){
+        if(!succeededLoadOf_ExternalComponent){ //loda未完了の場合
+            console.error("External Component \`" + url_externalComponent + "\` is not loaded yet");
+            return false;
+        }else{ //load済みの場合
+            return true;
+        }
+    }
+
     //
     // PropertyEditConsole 内の各 Property Editor の設定値を
     // selected な Node の表示状態に合わせる
@@ -2422,7 +2449,7 @@
             }
 
             //マージしたスタイルをNodeEditConsoleに反映
-
+            
             //text_content
 
             //<text.text_anchor>-------------------------------------------------------------------------------------
