@@ -120,16 +120,6 @@
     //Property Edit Console要素のclass名
     var className_propertyEditConsoleElement = "propertyEditConsole";
 
-    //Property Editor (fill, font-family等を個別に指定する要素)のclass名
-    var className_propertyEditor = "propertyEditor";
-
-    //Property Editor のクラス名
-    var className_propertyEditor_text_text_anchor = "text_text_anchor"; //text.text_anchor
-    var className_propertyEditor_text_text_fill = "text_text_fill";     //text.text_fill
-
-    //Property Editor 内の explicitness message要素用セレクタ文字列
-    var selectorString_propertyEditor_explicitnessMessage = ".message.explicitness";
-
     //Transaction History要素のclass名
     var className_transactionHistoryElement = "transactionHistory";
 
@@ -155,6 +145,17 @@
 
     //<text>要素内での行間 note:単位は[em]
     var valOfLineHightInText = 1.3;
+
+    var forSpectrumRegisteringOptionObj = { //register spectrum for text.text_fill
+        showAlpha: true,
+        allowEmpty: false,
+        showInitial: true,
+        clickoutFiresChange: true, // <- カラーピッカーの範囲外をクリックする or ESC押下時に、
+                                   //    最後に入力されていたtinyColorObjを、
+                                   //    'change'イベント、'hide'イベントそれぞれに渡す(コール順序は'change'→'hide')
+                                   //    最後に入力されていたtinyColorObjがEmptyな場合は、nullを渡す
+        preferredFormat: "rgb",
+    }
     
     /* ---------------------------------------------------------------------------------------------</Hard cords> */
     
@@ -169,15 +170,76 @@
     firstTotalReport.allOK = true;
     firstTotalReport.reportsArr = [];
 
-    var bufTotalReportFor_text_text_content;    //text.text_content用PropertyEditroが使用するBuffer
-    clearBufTotalReportFor_text_text_content(); // <- 初期化もやっておく
+    
+    var $3superElement; //全てのもと
+    var $3propertyEditConsoleElement; //Property Edit Console (D3.js selection)
+    var $propertyEditConsoleElement;  //Property Edit Console (jQuery selection)
+    var $3transactionHistoryElement;  //Transaction History
+    var $3SVGDrawingAreaElement;      //描画用SVG領域 (D3.js selection)
+    var $SVGDrawingAreaElement;       //描画用SVG領域 (jQuery selection)
+    var $3nodesGroup;
+    var $3nodes;
+    var $3selectionLayersGroup;
 
+
+    //<Element Selections and Settings of PropertyEditor>-----------------------------------------------------------
+    //CSSと共用のキーワードが含まれる処理も、ここに記述する
+
+    var className_propertyEditor = "propertyEditor";
+
+    var className_propertyEditor_text_text_content = "text_text_content";
+    var bufTotalReportFor_propertyEditor_text_text_content;    //text.text_content用PropertyEditroが使用するBuffer
+    clearBufTotalReportFor_propertyEditor_text_text_content(); // <- 初期化もやっておく
+
+    var $propertyEditor_text_text_anchor;
+    var $propertyEditor_text_text_anchor_textAnchorTypes;
+    var $propertyEditor_text_text_anchor_expMsg;
+    var attributeName_typeOf_text_text_anchor_textAnchorType = "data-text_anchor_type";
+
+    var $propertyEditor_text_text_fill;
+    var $propertyEditor_text_text_fill_picker;
+    var $propertyEditor_text_text_fill_picker_spectrum;
+    var $propertyEditor_text_text_fill_inputElem;
+    var $propertyEditor_text_text_fill_expMsg;
+
+
+    // Property Edit Console 内の DOM Element Selection をグローバル変数に展開する
+    function deployElementSelectionsOf_PropertyEditConsle(){
+
+        $propertyEditor_text_text_anchor = $propertyEditConsoleElement.find(".propertyEditor.text_text_anchor");
+        $propertyEditor_text_text_anchor_textAnchorTypes = $propertyEditor_text_text_anchor.children(".textAnchorType");
+        $propertyEditor_text_text_anchor_expMsg = $propertyEditor_text_text_anchor.children(".message.explicitness").eq(0);
+
+        $propertyEditor_text_text_fill = $propertyEditConsoleElement.find(".propertyEditor.text_text_fill");
+        $propertyEditor_text_text_fill_picker = $propertyEditor_text_text_fill.children(".picker").eq(0);
+        var spectrumContainerClassName   =  "propertyEditor spectrum text_text_fill";
+        var spectrumContainerSelectorStr = ".propertyEditor.spectrum.text_text_fill";
+        forSpectrumRegisteringOptionObj.containerClassName = spectrumContainerClassName; //text.text_fill用である事を判別する為のクラス名を指定
+        $propertyEditor_text_text_fill_picker.spectrum(forSpectrumRegisteringOptionObj);
+        $propertyEditor_text_text_fill_picker_spectrum = $(spectrumContainerSelectorStr);
+        $propertyEditor_text_text_fill_inputElem = $propertyEditor_text_text_fill.children(".pickedColorText").eq(0);
+        $propertyEditor_text_text_fill_expMsg = $propertyEditor_text_text_fill.children(".message.explicitness").eq(0);
+    }
+
+    //text.text_anchor用PropertyEditorから指定ボタン要素を取得する
+    function get$propertyEditor_text_text_anchor_textAnchorType(selectByThisType){
+        var $toRetElem;
+        if(['start', 'middle', 'end'].indexOf(selectByThisType) < 0){ //Unkownの場合
+            console.warn("Unknown style \`text-anchor:" + specifiedType + ";\` specified.");
+            return $toRetElem; //'undefined'で返す
+        }
+        var selectorStr = '.textAnchorType[data-text_anchor_type="' + selectByThisType + '"]';
+        $toRetElem = $propertyEditor_text_text_anchor.children(selectorStr).eq(0); //指定要素を取得
+        return $toRetElem;
+    }
+
+    //----------------------------------------------------------</Element Selections and Settings of PropertyEditor>
 
     //DOM構築
-    var $3superElement = d3.select("#" + idName_superElement) //全てのもと
+    $3superElement = d3.select("#" + idName_superElement) //全てのもと
         .style("position", "relative");
 
-    var $3propertyEditConsoleElement = $3superElement.append("div") //Property Editor
+    $3propertyEditConsoleElement = $3superElement.append("div") //Property Edit Console
         .style("position", "absolute")
         .style("z-index", 10)
         .style("margin", 0)
@@ -186,8 +248,9 @@
         .style("display","none")
         .classed(className_propertyEditConsoleElement, true);
 
+    $propertyEditConsoleElement = $($3propertyEditConsoleElement.node()); //Jquery selectionも作る
+
     //外部コンポーネントをProperty Editor配下に構築する
-    var $propertyEditConsoleElement = $($3propertyEditConsoleElement.node());
     $propertyEditConsoleElement.load(url_externalComponent,function(responseText, textStatus, jqXHR) {
 
         //成功確認
@@ -196,6 +259,8 @@
             return;
         }
 
+        deployElementSelectionsOf_PropertyEditConsle(); //DomElementへの参照をグローバル変数に展開する
+        
         //<register behavor>----------------------------------------------------------------------------------------------------------
 
         //<text.text_anchor>---------------------------------------------------------------
@@ -204,8 +269,7 @@
         var beforeExpMessage_For_text_anchor = "";
         var before_text_anchor = "";
         
-        var $propertyEditor_text_anchor_expMsg = $propertyEditConsoleElement.find("." + className_propertyEditor + "." + className_propertyEditor_text_text_anchor).children(selectorString_propertyEditor_explicitnessMessage).eq(0);
-        $propertyEditConsoleElement.find("." + className_propertyEditor + "." + className_propertyEditor_text_text_anchor).children(".textAnchorType").on("click",function(){
+        $propertyEditor_text_text_anchor_textAnchorTypes.on("click",function(){
             var clickedElem = this;
 
             if(!($(clickedElem.parentNode).prop("disabled"))){ //プロパティエディタが有効の場合
@@ -215,7 +279,7 @@
             }
         });
         
-        $propertyEditConsoleElement.find("." + className_propertyEditor + "." + className_propertyEditor_text_text_anchor).children(".textAnchorType").hover(
+        $propertyEditor_text_text_anchor_textAnchorTypes.hover(
             
             function(){ //mouseenter
                 
@@ -223,20 +287,18 @@
 
                 if(!($(clickedElem.parentNode).prop("disabled"))){ //プロパティエディタが有効の場合
                     
-                    var specifiedType = clickedElem.getAttribute("data-text_anchor_type");
+                    var specifiedType = clickedElem.getAttribute(attributeName_typeOf_text_text_anchor_textAnchorType);
 
-                    if(['start', 'middle', 'end'].indexOf(specifiedType) < 0){ // PropertyEditorElementに対するイタズラで、
-                                                                               // `data-text_anchor_type`属性が不明値になった場合
-
+                    if(['start', 'middle', 'end'].indexOf(specifiedType) < 0){ // 念の為Unkownかどうかチェック
                         console.warn("Unknown style \`text-anchor:" + specifiedType + ";\` specified.");
                         return;
                     }
 
                     haveToRollBack_text_anchor = true;
-                    beforeExpMessage_For_text_anchor = $propertyEditor_text_anchor_expMsg.text();
+                    beforeExpMessage_For_text_anchor = $propertyEditor_text_text_anchor_expMsg.text();
 
-                    bufTotalReport_For_text_anchor = fireNodeEditConsoleEvent_renderSVG({text:{text_anchor: specifiedType}});
-                    fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust");
+                    bufTotalReport_For_text_anchor = fireEvent_PropertyEditConsole_rerender({text:{text_anchor: specifiedType}});
+                    fireEvent_PropertyEditConsole("propertyEditConsole_adjust");
 
                     bufTotalReport_For_text_anchor.message = "text-anchor:" + specifiedType;
     
@@ -245,17 +307,17 @@
                     before_text_anchor = "";
                     for(var i = 0 ; i < siblings.length ; i++){
                         if($(siblings[i]).hasClass(className_nodeIsSelected)){ //選択状態だったら
-                            before_text_anchor = siblings[i].getAttribute("data-text_anchor_type");
+                            before_text_anchor = siblings[i].getAttribute(attributeName_typeOf_text_text_anchor_textAnchorType);
                         }
                         siblings[i].classList.remove(className_nodeIsSelected);
                     }
                     clickedElem.classList.add(className_nodeIsSelected); //クリックされた要素を"selected"状態にする
 
                     if(bufTotalReport_For_text_anchor.allOK){ //適用全部成功の場合
-                        $propertyEditor_text_anchor_expMsg.text("explicit");
+                        $propertyEditor_text_text_anchor_expMsg.text("explicit");
                     
                     }else{ //適用一部失敗の場合
-                        $propertyEditor_text_anchor_expMsg.text("explicit (some part)");
+                        $propertyEditor_text_text_anchor_expMsg.text("explicit (some part)");
                         //note ロールバックは不要
                     }
                     
@@ -268,12 +330,14 @@
                 if(!($(clickedElem.parentNode).prop("disabled"))){ //プロパティエディタが有効の場合
                     if(haveToRollBack_text_anchor){
                         rollbackTransaction(bufTotalReport_For_text_anchor); //元に戻す
-                        fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust");
-                        $propertyEditor_text_anchor_expMsg.text(beforeExpMessage_For_text_anchor);
+                        fireEvent_PropertyEditConsole("propertyEditConsole_adjust");
+                        $propertyEditor_text_text_anchor_expMsg.text(beforeExpMessage_For_text_anchor);
                         clickedElem.classList.remove(className_nodeIsSelected);
                         if(before_text_anchor != ""){
-                            var selectorStr = '.textAnchorType[data-text_anchor_type="' + before_text_anchor + '"]';
-                            $(clickedElem.parentNode).children(selectorStr).eq(0).addClass(className_nodeIsSelected);
+                            var $toSelectElem = get$propertyEditor_text_text_anchor_textAnchorType(before_text_anchor); //property editor要素を取得
+                            if(typeof $toSelectElem != 'undefined'){ //選択対象要素がある場合
+                                $toSelectElem.addClass(className_nodeIsSelected); //選択状態にする
+                            }
                         }                    
                     }
                 }
@@ -286,11 +350,6 @@
         //--------------------------------------------------------------</text.text_anchor>
 
         //<text.text_fill>---------------------------------------------------------------
-        var $pickerElem = $propertyEditConsoleElement.find("." + className_propertyEditor + "." + className_propertyEditor_text_text_fill).children(".picker").eq(0);
-        var $inputElem = $propertyEditConsoleElement.find("." + className_propertyEditor + "." + className_propertyEditor_text_text_fill).children(".pickedColorText").eq(0);
-        var $expMsgElem = $propertyEditConsoleElement.find("." + className_propertyEditor + "." + className_propertyEditor_text_text_fill).children(selectorString_propertyEditor_explicitnessMessage).eq(0);
-        var spectrumContainerClassName = idName_superElement + '_spectrum_container_for_' + className_propertyEditor + "_" + className_propertyEditor_text_text_fill;
-
         var bufTotalReport_For_text_fill; //Rendering Report 用バッファ
         var beforeExpMessage_For_text_fill = null;
         
@@ -309,8 +368,8 @@
                 //最後に反映したカラーをログから取得
                 var latestTextFill = bufTotalReport_For_text_fill.reportsArr[0].RenderedObj.text.text_fill;
 
-                $inputElem.val(latestTextFill); //最後に反映したカラーで<input>要素を更新
-                $pickerElem.spectrum("set", latestTextFill); //カラーピッカーに反映
+                $propertyEditor_text_text_fill_inputElem.val(latestTextFill); //最後に反映したカラーで<input>要素を更新
+                $propertyEditor_text_text_fill_picker.spectrum("set", latestTextFill); //カラーピッカーに反映
 
                 appendHistory(bufTotalReport_For_text_fill);
                 func_clearBufTotalReport_For_text_fill(); //ログ用バッファ初期化
@@ -323,22 +382,22 @@
         var func_renderAndMergeBufTotalReport_For_text_fill = function renderAndMergeBufTotalReport_For_text_fill(toFillStr){
 
             if(beforeExpMessage_For_text_fill === null){ //初回の場合(Buffering 1回目の場合)
-                beforeExpMessage_For_text_fill = $expMsgElem.text(); //現在の表示状態を保存
+                beforeExpMessage_For_text_fill = $propertyEditor_text_text_fill_expMsg.text(); //現在の表示状態を保存
             }
 
             //SVGNodeへの反映
-            var totalReport = fireNodeEditConsoleEvent_renderSVG({text:{text_fill:toFillStr}});
-            fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust");
+            var totalReport = fireEvent_PropertyEditConsole_rerender({text:{text_fill:toFillStr}});
+            fireEvent_PropertyEditConsole("propertyEditConsole_adjust");
 
             if(!totalReport.allNG){ //1つ以上のNodeで適用成功の場合
                 totalReport.message = "text fill:" + toFillStr;
                 overWriteScceededTransaction(totalReport, bufTotalReport_For_text_fill);
 
                 if(totalReport.allOK){ //全てのNodeで適用成功の場合
-                    $expMsgElem.text("explicit");
+                    $propertyEditor_text_text_fill_expMsg.text("explicit");
 
                 }else{ //1部Nodeで適用失敗の場合
-                    $expMsgElem.text("explicit (some part)");
+                    $propertyEditor_text_text_fill_expMsg.text("explicit (some part)");
                 }
             }
         }
@@ -346,46 +405,33 @@
         func_clearBufTotalReport_For_text_fill(); //ログ用バッファ初期化
 
         //<input>要素内のキータイピングイベント
-        $inputElem.get(0).oninput = function(){
+        $propertyEditor_text_text_fill_inputElem.get(0).oninput = function(){
 
-            var iputStr = $inputElem.val();
+            var iputStr = $propertyEditor_text_text_fill_inputElem.val();
 
             //TinyColorでパース可能な文字列かどうかチェック
             if(!(tinycolor(iputStr).isValid())){ //パース不可能な場合
                 console.warn("Cannot parse \`" + iputStr + "\` by TinyColor.");
                 return;
             }
-            $pickerElem.spectrum("set", iputStr); //カラーピッカーに反映
+            $propertyEditor_text_text_fill_picker.spectrum("set", iputStr); //カラーピッカーに反映
 
             //SVGNodeへの反映 & Rendering Reportをバッファに積む
             func_renderAndMergeBufTotalReport_For_text_fill(iputStr);
         }
 
         //<input>要素からフォーカスが離れた時のイベント
-        $inputElem.get(0).onblur = function(){
+        $propertyEditor_text_text_fill_inputElem.get(0).onblur = function(){
             func_confirmBufTotalReport_For_text_fill(); //バッファに積んだ Rendering Report を 確定させる
         }
 
-        //register spectrum
-        $pickerElem.spectrum({
-            showAlpha: true,
-            allowEmpty: false,
-            showInitial: true,
-            clickoutFiresChange: true, // <- カラーピッカーの範囲外をクリックする or ESC押下時に、
-                                    //    最後に入力されていたtinyColorObjを、
-                                    //    'change'イベント、'hide'イベントそれぞれに渡す(コール順序は'change'→'hide')
-                                    //    最後に入力されていたtinyColorObjがEmptyな場合は、nullを渡す
-            preferredFormat: "rgb",
-            containerClassName: spectrumContainerClassName,
-        });
-
         //カラーピッカーのドラッグイベント
-        $pickerElem.on('move.spectrum', function(e, tinycolorObj) {
+        $propertyEditor_text_text_fill_picker.on('move.spectrum', function(e, tinycolorObj) {
             
             if(tinycolorObj !== null){ //nullチェック。カラーピッカー右上の「×」をクリックすると、nullが来る。
 
                 var iputStr = tinycolorObj.toRgbString();
-                $inputElem.val(iputStr); //<input>要素に値を設定する
+                $propertyEditor_text_text_fill_inputElem.val(iputStr); //<input>要素に値を設定する
 
                 //SVGNodeへの反映 & Rendering Reportをバッファに積む
                 func_renderAndMergeBufTotalReport_For_text_fill(iputStr);
@@ -393,8 +439,8 @@
         });
 
         var initialOfColorPicker = "";
-        $pickerElem.on('show.spectrum', function(e, tinycolorObj) {
-            colObj = $pickerElem.spectrum("get");
+        $propertyEditor_text_text_fill_picker.on('show.spectrum', function(e, tinycolorObj) {
+            colObj = $propertyEditor_text_text_fill_picker.spectrum("get");
             if(colObj === null){
                 initialOfColorPicker = "";
             }else{
@@ -405,14 +451,14 @@
         var changed_text_text_fill = false;
 
         //カラーピッカーの `chooseボタンクリック` or `範囲外クリック` イベント
-        $pickerElem.on('change.spectrum', function(e, tinycolorObj) {
+        $propertyEditor_text_text_fill_picker.on('change.spectrum', function(e, tinycolorObj) {
             func_confirmBufTotalReport_For_text_fill(); //バッファに積んだ Rendering Report を 確定させる
             changed_text_text_fill = true;
         });
 
         //カラーピッカーの`cancel` or `ESC押下` or `▽押下`イベント
         // note `chooseボタンクリック` or `範囲外クリック`でも発火する
-        $pickerElem.on('hide.spectrum', function(e, tinycolorObj) {
+        $propertyEditor_text_text_fill_picker.on('hide.spectrum', function(e, tinycolorObj) {
 
             if(!changed_text_text_fill){ //`chooseボタンクリック` or `範囲外クリック`を押下していない場合
                 clear_bufTotalReport_For_text_fill();
@@ -423,13 +469,13 @@
         function clear_bufTotalReport_For_text_fill(){
 
             clearBufOf_text_text_fill();
-            fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust"); //編集中の<textarea>を元に戻したSVGNodeに合わせる
+            fireEvent_PropertyEditConsole("propertyEditConsole_adjust"); //編集中の<textarea>を元に戻したSVGNodeに合わせる
 
             if(tinycolor(initialOfColorPicker).isValid()){ //パース可能な場合
-                $pickerElem.spectrum("set", initialOfColorPicker);
+                $propertyEditor_text_text_fill_picker.spectrum("set", initialOfColorPicker);
             }
             //<input>要素をカラーピッカーの色に合わせる
-            $inputElem.val(initialOfColorPicker);
+            $propertyEditor_text_text_fill_inputElem.val(initialOfColorPicker);
 
         }
 
@@ -437,7 +483,7 @@
             if(!bufTotalReport_For_text_fill.allNG){ //成功したRenderingReportが存在する場合
                 rollbackTransaction(bufTotalReport_For_text_fill); //元に戻す
                 func_clearBufTotalReport_For_text_fill(); //ログ用バッファ初期化
-                $expMsgElem.text(beforeExpMessage_For_text_fill);
+                $propertyEditor_text_text_fill_expMsg.text(beforeExpMessage_For_text_fill);
                 beforeExpMessage_For_text_fill = null;
             }
         }
@@ -447,19 +493,19 @@
         func_clearBuf_forPropertyEditor = function text(){
 
             //text.text_fill
-            var isColorpickerHidden = $(spectrumContainerClassName).hasClass("sp-hidden");
+            var isColorpickerHidden = $propertyEditor_text_text_fill_picker_spectrum.hasClass("sp-hidden");
             if(isColorpickerHidden){ //text.text_fill の colorpicker が非表示だった場合
                 clearBufOf_text_text_fill();
                 
             }else{ //text.text_fill の colorpicker が表示中だった場合
-                $pickerElem.spectrum("hide"); //colorpickerをcancelする
+                $propertyEditor_text_text_fill_picker.spectrum("hide"); //colorpickerをcancelする
             }
         }
 
         //---------------------------------------------------------------------------------------------------------</register behavor>
     });
 
-    var $3transactionHistoryElement = $3superElement.append("div") //transaction history
+    $3transactionHistoryElement = $3superElement.append("div") //transaction history
         .style("position", "absolute")
         .style("z-index", 10)
         .style("margin", 0)
@@ -471,17 +517,19 @@
         .classed(className_transactionHistoryElement, true)
         .attr("wrap","off");
 
-    var $3svgGroup = $3superElement.append("svg") //Node描画用SVGの作成
+    $3SVGDrawingAreaElement = $3superElement.append("svg") //Node描画用SVGの作成
         .classed(className_SVGElementForNodesMapping, true)
         .style("vertical-align", "bottom");
 
-    var $3nodesGroup = $3svgGroup.append("g") //ノードグループの作成
+    $SVGDrawingAreaElement = $($3SVGDrawingAreaElement.node());
+
+    $3nodesGroup = $3SVGDrawingAreaElement.append("g") //ノードグループの作成
         .classed(className_SVGGroupForNodes, true);
 
-    var $3selectionLayersGroup = $3svgGroup.append("g") //Selection Layer 用グループの作成
+    $3selectionLayersGroup = $3SVGDrawingAreaElement.append("g") //Selection Layer 用グループの作成
         .classed(className_SVGGroupForSelectionLayers, true);
 
-    var $3nodes = $3nodesGroup.selectAll("g") // ノード追加
+    $3nodes = $3nodesGroup.selectAll("g") // ノード追加
         .data(dataset)
         .enter()
         .append("g")
@@ -516,17 +564,17 @@
             firstTotalReport.reportsArr.push(renderReport);
 
             //EventListener登録
-            bindedSVGElement.addEventListener("NodeEditConsoleEvent_renderSVG",function(eventObj){
+            bindedSVGElement.addEventListener("propertyEditConsole_rerender",function(eventObj){
 
                 if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //自分のNodeが選択中の場合
             
                     //引数チェック
                     if(typeof eventObj.argObj == 'undefined'){ //引数なし
-                        console.warn("NodeEditConsoleEvent_renderSVG was not specified \`argObj\`.");
+                        console.warn("propertyEditConsole_rerender was not specified \`argObj\`.");
                         return;
                     }
                     if(typeof eventObj.argObj.renderByThisObj != 'object'){ //nodeレンダリング用objが存在しない
-                        console.warn("NodeEditConsoleEvent_renderSVG was not specified \`argObj.renderByThisObj\`.");
+                        console.warn("propertyEditConsole_rerender was not specified \`argObj.renderByThisObj\`.");
                         return;
                     }
             
@@ -546,13 +594,13 @@
     //<UI TRAP>---------------------------------------------------------------------
 
     // Node以外に対する選択
-    $($3svgGroup.node()).on('click', function(e){
+    $SVGDrawingAreaElement.on('click', function(e){
         if(d3.select(e.target).classed(className_SVGElementForNodesMapping)){ // SVG領域に対する選択
                                                                               // -> Node以外に対する選択の場合
             
             if(nowEditng){ // 編集中の場合
 
-                fireNodeEditConsoleEvent("NodeEditConsoleEvent_exit", {confirm:true}); //バッファを確定させて<textarea>を終了
+                fireEvent_PropertyEditConsole("propertyEditConsole_exit", {confirm:true}); //バッファを確定させて<textarea>を終了
                 exitEditing(); //編集モードの終了
             
             }else{  // 編集中でない場合
@@ -575,13 +623,13 @@
         if(nowEditng){ // 編集中の場合
             
             if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択中Nodeの場合
-                fireNodeEditConsoleEvent("NodeEditConsoleEvent_exit", {confirm:false}); //バッファを残したまま<textarea>を終了
+                fireEvent_PropertyEditConsole("propertyEditConsole_exit", {confirm:false}); //バッファを残したまま<textarea>を終了
                 lastSelectedData = d; //最終選択Nodeの記憶
                 editSVGNode(lastSelectedData); //SVGノード(単一)編集機能をキック
 
             }else{ //選択中Nodeでない場合
 
-                fireNodeEditConsoleEvent("NodeEditConsoleEvent_exit", {confirm:true}); //バッファを確定させて<textarea>を終了
+                fireEvent_PropertyEditConsole("propertyEditConsole_exit", {confirm:true}); //バッファを確定させて<textarea>を終了
                 exitEditing(); //編集モードの終了
                 
                 selectOnlyMe = true;
@@ -628,7 +676,7 @@
                     // -> 発生し得ないルート
                     //    (直前に呼ばれる単一選択イベントによって、対象Nodeの上に<textarea>が生成される為)
 
-            fireNodeEditConsoleEvent("NodeEditConsoleEvent_exit", {confirm:true}); //バッファを確定させて<textarea>を終了
+            fireEvent_PropertyEditConsole("propertyEditConsole_exit", {confirm:true}); //バッファを確定させて<textarea>を終了
             exitEditing(); //編集モードの終了
         
         }
@@ -694,14 +742,14 @@
 
     // -------------------------------------------------------------------------------</TBD 複数Nodeのブラシ選択>
 
-    function fireNodeEditConsoleEvent_renderSVG(argObj){
+    function fireEvent_PropertyEditConsole_rerender(argObj){
         var totalReport = {};
         totalReport.allOK = true;
         totalReport.allNG = true;
         totalReport.reportsArr = [];
 
         var eventObj = document.createEvent("Event");
-        eventObj.initEvent("NodeEditConsoleEvent_renderSVG", false, false);
+        eventObj.initEvent("propertyEditConsole_rerender", false, false);
         eventObj.argObj　= {};
         eventObj.argObj.renderByThisObj = argObj;
         eventObj.argObj.clbkFunc = function(renderReport){ //ノード変更レポートの追加用コールバック関数
@@ -734,7 +782,7 @@
         return totalReport;
     }
 
-    function fireNodeEditConsoleEvent(eventName, attachThisArgObj){
+    function fireEvent_PropertyEditConsole(eventName, attachThisArgObj){
         var eventObj = document.createEvent("Event");
         eventObj.initEvent(eventName, false, false);
 
@@ -800,8 +848,8 @@
                 //todo nowEditingの場合は、NodeEditConsoleをロールバックした状態に合わせる
                 if(typeof func_clearBuf_forPropertyEditor == 'function'){
                     func_clearBuf_forPropertyEditor();
-                    applyRenderdStyleToPropertyEditor();
-                    fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust"); //編集中の<textarea>を元に戻したSVGNodeに合わせる
+                    adjustPropertyEditConsole();
+                    fireEvent_PropertyEditConsole("propertyEditConsole_adjust"); //編集中の<textarea>を元に戻したSVGNodeに合わせる
                 }else{
                     console.warn("Cannot clear Property Editor's Buffer");
                 }
@@ -814,8 +862,8 @@
                 if($(clickedElem).attr("data-rollbacked") != 'true'){
                     var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
                     replayHistory(historyIndex + 1);
-                    applyRenderdStyleToPropertyEditor();
-                    fireNodeEditConsoleEvent("NodeEditConsoleEvent_adjust"); //編集中の<textarea>を元に戻したSVGNodeに合わせる
+                    adjustPropertyEditConsole();
+                    fireEvent_PropertyEditConsole("propertyEditConsole_adjust"); //編集中の<textarea>を元に戻したSVGNodeに合わせる
                 }
                 
                 $(clickedElem).attr("data-rollbacked","false"); //rollback実行済み状態をfalseに設定
@@ -2304,7 +2352,7 @@
     function editSVGNodes(){
 
         //選択Nodeを元にPropertyEditorに反映
-        var computedStylesOfData = applyRenderdStyleToPropertyEditor();
+        var computedStylesOfData = adjustPropertyEditConsole();
         
         if(computedStylesOfData.length > 0){ //編集対象Nodeが存在する場合
             $propertyEditConsoleElement.slideDown(100); //PropertyEditorを表示
@@ -2312,7 +2360,11 @@
         }
     }
 
-    function applyRenderdStyleToPropertyEditor(){
+    //
+    // PropertyEditConsole 内の各 Property Editor の設定値を
+    // selected な Node の表示状態に合わせる
+    //
+    function adjustPropertyEditConsole(){
         var computedStylesOfData = [];
 
         //Node選択状態の非表示化ループ
@@ -2374,59 +2426,39 @@
             //text_content
 
             //<text.text_anchor>-------------------------------------------------------------------------------------
-            var $propertyEditor_text_anchor = $propertyEditConsoleElement.find("." + className_propertyEditor + "." + className_propertyEditor_text_text_anchor);
-            var $propertyEditor_text_anchor_expMsg = $propertyEditor_text_anchor.children(selectorString_propertyEditor_explicitnessMessage).eq(0);
-
+            
             //選択状態の初期化
-            var buttons = $propertyEditor_text_anchor.children();
+            var buttons = $propertyEditor_text_text_anchor.children();
             for(var i = 0 ; i < buttons.length; i++){
                 buttons.eq(i).removeClass(className_nodeIsSelected); //ボタン選択状態の初期化
             }
-            $propertyEditor_text_anchor_expMsg.text("");
+            $propertyEditor_text_text_anchor_expMsg.text("");
 
             if(typeof mergedStyles.text.text_anchor == 'undefined'){ //描画対象のNodeが存在しない
 
                 //対象プロパティエディタのグレーアウト
-                $propertyEditor_text_anchor.prop("disabled", true);
-                $propertyEditor_text_anchor_expMsg.text("no nodes");
+                $propertyEditor_text_text_anchor.prop("disabled", true);
+                $propertyEditor_text_text_anchor_expMsg.text("no nodes");
 
             }else{  //描画対象のスタイルが存在する
 
                 //対象プロパティエディタの有効化
-                $propertyEditor_text_anchor.prop("disabled", false);
+                $propertyEditor_text_text_anchor.prop("disabled", false);
 
                 if(mergedStyles.text.text_anchor !== null){// merged Styleが算出できた
-                    var isKnownType = true;
-                    switch(mergedStyles.text.text_anchor){
-                        case "start":
-                        break;
-        
-                        case "middle":
-                        break;
-        
-                        case "end":
-                        break;
 
-                        default:
-                        {
-                            console.warn("Unknown style \`text-anchor:" + specifiedType + ";\` specified.");
-                            isKnownType = false;
-                        }
-                        break
-                    }
-
-                    if(isKnownType){
-                        var selectorStr = '.textAnchorType[data-text_anchor_type="' + mergedStyles.text.text_anchor + '"]';
-                        $propertyEditor_text_anchor.children(selectorStr).eq(0).addClass(className_nodeIsSelected); //指定text-anchorタイプを選択
+                    var $toSelectElem = get$propertyEditor_text_text_anchor_textAnchorType(mergedStyles.text.text_anchor); //property editor要素を取得
+                    if(typeof $toSelectElem != 'undefined'){ //選択対象要素がある場合
+                        $toSelectElem.addClass(className_nodeIsSelected); //選択状態にする
                     }
                 }
 
                 if(mergedExplicitnesses.text.text_anchor === null){ // explicitly defined している Node は一部だけだった
-                    $propertyEditor_text_anchor_expMsg.text("explicit (some part)");
+                    $propertyEditor_text_text_anchor_expMsg.text("explicit (some part)");
                 }else if(mergedExplicitnesses.text.text_anchor){    // explicitly defined している Node は全部
-                    $propertyEditor_text_anchor_expMsg.text("explicit");
+                    $propertyEditor_text_text_anchor_expMsg.text("explicit");
                 }else{                                         // explicitly defined していない
-                    $propertyEditor_text_anchor_expMsg.text("");
+                    $propertyEditor_text_text_anchor_expMsg.text("");
                 }
 
             }
@@ -2437,39 +2469,35 @@
             //text_font_size
 
             //<text.text_fill>---------------------------------------------------------------------------------------
-            var $propertyEditor_text_fill = $propertyEditConsoleElement.find("." + className_propertyEditor + "." + className_propertyEditor_text_text_fill);
-            var $propertyEditor_text_fill_picker = $propertyEditor_text_fill.children(".picker").eq(0);
-            var $propertyEditor_text_fill_inputElem = $propertyEditor_text_fill.children(".pickedColorText").eq(0);
-            var $propertyEditor_text_fill_expMsg = $propertyEditor_text_fill.children(selectorString_propertyEditor_explicitnessMessage).eq(0);
-
+            
             //初期化
-            $propertyEditor_text_fill_expMsg.text("");
+            $propertyEditor_text_text_fill_expMsg.text("");
 
             if(typeof mergedStyles.text.text_fill == 'undefined'){ //描画対象のNodeが存在しない
                 
                 //対象プロパティエディタのグレーアウト
-                $propertyEditor_text_fill_picker.spectrum("disable"); //カラーピッカーを無効化
-                $propertyEditor_text_fill_inputElem.prop('disabled', true); //<input>要素を無効化
+                $propertyEditor_text_text_fill_picker.spectrum("disable"); //カラーピッカーを無効化
+                $propertyEditor_text_text_fill_inputElem.prop('disabled', true); //<input>要素を無効化
 
-                $propertyEditor_text_fill_expMsg.text("no nodes");
+                $propertyEditor_text_text_fill_expMsg.text("no nodes");
 
             }else{  //描画対象のスタイルが存在する
 
                 //対象プロパティエディタの有効化
-                $propertyEditor_text_fill_picker.spectrum("enable"); //カラーピッカーを有効化
-                $propertyEditor_text_fill_inputElem.prop('disabled', false); //<input>要素を有効化
+                $propertyEditor_text_text_fill_picker.spectrum("enable"); //カラーピッカーを有効化
+                $propertyEditor_text_text_fill_inputElem.prop('disabled', false); //<input>要素を有効化
 
                 if(mergedStyles.text.text_fill !== null){ // merged Styleが算出できた
-                    $propertyEditor_text_fill_inputElem.val(mergedStyles.text.text_fill);
-                    $propertyEditor_text_fill_picker.spectrum("set",mergedStyles.text.text_fill);
+                    $propertyEditor_text_text_fill_inputElem.val(mergedStyles.text.text_fill);
+                    $propertyEditor_text_text_fill_picker.spectrum("set",mergedStyles.text.text_fill);
                 }
 
                 if(mergedExplicitnesses.text.text_fill === null){ // explicitly defined している Node は一部だけだった
-                    $propertyEditor_text_fill_expMsg.text("explicit (some part)");
+                    $propertyEditor_text_text_fill_expMsg.text("explicit (some part)");
                 }else if(mergedExplicitnesses.text.text_fill){    // explicitly defined している Node は全部
-                    $propertyEditor_text_fill_expMsg.text("explicit");
+                    $propertyEditor_text_text_fill_expMsg.text("explicit");
                 }else{                                       // explicitly defined していない
-                    $propertyEditor_text_fill_expMsg.text("");
+                    $propertyEditor_text_text_fill_expMsg.text("");
                 }
             }
 
@@ -2555,7 +2583,9 @@
             .style("line-height", valOfLineHightInText + "em")
             .style("resize", "none")
             .style("overflow", "hidden")
-            .style("background-color", "rgba(105, 105, 105, 0)")
+            .style("background-color", "rgba(105, 105, 105, 0)") // <- 透明度100%にする
+            .classed(className_propertyEditor, true)
+            .classed(className_propertyEditor_text_text_content, true)
             .classed("mousetrap",true)
             .property("value", textareaValue)
             .attr("wrap","off");
@@ -2568,15 +2598,15 @@
             func_renderAndMergeBufTotalReport_For_text_content($3textareaElem.node().value, bindedData); //SVGNodeへの反映&<textarea>調整
         }
 
-        $3SVGnodeElem.node().addEventListener("NodeEditConsoleEvent_adjust",call_adjustTextarea);
-        $3SVGnodeElem.node().addEventListener("NodeEditConsoleEvent_exit",remove_exitListener);
+        $3SVGnodeElem.node().addEventListener("propertyEditConsole_adjust",call_adjustTextarea);
+        $3SVGnodeElem.node().addEventListener("propertyEditConsole_exit",remove_exitListener);
         
         function call_adjustTextarea(evetnObj){
             adjustTextarea(bindedData, $3textareaElem);
         }
 
         function remove_adjustListener(){
-            $3SVGnodeElem.node().removeEventListener("NodeEditConsoleEvent_adjust",call_adjustTextarea);
+            $3SVGnodeElem.node().removeEventListener("propertyEditConsole_adjust",call_adjustTextarea);
         }
 
         function remove_exitListener(eventObj){
@@ -2588,7 +2618,7 @@
             }
 
             remove_adjustListener();
-            $3SVGnodeElem.node().removeEventListener("NodeEditConsoleEvent_exit",remove_exitListener);
+            $3SVGnodeElem.node().removeEventListener("propertyEditConsole_exit",remove_exitListener);
         }
 
         function exitTextEdit(confirm){
@@ -2633,21 +2663,21 @@
         //SVGNodeへの反映 & Rendering Reportをバッファに積む
         var func_renderAndMergeBufTotalReport_For_text_content = function renderAndMergeBufTotalReport_For_text_content(text_content, bindedData){
             //SVGNodeへの反映
-            var totalReport = fireNodeEditConsoleEvent_renderSVG({text:{text_content:text_content}});
+            var totalReport = fireEvent_PropertyEditConsole_rerender({text:{text_content:text_content}});
             adjustTextarea(bindedData, $3textareaElem);
 
             if(!totalReport.allNG){ //1つ以上のNodeで適用成功の場合
                 totalReport.message = "text content:" + text_content;
-                overWriteScceededTransaction(totalReport, bufTotalReportFor_text_text_content);
+                overWriteScceededTransaction(totalReport, bufTotalReportFor_propertyEditor_text_text_content);
             }
         }
 
         //バッファに積んだ Rendering Report を 確定させる
         var func_confirmBufTotalReport_For_text_content = function confirmBufTotalReport_For_text_content(){
-            if(!bufTotalReportFor_text_text_content.allNG){ //ログに記録するべきレポートが存在する場合
+            if(!bufTotalReportFor_propertyEditor_text_text_content.allNG){ //ログに記録するべきレポートが存在する場合
 
-                appendHistory(bufTotalReportFor_text_text_content);
-                clearBufTotalReportFor_text_text_content();
+                appendHistory(bufTotalReportFor_propertyEditor_text_text_content);
+                clearBufTotalReportFor_propertyEditor_text_text_content();
             }
         }
 
@@ -2788,11 +2818,11 @@
     //
     //text.text_contentの編集時に使用するBufferをclearする
     //
-    function clearBufTotalReportFor_text_text_content(){
-        bufTotalReportFor_text_text_content = {};
-        bufTotalReportFor_text_text_content.allOK = false; 
-        bufTotalReportFor_text_text_content.allNG = true; // <- falseとなった場合は、ログに残すべきTransactionが少なくとも1件以上存在する事を表す
-        bufTotalReportFor_text_text_content.reportsArr = [];
+    function clearBufTotalReportFor_propertyEditor_text_text_content(){
+        bufTotalReportFor_propertyEditor_text_text_content = {};
+        bufTotalReportFor_propertyEditor_text_text_content.allOK = false; 
+        bufTotalReportFor_propertyEditor_text_text_content.allNG = true; // <- falseとなった場合は、ログに残すべきTransactionが少なくとも1件以上存在する事を表す
+        bufTotalReportFor_propertyEditor_text_text_content.reportsArr = [];
     }
 
     function getComputedStyleOfData(bindedData){
