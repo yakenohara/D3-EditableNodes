@@ -192,10 +192,13 @@
     var bufTotalReportFor_propertyEditor_text_text_content;    //text.text_content用PropertyEditroが使用するBuffer
     clearBufTotalReportFor_propertyEditor_text_text_content(); // <- 初期化もやっておく
 
+    
+    //todo global化が必要かどうか再検討
     var $propertyEditor_text_text_anchor;
     var $propertyEditor_text_text_anchor_textAnchorTypes;
     var $propertyEditor_text_text_anchor_expMsg;
     var attributeName_typeOf_text_text_anchor_textAnchorType = "data-text_anchor_type";
+    var propertyEditingBehavor_text_text_anchor;
 
     var $propertyEditor_text_text_fill;
     var $propertyEditor_text_text_fill_picker;
@@ -210,23 +213,21 @@
         $propertyEditor_text_text_anchor = $propertyEditConsoleElement.find(".propertyEditor.text_text_anchor");
         $propertyEditor_text_text_anchor_textAnchorTypes = $propertyEditor_text_text_anchor.children(".textAnchorType");
         $propertyEditor_text_text_anchor_expMsg = $propertyEditor_text_text_anchor.children(".message.explicitness").eq(0);
+        var elemAndValArr = [];
+        elemAndValArr.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="start"]'),
+                      useThisVal: 'start'});
+        elemAndValArr.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="middle"]'),
+                      useThisVal: 'middle'});
+        elemAndValArr.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="end"]'),
+                      useThisVal: 'end'});
+        propertyEditingBehavor_text_text_anchor = new propertyEditorBehavor_radioButtons(elemAndValArr, $propertyEditor_text_text_anchor_expMsg, ['text', 'text_anchor']);
 
         $propertyEditor_text_text_fill = $propertyEditConsoleElement.find(".propertyEditor.text_text_fill");
         $propertyEditor_text_text_fill_picker = $propertyEditor_text_text_fill.children(".picker").eq(0);
         $propertyEditor_text_text_fill_inputElem = $propertyEditor_text_text_fill.children(".pickedColorText").eq(0);
         $propertyEditor_text_text_fill_expMsg = $propertyEditor_text_text_fill.children(".message.explicitness").eq(0);
-    }
+        propertyEditingBehavor_text_text_fill = new propertyEditorBehavor_fill($propertyEditor_text_text_fill_inputElem, $propertyEditor_text_text_fill_picker, $propertyEditor_text_text_fill_expMsg, ['text', 'text_fill']);
 
-    //text.text_anchor用PropertyEditorから指定ボタン要素を取得する
-    function get$propertyEditor_text_text_anchor_textAnchorType(selectByThisType){
-        var $toRetElem;
-        if(['start', 'middle', 'end'].indexOf(selectByThisType) < 0){ //Unkownの場合
-            console.warn("Unknown style \`text-anchor:" + specifiedType + ";\` specified.");
-            return $toRetElem; //'undefined'で返す
-        }
-        var selectorStr = '.textAnchorType[data-text_anchor_type="' + selectByThisType + '"]';
-        $toRetElem = $propertyEditor_text_text_anchor.children(selectorStr).eq(0); //指定要素を取得
-        return $toRetElem;
     }
 
     //----------------------------------------------------------</Element Selections and Settings of PropertyEditor>
@@ -257,101 +258,10 @@
 
         deployElementSelectionsOf_PropertyEditConsle(); //DomElementへの参照をグローバル変数に展開する
         
-        //<register behavor>----------------------------------------------------------------------------------------------------------
-
-        //<text.text_anchor>---------------------------------------------------------------
-        var haveToRollBack_text_anchor = true;
-        var bufTotalReport_For_text_anchor = null; //Rendering Report 用バッファ
-        var beforeExpMessage_For_text_anchor = "";
-        var before_text_anchor = "";
         
-        $propertyEditor_text_text_anchor_textAnchorTypes.on("click",function(){
-            var clickedElem = this;
-
-            if(!($(clickedElem.parentNode).prop("disabled"))){ //プロパティエディタが有効の場合
-
-                appendHistory(bufTotalReport_For_text_anchor);
-                haveToRollBack_text_anchor = false;
-            }
-        });
-        
-        $propertyEditor_text_text_anchor_textAnchorTypes.hover(
-            
-            function(){ //mouseenter
-                
-                var clickedElem = this;
-
-                if(!($(clickedElem.parentNode).prop("disabled"))){ //プロパティエディタが有効の場合
-                    
-                    var specifiedType = clickedElem.getAttribute(attributeName_typeOf_text_text_anchor_textAnchorType);
-
-                    if(['start', 'middle', 'end'].indexOf(specifiedType) < 0){ // 念の為Unkownかどうかチェック
-                        console.warn("Unknown style \`text-anchor:" + specifiedType + ";\` specified.");
-                        return;
-                    }
-
-                    haveToRollBack_text_anchor = true;
-                    beforeExpMessage_For_text_anchor = $propertyEditor_text_text_anchor_expMsg.text();
-
-                    bufTotalReport_For_text_anchor = fireEvent_PropertyEditConsole_rerender({text:{text_anchor: specifiedType}});
-                    fireEvent_PropertyEditConsole("propertyEditConsole_adjust");
-
-                    bufTotalReport_For_text_anchor.message = "text-anchor:" + specifiedType;
-    
-                    //選択状態の解除ループ
-                    var siblings = clickedElem.parentNode.children;
-                    before_text_anchor = "";
-                    for(var i = 0 ; i < siblings.length ; i++){
-                        if($(siblings[i]).hasClass(className_nodeIsSelected)){ //選択状態だったら
-                            before_text_anchor = siblings[i].getAttribute(attributeName_typeOf_text_text_anchor_textAnchorType);
-                        }
-                        siblings[i].classList.remove(className_nodeIsSelected);
-                    }
-                    clickedElem.classList.add(className_nodeIsSelected); //クリックされた要素を"selected"状態にする
-
-                    if(bufTotalReport_For_text_anchor.allOK){ //適用全部成功の場合
-                        $propertyEditor_text_text_anchor_expMsg.text("explicit");
-                    
-                    }else{ //適用一部失敗の場合
-                        $propertyEditor_text_text_anchor_expMsg.text("explicit (some part)");
-                        //note ロールバックは不要
-                    }
-                    
-                }
-
-            },function(){ //mouseleave
-
-                var clickedElem = this;
-                
-                if(!($(clickedElem.parentNode).prop("disabled"))){ //プロパティエディタが有効の場合
-                    if(haveToRollBack_text_anchor){
-                        rollbackTransaction(bufTotalReport_For_text_anchor); //元に戻す
-                        fireEvent_PropertyEditConsole("propertyEditConsole_adjust");
-                        $propertyEditor_text_text_anchor_expMsg.text(beforeExpMessage_For_text_anchor);
-                        clickedElem.classList.remove(className_nodeIsSelected);
-                        if(before_text_anchor != ""){
-                            var $toSelectElem = get$propertyEditor_text_text_anchor_textAnchorType(before_text_anchor); //property editor要素を取得
-                            if(typeof $toSelectElem != 'undefined'){ //選択対象要素がある場合
-                                $toSelectElem.addClass(className_nodeIsSelected); //選択状態にする
-                            }
-                        }                    
-                    }
-                }
-
-                bufTotalReport_For_text_anchor = null;
-                beforeExpMessage_For_text_anchor = "";
-                haveToRollBack_text_anchor = true;
-            }
-        )
-        //--------------------------------------------------------------</text.text_anchor>
-
-        //<text.text_fill>---------------------------------------------------------------
-        propertyEditingBehavor_text_text_fill = new propertyEditorBehavor_fill($propertyEditor_text_text_fill_inputElem, $propertyEditor_text_text_fill_picker, $propertyEditor_text_text_fill_expMsg, ['text', 'text_fill']);
-        //--------------------------------------------------------------</text.text_fill>
-
         // 編集中を破棄する場合の Behavor 登録
         func_cancelBufOf_PropertyEditConsole = function(){
-            propertyEditingBehavor_text_text_fill.cancel();
+            propertyEditingBehavor_text_text_fill.cancel(); //todo ここに書きたくない
         }
 
         //---------------------------------------------------------------------------------------------------------</register behavor>
@@ -2343,43 +2253,7 @@
             //text_content
 
             //<text.text_anchor>-------------------------------------------------------------------------------------
-            
-            //選択状態の初期化
-            var buttons = $propertyEditor_text_text_anchor.children();
-            for(var i = 0 ; i < buttons.length; i++){
-                buttons.eq(i).removeClass(className_nodeIsSelected); //ボタン選択状態の初期化
-            }
-            $propertyEditor_text_text_anchor_expMsg.text("");
-
-            if(typeof mergedStyles.text.text_anchor == 'undefined'){ //描画対象のNodeが存在しない
-
-                //対象プロパティエディタのグレーアウト
-                $propertyEditor_text_text_anchor.prop("disabled", true);
-                $propertyEditor_text_text_anchor_expMsg.text("no nodes");
-
-            }else{  //描画対象のスタイルが存在する
-
-                //対象プロパティエディタの有効化
-                $propertyEditor_text_text_anchor.prop("disabled", false);
-
-                if(mergedStyles.text.text_anchor !== null){// merged Styleが算出できた
-
-                    var $toSelectElem = get$propertyEditor_text_text_anchor_textAnchorType(mergedStyles.text.text_anchor); //property editor要素を取得
-                    if(typeof $toSelectElem != 'undefined'){ //選択対象要素がある場合
-                        $toSelectElem.addClass(className_nodeIsSelected); //選択状態にする
-                    }
-                }
-
-                if(mergedExplicitnesses.text.text_anchor === null){ // explicitly defined している Node は一部だけだった
-                    $propertyEditor_text_text_anchor_expMsg.text("explicit (some part)");
-                }else if(mergedExplicitnesses.text.text_anchor){    // explicitly defined している Node は全部
-                    $propertyEditor_text_text_anchor_expMsg.text("explicit");
-                }else{                                         // explicitly defined していない
-                    $propertyEditor_text_text_anchor_expMsg.text("");
-                }
-
-            }
-
+            propertyEditingBehavor_text_text_anchor.applyFromComputedStyleObj(mergedStyles, mergedExplicitnesses);
             //------------------------------------------------------------------------------------</text.text_anchor>
 
             //text_font_family
@@ -2711,6 +2585,155 @@
         bufTotalReportFor_propertyEditor_text_text_content.reportsArr = [];
     }
 
+    function propertyEditorBehavor_radioButtons(elemAndValArr, $expMsgElem, structureArr){
+
+        var clicked = false;
+        var beforeExpMessage = "";
+        var beforeVal = "";
+        var bufTotalReport = null; //Rendering Report 用バッファ
+
+        //各Elementに対するBehavor登録
+        for(var itr = 0 ; itr < elemAndValArr.length ; itr++){
+
+            //Mouse Enter Event
+            elemAndValArr[itr].$elem.mouseenter(elemAndValArr[itr],function(event){
+                    
+                var enteredElem = this;
+
+                if(!($(enteredElem).prop("disabled"))){ //プロパティエディタが有効の場合
+
+                    var toRenderObj = makeNestedObj(event.data.useThisVal, structureArr);
+
+                    clicked = false;
+                    beforeExpMessage = $expMsgElem.text();
+
+                    bufTotalReport = fireEvent_PropertyEditConsole_rerender(toRenderObj);
+                    fireEvent_PropertyEditConsole("propertyEditConsole_adjust");
+
+                    bufTotalReport.message = structureArr.join("/") + ":" + event.data.useThisVal;
+    
+                    //選択状態の解除ループ
+                    beforeVal = "";
+                    for(var i = 0 ; i < elemAndValArr.length ; i++){
+                        if(elemAndValArr[i].$elem.hasClass(className_nodeIsSelected)){ //選択状態の場合
+                            beforeVal = elemAndValArr[i].useThisVal;
+                        }
+                        elemAndValArr[i].$elem.removeClass(className_nodeIsSelected); //選択解除
+                    }
+                    enteredElem.classList.add(className_nodeIsSelected); //クリックされた要素を選択状態にする
+
+                    if(bufTotalReport.allOK){ //適用全部成功の場合
+                        $expMsgElem.text("explicit");
+                    
+                    }else{ //適用一部失敗の場合
+                        $expMsgElem.text("explicit (some part)");
+                        //note ロールバックは不要
+                    }
+                    
+                }
+
+            });
+
+            // Mouse Click Event
+            elemAndValArr[itr].$elem.click(elemAndValArr[itr],function(event){
+                
+                var clickedElem = this;
+
+                if(!($(clickedElem).prop("disabled"))){ //プロパティエディタが有効の場合
+                    appendHistory(bufTotalReport);
+                    clicked = true;
+                }
+            });
+            
+            // Mouse Leave Event
+            elemAndValArr[itr].$elem.mouseleave(elemAndValArr[itr],function(event){
+                
+                var leavedElem = this;
+
+                if(!($(leavedElem).prop("disabled"))){ //プロパティエディタが有効の場合
+                    
+                    if(!clicked){ //クリックしなかった場合
+                        
+                        rollbackTransaction(bufTotalReport); //元に戻す
+                        fireEvent_PropertyEditConsole("propertyEditConsole_adjust");
+                        $expMsgElem.text(beforeExpMessage);
+                        leavedElem.classList.remove(className_nodeIsSelected);
+                        if(beforeVal != ""){
+                            var $toSelectElem = get$elemByVal(beforeVal); //property editor要素を取得
+                            if(typeof $toSelectElem != 'undefined'){ //選択対象要素がある場合
+                                $toSelectElem.addClass(className_nodeIsSelected); //選択状態にする
+                            }
+                        }                    
+                    }
+
+                    bufTotalReport = null;
+                    beforeExpMessage = "";
+                    clicked = false;
+
+                }
+            });
+        }
+
+        //PropertyEditorの表示状態をNodeの表示状態にあわせる
+        this.applyFromComputedStyleObj = function(computedStyleObj, explicitnessObj){
+
+            //選択状態の解除ループ
+            for(var i = 0 ; i < elemAndValArr.length ; i++){
+                elemAndValArr[i].$elem.removeClass(className_nodeIsSelected); //選択解除
+            }
+
+            var valOfNode = getValFromNestObj(structureArr, computedStyleObj);
+
+            if(typeof valOfNode == 'undefined'){ //対象のNodeが存在しない
+
+                //要素無効化ループ
+                for(var i = 0 ; i < elemAndValArr.length ; i++){
+                    elemAndValArr[i].$elem.prop('disabled', true); //要素無効化
+                }
+                $expMsgElem.text("no nodes");
+
+            }else{ //描画対象のスタイルが存在する
+
+                //要素有効化ループ
+                for(var i = 0 ; i < elemAndValArr.length ; i++){
+                    elemAndValArr[i].$elem.prop('disabled', false); //要素有効化
+                }
+
+                if(valOfNode !== null){// merged Styleが算出できた
+
+                    var $toSelectElem = get$elemByVal(valOfNode); //property editor要素を取得
+                    if(typeof $toSelectElem != 'undefined'){ //選択対象要素がある場合
+                        $toSelectElem.addClass(className_nodeIsSelected); //選択状態にする
+                    }else{
+                        console.warn("Unkown style \`" + valOfNode.toString() + "\` specfied by computed style")
+                    }
+                }
+
+                var valOfExp = getValFromNestObj(structureArr, explicitnessObj);
+
+                if(valOfExp === null){ // explicitly defined している Node は一部だけだった
+                    $expMsgElem.text("explicit (some part)");
+                }else if(valOfExp){    // explicitly defined している Node は全部
+                    $expMsgElem.text("explicit");
+                }else{                                              // explicitly defined していない
+                    $expMsgElem.text("");
+                }
+
+            }
+        }
+
+        function get$elemByVal(val){
+            var toRet$elem;
+            for(var i = 0; i < elemAndValArr.length ; i++){
+                if(elemAndValArr[i].useThisVal == val){
+                    toRet$elem = elemAndValArr[i].$elem;
+                    break;
+                }
+            }
+            return toRet$elem; //見つけられなかった場合は'undefined'が返る
+        }
+    }
+
     function propertyEditorBehavor_fill($inputElem, $pickerElem, $expMsgElem, structureArr){
 
         var bufTotalReport; //<input>要素 or spectrum の編集中に保存する Buffer
@@ -2871,7 +2894,7 @@
             fireEvent_PropertyEditConsole("propertyEditConsole_adjust");
 
             if(!totalReport.allNG){ //1つ以上のNodeで適用成功の場合
-                totalReport.message = "text fill:" + toFillStr;
+                totalReport.message = structureArr.join('/') + ":" + toFillStr;
                 overWriteScceededTransaction(totalReport, bufTotalReport);
 
                 if(totalReport.allOK){ //全てのNodeで適用成功の場合
