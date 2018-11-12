@@ -249,9 +249,9 @@
         .style("display","none")
         .classed(className_propertyEditConsoleElement, true);
 
-    $propertyEditConsoleElement = $($3propertyEditConsoleElement.node()); //Jquery selectionも作る
+    $propertyEditConsoleElement = $($3propertyEditConsoleElement.node()); //jQuery selectionも作る
 
-    //外部コンポーネントをProperty Editor配下に構築する
+    //外部コンポーネントを Property Edit Console 配下に構築する
     $propertyEditConsoleElement.load(url_externalComponent,function(responseText, textStatus, jqXHR) {
 
         //成功確認
@@ -461,24 +461,19 @@
         // note `chooseボタンクリック` or `範囲外クリック`でも発火する
         $propertyEditor_text_text_fill_picker.on('hide.spectrum', function(e, tinycolorObj) {
 
-            if(!changed_text_text_fill){ //`chooseボタンクリック` or `範囲外クリック`を押下していない場合
-                clear_bufTotalReport_For_text_fill();
+            if(!changed_text_text_fill){ //`cancel` or `ESC押下` or `▽押下`イベントの場合
+            
+                clearBufOf_text_text_fill();
+                fireEvent_PropertyEditConsole("propertyEditConsole_adjust"); //編集中の<textarea>を元に戻したSVGNodeに合わせる
+
+                if(tinycolor(initialOfColorPicker).isValid()){ //パース可能な場合
+                    $propertyEditor_text_text_fill_picker.spectrum("set", initialOfColorPicker);
+                }
+                //<input>要素をカラーピッカーの色に合わせる
+                $propertyEditor_text_text_fill_inputElem.val(initialOfColorPicker);
             }
             changed_text_text_fill = false;
         });
-
-        function clear_bufTotalReport_For_text_fill(){
-
-            clearBufOf_text_text_fill();
-            fireEvent_PropertyEditConsole("propertyEditConsole_adjust"); //編集中の<textarea>を元に戻したSVGNodeに合わせる
-
-            if(tinycolor(initialOfColorPicker).isValid()){ //パース可能な場合
-                $propertyEditor_text_text_fill_picker.spectrum("set", initialOfColorPicker);
-            }
-            //<input>要素をカラーピッカーの色に合わせる
-            $propertyEditor_text_text_fill_inputElem.val(initialOfColorPicker);
-
-        }
 
         function clearBufOf_text_text_fill(){
             if(!bufTotalReport_For_text_fill.allNG){ //成功したRenderingReportが存在する場合
@@ -600,7 +595,7 @@
     $SVGDrawingAreaElement.on('click', function(e){
 
         // SVG領域に対する選択でない場合(Node等)はハジく
-        if(!((e.target).classList.contains(className_SVGElementForNodesMapping))){return;}
+        if(!(d3.select(e.target).classed(className_SVGElementForNodesMapping))){return;}
 
         //External Componentが未loadの場合はハジく
         if(!(checkSucceededLoadOf_ExternalComponent())){return;}
