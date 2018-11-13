@@ -106,9 +106,9 @@
 
     //キー操作設定
     var keySettings = {
-        editSVGNodes: "f2", //`Mousetrap` event
+        editSVGNodes: "f11", //`Mousetrap` event
         submitEditingTextTypeSVGNode: "enter", //`Mousetrap` event
-        insertLFWhenEditingTextTypeSVGNode: "alt+enter", //`Mousetrap` event
+        insertLF: "alt+enter", //`Mousetrap` event
     };
 
     //外部コンポーネントパス
@@ -189,17 +189,19 @@
     var className_propertyEditor = "propertyEditor";
 
     var className_propertyEditor_text_text_content = "text_text_content";
-    var bufTotalReportFor_propertyEditor_text_text_content;    //text.text_content用PropertyEditroが使用するBuffer
-    clearBufTotalReportFor_propertyEditor_text_text_content(); // <- 初期化もやっておく
+    
 
     
-    //todo global化が必要かどうか再検討
+    var propertyEditingBehavor_text_text_content;
     var propertyEditingBehavor_text_text_anchor;
     var propertyEditingBehavor_text_text_fill;
 
 
     // Property Edit Console 内の DOM Element Selection をグローバル変数に展開する
     function deployElementSelectionsOf_PropertyEditConsle(){
+
+        //text.text_content
+        propertyEditingBehavor_text_text_content = new propertyEditorBehavor_text(['text','text_content']);
 
         //text.text_anchor
         var $propertyEditor_text_text_anchor = $propertyEditConsoleElement.find(".propertyEditor.text_text_anchor");
@@ -372,7 +374,7 @@
             
             //Nodeすべてを選択解除する
             for(var i = 0 ; i < dataset.length ; i++){
-                dataset[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
+                dataset[i].$3bindedSelectionLayerSVGElement.style("visibility", "hidden")
                     .attr("data-selected", "false"); //選択解除
             }
             lastSelectedData = null;
@@ -386,6 +388,9 @@
     //      .on('dblclick', function()~ によって強制的に選択状態にされる
     //
     $3nodes.on('click', function(d){
+
+        propertyEditingBehavor_text_text_content.append(d);　//todo <- 消す
+        propertyEditingBehavor_text_text_content.focus(d);
 
         //External Componentが未loadの場合はハジく
         if(!(checkSucceededLoadOf_ExternalComponent())){return;}
@@ -467,6 +472,7 @@
                     .attr("data-selected", "true"); //選択解除
             }
         }
+        
         editSVGNodes();
         lastSelectedData = d; //最終選択Nodeの記憶
         editSVGNode(lastSelectedData); //SVGノード(単一)編集機能をキック
@@ -2170,7 +2176,7 @@
     //
     function editSVGNodes(){
 
-        //選択Nodeを元にPropertyEditorに反映
+        //選択 Node(s) を元に PropertyEditConsole に反映
         var computedStylesOfData = adjustPropertyEditConsole();
         
         if(computedStylesOfData.length > 0){ //編集対象Nodeが存在する場合
@@ -2180,7 +2186,7 @@
     }
 
     function checkSucceededLoadOf_ExternalComponent(){
-        if(!succeededLoadOf_ExternalComponent){ //loda未完了の場合
+        if(!succeededLoadOf_ExternalComponent){ //load未完了の場合
             console.error("External Component \`" + url_externalComponent + "\` is not loaded yet");
             return false;
         }else{ //load済みの場合
@@ -2320,130 +2326,6 @@
         }
     }
 
-    function editTextTypeSVGNode(bindedData){
-        
-        var $3SVGnodeElem = bindedData.$3bindedSVGElement;
-        var $3SVGnodeElem_text = $3SVGnodeElem.select("text");
-        
-        //<textarea>表示の為のtop位置を算出テキスト内容を<tspan>からを取得
-        var SVGnodeElem_text_tspans = $3SVGnodeElem_text.node().childNodes;
-        var textareaValue = SVGnodeElem_text_tspans[0].textContent;
-        for(var i = 1 ; i < SVGnodeElem_text_tspans.length ; i++){
-            textareaValue += ("\n" + SVGnodeElem_text_tspans[i].textContent);
-        }
-
-        //編集先Nodeの<text>を非表示にする
-        $3SVGnodeElem_text.style("visibility", "hidden");
-
-        //<textarea>の表示
-        var $3textareaElem = $3superElement.append("textarea")
-            .style("position", "absolute")
-            .style("margin", 0)
-            .style("border", 0)
-            .style("padding", 0)
-            .style("line-height", valOfLineHightInText + "em")
-            .style("resize", "none")
-            .style("overflow", "hidden")
-            .style("background-color", "rgba(105, 105, 105, 0)") // <- 透明度100%にする
-            .classed(className_propertyEditor, true)
-            .classed(className_propertyEditor_text_text_content, true)
-            .classed("mousetrap",true)
-            .property("value", textareaValue)
-            .attr("wrap","off");
-
-        //<textarea>の表示調整
-        adjustTextarea(bindedData, $3textareaElem);
-
-        //<textarea>のサイズ自動調整リスナ登録
-        $3textareaElem.node().oninput = function(){
-            func_renderAndMergeBufTotalReport_For_text_content($3textareaElem.node().value, bindedData); //SVGNodeへの反映&<textarea>調整
-        }
-
-        $3SVGnodeElem.node().addEventListener("propertyEditConsole_adjust",call_adjustTextarea);
-        $3SVGnodeElem.node().addEventListener("propertyEditConsole_exit",remove_exitListener);
-        
-        function call_adjustTextarea(evetnObj){
-            adjustTextarea(bindedData, $3textareaElem);
-        }
-
-        function remove_adjustListener(){
-            $3SVGnodeElem.node().removeEventListener("propertyEditConsole_adjust",call_adjustTextarea);
-        }
-
-        function remove_exitListener(eventObj){
-
-            if((typeof eventObj.argObj != 'undefined') && (eventObj.argObj.confirm)){
-                exitTextEdit(true);
-            }else{
-                exitTextEdit(false);
-            }
-
-            remove_adjustListener();
-            $3SVGnodeElem.node().removeEventListener("propertyEditConsole_exit",remove_exitListener);
-        }
-
-        function exitTextEdit(confirm){
-            $3SVGnodeElem_text.style("visibility", null); //編集先Nodeの<text>を非表示から元に戻す
-            $3textareaElem.remove(); //<textarea>を削除
-
-            if(confirm){
-                func_confirmBufTotalReport_For_text_content(); //バッファに積んだtext_content更新Reportを確定させる
-            }
-        }
-
-        //<textarea>にキャレットをフォーカス
-        $3textareaElem.node().focus();
-
-        textareaElem = $3textareaElem.node();
-
-        //UI TRAP
-        Mousetrap(textareaElem).bind(keySettings.insertLFWhenEditingTextTypeSVGNode, function(e){ //<textarea>の改行挿入イベント
-            //LFを挿入する
-            var txt = textareaElem.value;
-            var toSelect = textareaElem.selectionStart + 1;
-            var beforeTxt = txt.substr(0, textareaElem.selectionStart);
-            var afterTxt = txt.substr(textareaElem.selectionEnd);
-            textareaElem.value = beforeTxt + '\n' + afterTxt;
-            textareaElem.selectionStart = toSelect;
-            textareaElem.selectionEnd = toSelect;
-
-            //SVGNodeへの反映&<textarea>調整
-            func_renderAndMergeBufTotalReport_For_text_content(textareaElem.value, bindedData);
-
-            disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
-        });
-
-        Mousetrap(textareaElem).bind(keySettings.submitEditingTextTypeSVGNode, function(e){ //<textarea>の確定イベント
-
-            remove_exitListener({argObj:{confirm:true}});
-            exitEditing(); //編集モードの終了
-            
-            disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
-        });
-
-        //SVGNodeへの反映 & Rendering Reportをバッファに積む
-        var func_renderAndMergeBufTotalReport_For_text_content = function renderAndMergeBufTotalReport_For_text_content(text_content, bindedData){
-            //SVGNodeへの反映
-            var totalReport = fireEvent_PropertyEditConsole_rerender({text:{text_content:text_content}});
-            adjustTextarea(bindedData, $3textareaElem);
-
-            if(!totalReport.allNG){ //1つ以上のNodeで適用成功の場合
-                totalReport.message = "text content:" + text_content;
-                overWriteScceededTransaction(totalReport, bufTotalReportFor_propertyEditor_text_text_content);
-            }
-        }
-
-        //バッファに積んだ Rendering Report を 確定させる
-        var func_confirmBufTotalReport_For_text_content = function confirmBufTotalReport_For_text_content(){
-            if(!bufTotalReportFor_propertyEditor_text_text_content.allNG){ //ログに記録するべきレポートが存在する場合
-
-                appendHistory(bufTotalReportFor_propertyEditor_text_text_content);
-                clearBufTotalReportFor_propertyEditor_text_text_content();
-            }
-        }
-
-    }
-
     function disablingKeyEvent(e){
         if (e.preventDefault) {
             e.preventDefault();
@@ -2454,6 +2336,8 @@
     }
 
     function adjustTextarea(bindedData, $3textareaElem){
+
+        $3textareaElem.property("value", bindedData.text.text_content);
 
         //apply styles from <SVGTextElement>------------------------------------------------------------------------------------
         var $3SVGnodeElem_text = bindedData.$3bindedSVGElement.select("text");
@@ -2577,15 +2461,155 @@
     }
 
     //
-    //text.text_contentの編集時に使用するBufferをclearする
+    // text タイプ の Property Editor の Behavor
     //
-    function clearBufTotalReportFor_propertyEditor_text_text_content(){
-        bufTotalReportFor_propertyEditor_text_text_content = {};
-        bufTotalReportFor_propertyEditor_text_text_content.allOK = false; 
-        bufTotalReportFor_propertyEditor_text_text_content.allNG = true; // <- falseとなった場合は、ログに残すべきTransactionが少なくとも1件以上存在する事を表す
-        bufTotalReportFor_propertyEditor_text_text_content.reportsArr = [];
+    function propertyEditorBehavor_text(structureArr){
+
+        var editingDataArr = [];
+        var bufTotalReport;
+        clearBufTotalReport();
+
+        //指定 Data に対する<textarea>要素を作る
+        this.append = function(bindedData){
+
+            //編集先Nodeの<text>SVG要素を非表示にする
+            bindedData.$3bindedSVGElement.select("text").style("visibility", "hidden");
+
+            var textareaValue = getValFromNestObj(structureArr, bindedData);
+
+            //<textarea>要素の追加
+            var $3textareaElem = $3superElement.append("textarea")
+                .style("position", "absolute")
+                .style("margin", 0)
+                .style("border", 0)
+                .style("padding", 0)
+                .style("line-height", valOfLineHightInText + "em")
+                .style("resize", "none")
+                .style("overflow", "hidden")
+                .style("background-color", "rgba(105, 105, 105, 0)") // <- 透明度100%にする
+                .classed(getUniqueClassName(structureArr.join('_')), true)
+                .classed("mousetrap",true)
+                .property("value", textareaValue)
+                .attr("wrap","off");
+            
+            var textareaElem = $3textareaElem.node();
+            
+            adjustTextarea(bindedData, $3textareaElem); //追加した<textarea>の表示調整
+            
+            var appendThisObj = {bindedData: bindedData,
+                                 $3textareaElem: $3textareaElem};
+            
+            editingDataArr.push(appendThisObj); //編集対象Nodeとして保存
+            
+            //<textarea>内のキータイプイベント
+            $3textareaElem.node().oninput = function(){
+                //SVGNodeへの反映&<textarea>調整
+                renderAndMergeBufTotalReport($3textareaElem.node().value);
+            }
+
+            //<textarea>内の改行挿入イベント
+            Mousetrap(textareaElem).bind(keySettings.insertLF, function(e){
+                
+                //<textarea>内にLFを挿入する
+                var txt = textareaElem.value;
+                var toSelect = textareaElem.selectionStart + 1;
+                var beforeTxt = txt.substr(0, textareaElem.selectionStart);
+                var afterTxt = txt.substr(textareaElem.selectionEnd);
+                textareaElem.value = beforeTxt + '\n' + afterTxt;
+                textareaElem.selectionStart = toSelect;
+                textareaElem.selectionEnd = toSelect;
+    
+                //SVGNodeへの反映&<textarea>調整
+                renderAndMergeBufTotalReport(textareaElem.value);
+    
+                disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+            });
+
+            //<textarea>内からフォーカスが外れたイベント
+            $3textareaElem.node().onblur = function(){
+                comfirmBufTotalReport(); //Bufferの確定
+            }
+
+            //確定イベント
+            Mousetrap(textareaElem).bind(keySettings.submitEditingTextTypeSVGNode, function(e){
+                comfirmBufTotalReport(); //Bufferの確定
+                exitEditors(); // <textarea> の終了
+                disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+            });
+        }
+
+        //<textarea>のサイズ等を Data にあわせる
+        this.adjust = function(){
+            adjustEditors();
+        }
+
+        //<textarea>を終了する
+        this.exit = function(){
+            exitEditors();
+        }
+
+        //指定Dataに紐づけた<textarea>にキャレット(フォーカス)をあわせる
+        this.focus = function(bindedData){
+            var i;
+            for(i = 0 ; i < editingDataArr.length ; i++){
+                if(editingDataArr[i].bindedData === bindedData){ //指定Dataの場合
+                    editingDataArr[i].$3textareaElem.node().focus(); //キャレット表示
+                }
+            }
+            if(i == editingDataArr.length){ //指定Dataが見つからなかった場合
+                console.warn("<textare> not exist for specified Data (key:\`" + bindedData.key.toString() + "\`)");
+            }
+        }
+
+        //すべての<textarea>の表示状態をSVGNodeの表示状態にあわせる
+        function adjustEditors(){
+            for(var i = 0 ; i < editingDataArr.length ; i++){
+                adjustTextarea(editingDataArr[i].bindedData, editingDataArr[i].$3textareaElem);
+            }
+        }
+
+        function exitEditors(){
+            for(var i = 0 ; i < editingDataArr.length ; i++){
+                editingDataArr[i].bindedData.$3bindedSVGElement.select("text").style("visibility", null); //表示状態に戻す
+                editingDataArr[i].$3textareaElem.remove(); //<textarea>要素を削除する
+            }
+            editingDataArr = []; //配列初期化
+        }
+
+        //SVGNodeへの反映 & Rendering Reportをバッファに積む
+        function renderAndMergeBufTotalReport(text_content){
+            //SVGNodeへの反映
+            var toRenderObj = makeNestedObj(text_content, structureArr);
+            var totalReport = fireEvent_PropertyEditConsole_rerender(toRenderObj);
+            adjustEditors();
+            
+            if(!totalReport.allNG){ //1つ以上適用成功の場合
+                totalReport.message = structureArr.join("_") + ":" + text_content;
+                overWriteScceededTransaction(totalReport, bufTotalReport);
+            }
+        }
+
+        //バッファに積んだ Rendering Report を 確定させる
+        function comfirmBufTotalReport(){
+            if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
+                appendHistory(bufTotalReport);
+                clearBufTotalReport();
+            }
+        }
+
+        //todo 共通化
+        function clearBufTotalReport(){
+            bufTotalReport = {};
+            bufTotalReport.allOK = false; 
+            bufTotalReport.allNG = true; // <- falseとなった場合は、
+                                         // historyに残すべきTransactionが少なくとも1件以上存在する事を表す
+            bufTotalReport.reportsArr = [];
+        }
     }
 
+    //
+    // Radio Buttons タイプ の Property Editor の Behavor
+    //
     function propertyEditorBehavor_radioButtons(elemAndValArr, $expMsgElem, structureArr){
 
         var clicked = false;
@@ -2735,6 +2759,9 @@
         }
     }
 
+    //
+    // Colopickerとinput要素を使って色指定するタイプ の Property Editor の Behavor
+    //
     function propertyEditorBehavor_fill($inputElem, $pickerElem, $expMsgElem, structureArr){
 
         var bufTotalReport; //<input>要素 or spectrum の編集中に保存する Buffer
@@ -2748,7 +2775,7 @@
         initializeBufTotalReport();
 
         //spectrum(color picker)の登録
-        var spectrumContainerClassName   =  getUniqueClassName();
+        var spectrumContainerClassName   =  getUniqueClassName(structureArr.join("_"));
         forSpectrumRegisteringOptionObj.containerClassName = spectrumContainerClassName; //pikcerに紐づくspectrum要素検索用のClass名
         $pickerElem.spectrum(forSpectrumRegisteringOptionObj); //登録
         $spectrumElem = $(forSpectrumRegisteringOptionObj);
@@ -2862,12 +2889,12 @@
             }
         }
 
-        //Buffer初期化
+        //Buffer初期化 //todo 共通化
         function initializeBufTotalReport(){
             bufTotalReport = {};
             bufTotalReport.allOK = false; 
             bufTotalReport.allNG = true; // <- falseとなった場合は、
-                                         //    ログに残すべきTransactionが少なくとも1件以上存在する事を表す
+                                         //    historyに残すべきTransactionが少なくとも1件以上存在する事を表す
             bufTotalReport.reportsArr = [];
         }
 
