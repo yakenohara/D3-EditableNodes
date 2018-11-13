@@ -194,39 +194,36 @@
 
     
     //todo global化が必要かどうか再検討
-    var $propertyEditor_text_text_anchor;
-    var $propertyEditor_text_text_anchor_textAnchorTypes;
-    var $propertyEditor_text_text_anchor_expMsg;
-    var attributeName_typeOf_text_text_anchor_textAnchorType = "data-text_anchor_type";
     var propertyEditingBehavor_text_text_anchor;
-
-    var $propertyEditor_text_text_fill;
-    var $propertyEditor_text_text_fill_picker;
-    var $propertyEditor_text_text_fill_inputElem;
-    var $propertyEditor_text_text_fill_expMsg;
     var propertyEditingBehavor_text_text_fill;
 
 
     // Property Edit Console 内の DOM Element Selection をグローバル変数に展開する
     function deployElementSelectionsOf_PropertyEditConsle(){
 
-        $propertyEditor_text_text_anchor = $propertyEditConsoleElement.find(".propertyEditor.text_text_anchor");
-        $propertyEditor_text_text_anchor_textAnchorTypes = $propertyEditor_text_text_anchor.children(".textAnchorType");
-        $propertyEditor_text_text_anchor_expMsg = $propertyEditor_text_text_anchor.children(".message.explicitness").eq(0);
+        //text.text_anchor
+        var $propertyEditor_text_text_anchor = $propertyEditConsoleElement.find(".propertyEditor.text_text_anchor");
+        var $propertyEditor_text_text_anchor_expMsg = $propertyEditor_text_text_anchor.children(".message.explicitness").eq(0);
         var elemAndValArr = [];
-        elemAndValArr.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="start"]'),
-                      useThisVal: 'start'});
-        elemAndValArr.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="middle"]'),
-                      useThisVal: 'middle'});
-        elemAndValArr.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="end"]'),
-                      useThisVal: 'end'});
-        propertyEditingBehavor_text_text_anchor = new propertyEditorBehavor_radioButtons(elemAndValArr, $propertyEditor_text_text_anchor_expMsg, ['text', 'text_anchor']);
+        elemAndValArr.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="start"]').eq(0),
+                            useThisVal: 'start'});
+        elemAndValArr.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="middle"]').eq(0),
+                            useThisVal: 'middle'});
+        elemAndValArr.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="end"]').eq(0),
+                            useThisVal: 'end'});
+        propertyEditingBehavor_text_text_anchor = new propertyEditorBehavor_radioButtons(elemAndValArr,
+                                                                                         $propertyEditor_text_text_anchor_expMsg,
+                                                                                         ['text', 'text_anchor']);
 
-        $propertyEditor_text_text_fill = $propertyEditConsoleElement.find(".propertyEditor.text_text_fill");
-        $propertyEditor_text_text_fill_picker = $propertyEditor_text_text_fill.children(".picker").eq(0);
-        $propertyEditor_text_text_fill_inputElem = $propertyEditor_text_text_fill.children(".pickedColorText").eq(0);
-        $propertyEditor_text_text_fill_expMsg = $propertyEditor_text_text_fill.children(".message.explicitness").eq(0);
-        propertyEditingBehavor_text_text_fill = new propertyEditorBehavor_fill($propertyEditor_text_text_fill_inputElem, $propertyEditor_text_text_fill_picker, $propertyEditor_text_text_fill_expMsg, ['text', 'text_fill']);
+        //text.text_fill
+        var $propertyEditor_text_text_fill = $propertyEditConsoleElement.find(".propertyEditor.text_text_fill");
+        var $propertyEditor_text_text_fill_picker = $propertyEditor_text_text_fill.children(".picker").eq(0);
+        var $propertyEditor_text_text_fill_inputElem = $propertyEditor_text_text_fill.children(".pickedColorText").eq(0);
+        var $propertyEditor_text_text_fill_expMsg = $propertyEditor_text_text_fill.children(".message.explicitness").eq(0);
+        propertyEditingBehavor_text_text_fill = new propertyEditorBehavor_fill($propertyEditor_text_text_fill_inputElem,
+                                                                               $propertyEditor_text_text_fill_picker,
+                                                                               $propertyEditor_text_text_fill_expMsg,
+                                                                               ['text', 'text_fill']);
 
     }
 
@@ -1947,43 +1944,47 @@
 
     //指定構造のObjectを生成して返却する
     function makeNestedObj(primitiveVal, structureArr){
+        
         var toRetObj = {};
         makeNestedObj_sub(primitiveVal, structureArr, toRetObj, 0);
         return toRetObj;
-    }
-    function makeNestedObj_sub(primitiveVal, structureArr, makeHere, idx){
+
+        function makeNestedObj_sub(primitiveVal, structureArr, makeHere, idx){
         
-        if(idx == (structureArr.length-1)){ //Nest終端の場合
-            makeHere[structureArr[idx]] = primitiveVal;
-
-        }else{ //Nest終端でない場合
-            makeHere[structureArr[idx]] = {}; //空オブジェクトを定義
-
-            makeNestedObj_sub(primitiveVal, structureArr, makeHere[structureArr[idx]], idx+1);
+            if(idx == (structureArr.length-1)){ //Nest終端の場合
+                makeHere[structureArr[idx]] = primitiveVal;
+    
+            }else{ //Nest終端でない場合
+                makeHere[structureArr[idx]] = {}; //空オブジェクトを定義
+    
+                makeNestedObj_sub(primitiveVal, structureArr, makeHere[structureArr[idx]], idx+1);
+            }
         }
     }
-
+    
     //Objの指定部分の値を返却する
     function getValFromNestObj(structureArr, fromThisObj){
+        
         return getValFromNestObj_sub(structureArr, fromThisObj, 0);
-    }
-    function getValFromNestObj_sub(structureArr, fromThisObj, idx){
+
+        function getValFromNestObj_sub(structureArr, fromThisObj, idx){
         
-        var toRetVal;
-        if(typeof fromThisObj == 'undefined'){
-            return toRetVal; //'undefined'を返す
-        }
-
-        var testHere = fromThisObj[structureArr[idx]];
-
-        if(idx == (structureArr.length-1)){
-            return testHere;
-        
-        }else{
-            return getValFromNestObj_sub(structureArr, testHere, idx+1);
+            var toRetVal;
+            if(typeof fromThisObj == 'undefined'){
+                return toRetVal; //'undefined'を返す
+            }
+    
+            var testHere = fromThisObj[structureArr[idx]];
+    
+            if(idx == (structureArr.length-1)){
+                return testHere;
+            
+            }else{
+                return getValFromNestObj_sub(structureArr, testHere, idx+1);
+            }
         }
     }
-
+    
     function backToDefaulIfWarn(reportObj, bindedData){
 
         if(typeof reportObj.RenderedObj.type != 'undefined'){
