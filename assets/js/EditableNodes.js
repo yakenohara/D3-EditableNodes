@@ -568,80 +568,6 @@
         }
     }
 
-    function appendHistory(transactionObj){
-
-        var appendedIndex = transactionHistory.length;
-        transactionHistory.push(transactionObj); //Append History
-
-        var $3historyMessageElem = $3transactionHistoryElement.append("div")
-            .classed("transaction",true)
-            .attr("data-history_index", appendedIndex.toString())
-            .attr("data-rollbacked","false");
-
-        $3historyMessageElem.append("small")
-            .text(transactionObj.message);
-            
-        
-        var $historyMessageElem  = $($3historyMessageElem.node());
-        $historyMessageElem.hover(
-
-            //transactionに対するMouseEnterイベント
-            function(){
-                var clickedElem = this;
-                clickedElem.classList.add(className_nodeIsSelected); //選択状態を表すクラス追加
-                $(clickedElem).attr("data-rollbacked","false"); //rollback実行済み状態をfalseに設定
-
-                var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
-                rollbackHistory(historyIndex, false);
-
-                //property editor内の値をロールバックしたNode状態に合わせる
-                if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
-                    func_cancelBufOf_PropertyEditConsole();
-                    adjustPropertyEditConsole();
-                    propertyEditingBehavor_text_text_content.adjust();
-                }
-                
-            //transactionに対するMouseLeaveイベント
-            },function(){
-                var clickedElem = this;
-                clickedElem.classList.remove(className_nodeIsSelected); //選択状態を表すクラス削除
-
-                if($(clickedElem).attr("data-rollbacked") != 'true'){
-                    var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
-                    replayHistory(historyIndex + 1);
-                    adjustPropertyEditConsole();
-                    propertyEditingBehavor_text_text_content.adjust();
-                }
-                
-                $(clickedElem).attr("data-rollbacked","false"); //rollback実行済み状態をfalseに設定
-
-            }
-        );
-
-        //transactionに対するクリックイベント
-        $historyMessageElem.on("click",function(){
-            var clickedElem = this;
-            var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
-            
-            $(clickedElem).attr("data-rollbacked","true"); //rollback実行済み状態をtrueに設定
-
-            //history[]から historyIndex+1 以降を削除
-            transactionHistory.splice(historyIndex+1, transactionHistory.length - (historyIndex + 1));
-
-            //history表示の削除ループ
-            var siblings = clickedElem.parentNode.children;
-            for(var i = siblings.length - 1 ; i >= 0 ; i--){ //最終indexからデクリメントで網羅
-                var historyIndexOfItr = parseInt($(siblings[i]).attr("data-history_index"));
-                if(historyIndexOfItr > historyIndex){ //選択したtransactionより後のhistoryだった場合
-                    $(siblings[i]).remove(); //history表示の削除
-                }else{
-                    break;
-                }
-            }
-
-        });
-    }
-
     function checkToBindData(checkThisData){
 
         if(typeof checkThisData.type == 'undefined'){ //type指定がない場合
@@ -1796,80 +1722,6 @@
     }
 
     //
-    // caution renderringReport.allNG = falseな時だけコールする
-    //
-    function overWriteScceededTransaction(fromThisTransaction, toThisTransaction){
-
-        if(toThisTransaction.allNG){ //allNGの場合は、この関数がコールされないので、
-                                    //1回目のコールを表す
-            toThisTransaction.allNG = false;
-            toThisTransaction.allOK = fromThisTransaction.allOK;
-        }
-
-        if(!fromThisTransaction.allOK){ //1部NGがある場合
-            toThisTransaction.allOK = false;
-        }
-
-        if(typeof fromThisTransaction.message != 'undefined'){ //message指定がある場合
-            toThisTransaction.message = fromThisTransaction.message; //直近のmessageで更新
-        }
-        
-        //レンダリングレポート網羅ループ
-        for(var i_f = 0 ; i_f < fromThisTransaction.reportsArr.length ; i_f++){
-
-            if(!fromThisTransaction.reportsArr[i_f].allNG){ //property全て失敗でなければ
-                
-                //マージ対象ノード検索ループ
-                var i_t = 0;
-                
-                for( ; i_t < toThisTransaction.reportsArr.length ; i_t++){
-
-                    //マージ対象のノードkeyが見つかった場合
-                    if(toThisTransaction.reportsArr[i_t].key == fromThisTransaction.reportsArr[i_f].key){
-                        break;
-                    }
-                }
-
-                if(i_t == toThisTransaction.reportsArr.length){ //マージ対象のノードkeyが見つからなかった場合
-                    toThisTransaction.reportsArr.push({}); //空のオブジェクトを追加する
-                    toThisTransaction.reportsArr[i_t].key = fromThisTransaction.reportsArr[i_f].key;
-
-                    //allOK
-                    toThisTransaction.reportsArr[i_t].allOK = fromThisTransaction.reportsArr[i_f].allOK;
-                    //allNG
-                    toThisTransaction.reportsArr[i_t].allNG = false;
-                    //PrevObj
-                    toThisTransaction.reportsArr[i_t].PrevObj = {};
-                    mergeObj(fromThisTransaction.reportsArr[i_f].PrevObj, toThisTransaction.reportsArr[i_t].PrevObj,false);
-                    //RenderedObj
-                    toThisTransaction.reportsArr[i_t].RenderedObj = {};
-                    //FailuredMessages
-                    toThisTransaction.reportsArr[i_t].FailuredMessages = {};
-
-                }else{ //マージ対象のノードkeyが見つかった場合
-
-                    //allOK
-                    if(!fromThisTransaction.reportsArr[i_f].allOK){ //一部失敗がある場合
-                        toThisTransaction.reportsArr[i_t].allOK = false;
-                    }
-                    
-                    //allNGは不要
-                    
-                    //PrevObj
-                    mergeObj(fromThisTransaction.reportsArr[i_f].PrevObj, toThisTransaction.reportsArr[i_t].PrevObj,true); //toThisTransactionに存在しない時だけmerge
-                    
-                }
-                
-                //RenderedObj
-                mergeObj(fromThisTransaction.reportsArr[i_f].RenderedObj, toThisTransaction.reportsArr[i_t].RenderedObj,false);
-                
-                //FailuredMessages
-                mergeObj(fromThisTransaction.reportsArr[i_f].FailuredMessages, toThisTransaction.reportsArr[i_t].FailuredMessages,false);
-            }
-        }
-    }
-
-    //
     //オブジェクトをマージする
     //
     function mergeObj(fromThisObj, toThisObj, ifOnlyNotExists){
@@ -1995,6 +1847,82 @@
         
     }
 
+    //<history関係>------------------------------------------------------------------------------------
+
+    function appendHistory(transactionObj){
+
+        var appendedIndex = transactionHistory.length;
+        transactionHistory.push(transactionObj); //Append History
+
+        var $3historyMessageElem = $3transactionHistoryElement.append("div")
+            .classed("transaction",true)
+            .attr("data-history_index", appendedIndex.toString())
+            .attr("data-rollbacked","false");
+
+        $3historyMessageElem.append("small")
+            .text(transactionObj.message);
+            
+        
+        var $historyMessageElem  = $($3historyMessageElem.node());
+        $historyMessageElem.hover(
+
+            //transactionに対するMouseEnterイベント
+            function(){
+                var clickedElem = this;
+                clickedElem.classList.add(className_nodeIsSelected); //選択状態を表すクラス追加
+                $(clickedElem).attr("data-rollbacked","false"); //rollback実行済み状態をfalseに設定
+
+                var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
+                rollbackHistory(historyIndex, false);
+
+                //property editor内の値をロールバックしたNode状態に合わせる
+                if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
+                    func_cancelBufOf_PropertyEditConsole();
+                    adjustPropertyEditConsole();
+                    propertyEditingBehavor_text_text_content.adjust();
+                }
+                
+            //transactionに対するMouseLeaveイベント
+            },function(){
+                var clickedElem = this;
+                clickedElem.classList.remove(className_nodeIsSelected); //選択状態を表すクラス削除
+
+                if($(clickedElem).attr("data-rollbacked") != 'true'){
+                    var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
+                    replayHistory(historyIndex + 1);
+                    adjustPropertyEditConsole();
+                    propertyEditingBehavor_text_text_content.adjust();
+                }
+                
+                $(clickedElem).attr("data-rollbacked","false"); //rollback実行済み状態をfalseに設定
+
+            }
+        );
+
+        //transactionに対するクリックイベント
+        $historyMessageElem.on("click",function(){
+            var clickedElem = this;
+            var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
+            
+            $(clickedElem).attr("data-rollbacked","true"); //rollback実行済み状態をtrueに設定
+
+            //history[]から historyIndex+1 以降を削除
+            transactionHistory.splice(historyIndex+1, transactionHistory.length - (historyIndex + 1));
+
+            //history表示の削除ループ
+            var siblings = clickedElem.parentNode.children;
+            for(var i = siblings.length - 1 ; i >= 0 ; i--){ //最終indexからデクリメントで網羅
+                var historyIndexOfItr = parseInt($(siblings[i]).attr("data-history_index"));
+                if(historyIndexOfItr > historyIndex){ //選択したtransactionより後のhistoryだった場合
+                    $(siblings[i]).remove(); //history表示の削除
+                }else{
+                    break;
+                }
+            }
+
+        });
+    }
+
     function rollbackHistory(historyIndex, haveToPopTransaction){
 
         if(transactionHistory.length < 1){ //Historyが存在しない場合
@@ -2052,6 +1980,8 @@
             }
         }
     }
+
+    //-----------------------------------------------------------------------------------</history関係>
 
     //
     //<text>要素の占有領域サイズに合わせて<rect>を再調整する
@@ -2188,9 +2118,13 @@
 
             if(bindedData.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ // 選択対象Nodeの場合
                 
-                var computedStlOfData = getComputedStyleOfData(bindedData); // Nodeに適用されたスタイルの取得
-                if( computedStlOfData !== null){
-                    computedStylesOfData.push(computedStlOfData);
+                var computedStyleObj = {};
+                var explicitnessObj = {};
+                var sccedded = getComputedStyleOfData(bindedData, computedStyleObj, explicitnessObj); // Nodeに適用されたスタイルの取得
+                
+                if(sccedded){
+                    computedStylesOfData.push({computedStyle:computedStyleObj,
+                                               explicitness:explicitnessObj});
                     
                 }
             }
@@ -2198,31 +2132,31 @@
 
         if(computedStylesOfData.length > 0){ //編集対象Nodeが存在する場合
 
-            var mergedStyles = {};
-            mergedStyles.text = {};
-            var mergedExplicitnesses = {};
-            mergedExplicitnesses.text = {};
+            var mergedStyle = {};
+            mergedStyle.text = {};
+            var mergedExplicitness = {};
+            mergedExplicitness.text = {};
 
             // computedStylesOfData[]からスタイルをマージ
             for(var i = 0 ; i < computedStylesOfData.length ; i++){
                 var computedStlOfData =  computedStylesOfData[i];
-                switch(computedStlOfData.type){
+                switch(computedStlOfData.computedStyle.type){
                     case "text":
                     {
                         //各Propertyのマージ
-                        mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "text_content");
-                        mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "text_anchor");
-                        mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "text_font_family");
-                        mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "text_font_size");
-                        mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "text_fill");
-                        mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "text_font_weight");
-                        mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "text_font_style");
-                        mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "text_text_decoration");
-                        mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "frame_shape");
-                        mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "frame_stroke");
-                        mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "frame_stroke_width");
-                        mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "frame_stroke_dasharray");
-                        mergeStyles(computedStlOfData.text, computedStlOfData.explicitness, mergedStyles.text, mergedExplicitnesses.text, "frame_fill");
+                        mergeStyles(computedStlOfData.computedStyle.text, computedStlOfData.explicitness.text, mergedStyle.text, mergedExplicitness.text, "text_content");
+                        mergeStyles(computedStlOfData.computedStyle.text, computedStlOfData.explicitness.text, mergedStyle.text, mergedExplicitness.text, "text_anchor");
+                        mergeStyles(computedStlOfData.computedStyle.text, computedStlOfData.explicitness.text, mergedStyle.text, mergedExplicitness.text, "text_font_family");
+                        mergeStyles(computedStlOfData.computedStyle.text, computedStlOfData.explicitness.text, mergedStyle.text, mergedExplicitness.text, "text_font_size");
+                        mergeStyles(computedStlOfData.computedStyle.text, computedStlOfData.explicitness.text, mergedStyle.text, mergedExplicitness.text, "text_fill");
+                        mergeStyles(computedStlOfData.computedStyle.text, computedStlOfData.explicitness.text, mergedStyle.text, mergedExplicitness.text, "text_font_weight");
+                        mergeStyles(computedStlOfData.computedStyle.text, computedStlOfData.explicitness.text, mergedStyle.text, mergedExplicitness.text, "text_font_style");
+                        mergeStyles(computedStlOfData.computedStyle.text, computedStlOfData.explicitness.text, mergedStyle.text, mergedExplicitness.text, "text_text_decoration");
+                        mergeStyles(computedStlOfData.computedStyle.text, computedStlOfData.explicitness.text, mergedStyle.text, mergedExplicitness.text, "frame_shape");
+                        mergeStyles(computedStlOfData.computedStyle.text, computedStlOfData.explicitness.text, mergedStyle.text, mergedExplicitness.text, "frame_stroke");
+                        mergeStyles(computedStlOfData.computedStyle.text, computedStlOfData.explicitness.text, mergedStyle.text, mergedExplicitness.text, "frame_stroke_width");
+                        mergeStyles(computedStlOfData.computedStyle.text, computedStlOfData.explicitness.text, mergedStyle.text, mergedExplicitness.text, "frame_stroke_dasharray");
+                        mergeStyles(computedStlOfData.computedStyle.text, computedStlOfData.explicitness.text, mergedStyle.text, mergedExplicitness.text, "frame_fill");
                         
                     }
                     break;
@@ -2240,14 +2174,14 @@
             //text_content
 
             //<text.text_anchor>-------------------------------------------------------------------------------------
-            propertyEditingBehavor_text_text_anchor.applyFromComputedStyleObj(mergedStyles, mergedExplicitnesses);
+            propertyEditingBehavor_text_text_anchor.applyFromComputedStyleObj(mergedStyle, mergedExplicitness);
             //------------------------------------------------------------------------------------</text.text_anchor>
 
             //text_font_family
             //text_font_size
 
             //<text.text_fill>---------------------------------------------------------------------------------------
-            propertyEditingBehavor_text_text_fill.applyFromComputedStyleObj(mergedStyles, mergedExplicitnesses);
+            propertyEditingBehavor_text_text_fill.applyFromComputedStyleObj(mergedStyle, mergedExplicitness);
             //--------------------------------------------------------------------------------------</text.text_fill>
 
             //text_font_weight
@@ -2261,22 +2195,22 @@
 
         }
 
-        return computedStylesOfData;
-    }
-
-    function mergeStyles(fromThisStlObj, fromThisExpObj, toThisStlObj, toThisExpObj, propertyName){
-        mergeProperties(fromThisStlObj, toThisStlObj, propertyName);
-        mergeProperties(fromThisExpObj, toThisExpObj, propertyName);
-    }
-
-    function mergeProperties(fromThisObj, toThisObj, propertyName){
-        if(typeof toThisObj[propertyName] == 'undefined'){ //マージ先Objectに存在しない場合
-            toThisObj[propertyName] = fromThisObj[propertyName];
-        }else{
-            if(toThisObj[propertyName] !== fromThisObj[propertyName]){ //マージ済みの値と異なる場合
-                toThisObj[propertyName] = null;
+        function mergeStyles(fromThisStlObj, fromThisExpObj, toThisStlObj, toThisExpObj, propertyName){
+            mergeProperties(fromThisStlObj, toThisStlObj, propertyName);
+            mergeProperties(fromThisExpObj, toThisExpObj, propertyName);
+        }
+    
+        function mergeProperties(fromThisObj, toThisObj, propertyName){
+            if(typeof toThisObj[propertyName] == 'undefined'){ //マージ先Objectに存在しない場合
+                toThisObj[propertyName] = fromThisObj[propertyName];
+            }else{
+                if(toThisObj[propertyName] !== fromThisObj[propertyName]){ //マージ済みの値と異なる場合
+                    toThisObj[propertyName] = null;
+                }
             }
         }
+
+        return computedStylesOfData;
     }
 
     function disablingKeyEvent(e){
@@ -2949,107 +2883,191 @@
         }
     }
 
-    function getComputedStyleOfData(bindedData){
+    //
+    // caution renderringReport.allNG = falseな時だけコールする
+    //
+    function overWriteScceededTransaction(fromThisTransaction, toThisTransaction){ //?
 
+        if(toThisTransaction.allNG){ //allNGの場合は、この関数がコールされないので、
+                                    //1回目のコールを表す
+            toThisTransaction.allNG = false;
+            toThisTransaction.allOK = fromThisTransaction.allOK;
+        }
+
+        if(!fromThisTransaction.allOK){ //1部NGがある場合
+            toThisTransaction.allOK = false;
+        }
+
+        if(typeof fromThisTransaction.message != 'undefined'){ //message指定がある場合
+            toThisTransaction.message = fromThisTransaction.message; //直近のmessageで更新
+        }
+        
+        //レンダリングレポート網羅ループ
+        for(var i_f = 0 ; i_f < fromThisTransaction.reportsArr.length ; i_f++){
+
+            if(!fromThisTransaction.reportsArr[i_f].allNG){ //property全て失敗でなければ
+                
+                //マージ対象ノード検索ループ
+                var i_t = 0;
+                
+                for( ; i_t < toThisTransaction.reportsArr.length ; i_t++){
+
+                    //マージ対象のノードkeyが見つかった場合
+                    if(toThisTransaction.reportsArr[i_t].key == fromThisTransaction.reportsArr[i_f].key){
+                        break;
+                    }
+                }
+
+                if(i_t == toThisTransaction.reportsArr.length){ //マージ対象のノードkeyが見つからなかった場合
+                    toThisTransaction.reportsArr.push({}); //空のオブジェクトを追加する
+                    toThisTransaction.reportsArr[i_t].key = fromThisTransaction.reportsArr[i_f].key;
+
+                    //allOK
+                    toThisTransaction.reportsArr[i_t].allOK = fromThisTransaction.reportsArr[i_f].allOK;
+                    //allNG
+                    toThisTransaction.reportsArr[i_t].allNG = false;
+                    //PrevObj
+                    toThisTransaction.reportsArr[i_t].PrevObj = {};
+                    mergeObj(fromThisTransaction.reportsArr[i_f].PrevObj, toThisTransaction.reportsArr[i_t].PrevObj,false);
+                    //RenderedObj
+                    toThisTransaction.reportsArr[i_t].RenderedObj = {};
+                    //FailuredMessages
+                    toThisTransaction.reportsArr[i_t].FailuredMessages = {};
+
+                }else{ //マージ対象のノードkeyが見つかった場合
+
+                    //allOK
+                    if(!fromThisTransaction.reportsArr[i_f].allOK){ //一部失敗がある場合
+                        toThisTransaction.reportsArr[i_t].allOK = false;
+                    }
+                    
+                    //allNGは不要
+                    
+                    //PrevObj
+                    mergeObj(fromThisTransaction.reportsArr[i_f].PrevObj, toThisTransaction.reportsArr[i_t].PrevObj,true); //toThisTransactionに存在しない時だけmerge
+                    
+                }
+                
+                //RenderedObj
+                mergeObj(fromThisTransaction.reportsArr[i_f].RenderedObj, toThisTransaction.reportsArr[i_t].RenderedObj,false);
+                
+                //FailuredMessages
+                mergeObj(fromThisTransaction.reportsArr[i_f].FailuredMessages, toThisTransaction.reportsArr[i_t].FailuredMessages,false);
+            }
+        }
+    }
+
+    //
+    //SVGに適用されたスタイルを抽出する
+    //抽出成功の場合は、true,
+    //失敗の場合はfalseを返却する
+    //
+    function getComputedStyleOfData(bindedData, computedStyleObj, explicitnessObj){
+
+        
         //type指定チェック
         if(typeof (bindedData.type) == 'undefined'){
             console.warn("\"type\" property is not specified");
-            return; //存在しない場合場合は終了する
+            return false; //存在しない場合場合は終了する
         }
 
-        var computedStyleOfData = {};
-        computedStyleOfData.explicitness = {}; //dataset[]による明示的な指定かどうか
-        computedStyleOfData.key = bindedData.key;
+        //初期化
+        computedStyleObj.key = bindedData.key;
+        explicitnessObj.key = true; //常に明示的とする
 
+        
         switch(bindedData.type){
             case "text":
             {
-                computedStyleOfData.type = "text";
-                computedStyleOfData.text = {};
+                computedStyleObj.type = "text";
+                computedStyleObj.text = {};
+                explicitnessObj.type = true; //常に明示的な指定とする
+                explicitnessObj.text = {};
 
-                getComputedStyleOfTextTypeData(bindedData, computedStyleOfData);
+                getComputedStyleOfTextTypeData(bindedData, computedStyleObj, explicitnessObj);
             }
             break;
 
             default:
             {
                 console.warn("unknown data type"); //<-仮の処理
-                return;
+                return false;
             }
             break;
         }
 
-        return computedStyleOfData;
+        return true;
+
     }
 
-    function getComputedStyleOfTextTypeData(bindedData, computedStyleOfTextTypeData){
+    function getComputedStyleOfTextTypeData(bindedData, computedStyleObj, explicitnessObj){
         
         var $3SVGnodeElem_text = bindedData.$3bindedSVGElement.select("text");
         var computedStyleOf_SVGnodeElem_text = window.getComputedStyle($3SVGnodeElem_text.node());
 
         //text_content
-        computedStyleOfTextTypeData.text.text_content = bindedData.text.text_content;
-        computedStyleOfTextTypeData.explicitness.text_content = true; //常に明示的な指定として扱う
+        computedStyleObj.text.text_content = bindedData.text.text_content;
+        explicitnessObj.text.text_content = true; //常に明示的な指定として扱う
 
         //text_anchor
-        computedStyleOfTextTypeData.text.text_anchor = computedStyleOf_SVGnodeElem_text.getPropertyValue("text-anchor");;
-        computedStyleOfTextTypeData.explicitness.text_anchor = (typeof bindedData.text.text_anchor != 'undefined');
+        computedStyleObj.text.text_anchor = computedStyleOf_SVGnodeElem_text.getPropertyValue("text-anchor");;
+        explicitnessObj.text.text_anchor = (typeof bindedData.text.text_anchor != 'undefined');
 
         //text_font_family
-        computedStyleOfTextTypeData.text.text_font_family = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-family").replace(/\"/g, "'"); //スペースを含むフォントの引用符をsingle quoteに統一
-        computedStyleOfTextTypeData.explicitness.text_font_family = (typeof bindedData.text.text_font_family != 'undefined');
+        computedStyleObj.text.text_font_family = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-family").replace(/\"/g, "'"); //スペースを含むフォントの引用符をsingle quoteに統一
+        explicitnessObj.text.text_font_family = (typeof bindedData.text.text_font_family != 'undefined');
 
         //text_font_size
-        computedStyleOfTextTypeData.text.text_font_size = parseFloat(computedStyleOf_SVGnodeElem_text.getPropertyValue("font-size"));
-        computedStyleOfTextTypeData.explicitness.text_font_size = (typeof bindedData.text.text_font_size != 'undefined');
+        computedStyleObj.text.text_font_size = parseFloat(computedStyleOf_SVGnodeElem_text.getPropertyValue("font-size"));
+        explicitnessObj.text.text_font_size = (typeof bindedData.text.text_font_size != 'undefined');
 
         //text_fill
-        computedStyleOfTextTypeData.text.text_fill = computedStyleOf_SVGnodeElem_text.getPropertyValue("fill");
-        computedStyleOfTextTypeData.explicitness.text_fill = (typeof bindedData.text.text_fill != 'undefined');
+        computedStyleObj.text.text_fill = computedStyleOf_SVGnodeElem_text.getPropertyValue("fill");
+        explicitnessObj.text.text_fill = (typeof bindedData.text.text_fill != 'undefined');
 
         //text_font_weight
-        computedStyleOfTextTypeData.explicitness.text_font_weight = (typeof bindedData.text.text_font_weight != 'undefined');
-        if(computedStyleOfTextTypeData.explicitness.text_font_weight){ //明示的指定がある場合
-            computedStyleOfTextTypeData.text.text_font_weight = bindedData.text.text_font_weight; //明示的指定した方に合わせる('normal', '400' 等の違いを吸収する為)
+        explicitnessObj.text.text_font_weight = (typeof bindedData.text.text_font_weight != 'undefined');
+        if(explicitnessObj.text.text_font_weight){ //明示的指定がある場合
+            computedStyleObj.text.text_font_weight = bindedData.text.text_font_weight; //明示的指定した方に合わせる('normal', '400' 等の違いを吸収する為)
         }else{
-            computedStyleOfTextTypeData.text.text_font_weight = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-weight");
+            computedStyleObj.text.text_font_weight = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-weight");
         }
 
         //text_font_style
-        computedStyleOfTextTypeData.text.text_font_style = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-style");
-        computedStyleOfTextTypeData.explicitness.text_font_style = (typeof bindedData.text.text_font_style != 'undefined');
+        computedStyleObj.text.text_font_style = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-style");
+        explicitnessObj.text.text_font_style = (typeof bindedData.text.text_font_style != 'undefined');
 
         //text_text_decoration
-        computedStyleOfTextTypeData.text.text_text_decoration = computedStyleOf_SVGnodeElem_text.getPropertyValue("text-decoration");
-        computedStyleOfTextTypeData.explicitness.text_text_decoration = (typeof bindedData.text.text_text_decoration != 'undefined');
+        computedStyleObj.text.text_text_decoration = computedStyleOf_SVGnodeElem_text.getPropertyValue("text-decoration");
+        explicitnessObj.text.text_text_decoration = (typeof bindedData.text.text_text_decoration != 'undefined');
 
         var SVGnodeElem_DOTframe_frame = bindedData.$3bindedSVGElement.select(".frame").node().firstChild;
 
         //frame_shape
-        computedStyleOfTextTypeData.text.frame_shape = SVGnodeElem_DOTframe_frame.tagName.toLowerCase();
-        computedStyleOfTextTypeData.explicitness.frame_shape = true; //常に明示的な指定として扱う
+        computedStyleObj.text.frame_shape = SVGnodeElem_DOTframe_frame.tagName.toLowerCase();
+        explicitnessObj.text.frame_shape = true; //常に明示的な指定として扱う
 
         var computedStyleOf_SVGnodeElem_DOTframe_frame = window.getComputedStyle(SVGnodeElem_DOTframe_frame);
 
         //frame_stroke
-        computedStyleOfTextTypeData.text.frame_stroke = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke");
-        computedStyleOfTextTypeData.explicitness.frame_stroke = (typeof bindedData.text.frame_stroke != 'undefined');
+        computedStyleObj.text.frame_stroke = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke");
+        explicitnessObj.text.frame_stroke = (typeof bindedData.text.frame_stroke != 'undefined');
 
         //frame_stroke_width
-        computedStyleOfTextTypeData.text.frame_stroke_width = parseFloat(computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-width"));
-        computedStyleOfTextTypeData.explicitness.frame_stroke_width = (typeof bindedData.text.frame_stroke_width != 'undefined');
+        computedStyleObj.text.frame_stroke_width = parseFloat(computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-width"));
+        explicitnessObj.text.frame_stroke_width = (typeof bindedData.text.frame_stroke_width != 'undefined');
 
         //frame_stroke_dasharray
         var frameStyle_strokeDashArray = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-dasharray");
         //"px"とスペースは無視する
         frameStyle_strokeDashArray = frameStyle_strokeDashArray.replace(/px/g, "");
         frameStyle_strokeDashArray = frameStyle_strokeDashArray.replace(/ /g, "");
-        computedStyleOfTextTypeData.text.frame_stroke_dasharray = frameStyle_strokeDashArray;
-        computedStyleOfTextTypeData.explicitness.frame_stroke_dasharray = (typeof bindedData.text.frame_stroke_dasharray != 'undefined');
+        computedStyleObj.text.frame_stroke_dasharray = frameStyle_strokeDashArray;
+        explicitnessObj.text.frame_stroke_dasharray = (typeof bindedData.text.frame_stroke_dasharray != 'undefined');
 
         //frame_fill
-        computedStyleOfTextTypeData.text.frame_fill = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("fill");
-        computedStyleOfTextTypeData.explicitness.frame_fill = (typeof bindedData.text.frame_fill != 'undefined');
+        computedStyleObj.text.frame_fill = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("fill");
+        explicitnessObj.text.frame_fill = (typeof bindedData.text.frame_fill != 'undefined');
 
     }
 
