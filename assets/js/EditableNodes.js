@@ -159,8 +159,7 @@
     
     /* ---------------------------------------------------------------------------------------------</Hard cords> */
     
-    var succeededLoadOf_ExternalComponent = false;
-    var nowEditng = false;　      //Property Editorが起動中かどうか
+    var nowEditng = false;　      //Property Edit Console が起動中かどうか
     var lastSelectedData = null;　//最後に選択状態にしたNode
     var transactionHistory = [];  //history
 
@@ -183,16 +182,7 @@
 
     //<Element Selections and Settings of PropertyEditor>-----------------------------------------------------------
     //CSSと共用のキーワードが含まれる処理も、ここに記述する
-
-    var className_propertyEditor = "propertyEditor";
-
-    var className_propertyEditor_text_text_content = "text_text_content";
-    
-
-    
-
     var propertyEditorsManager;
-
     function wrapperOfPropertyEditors(){
 
         var propertyEditingBehavor_text_text_content;
@@ -215,7 +205,12 @@
                             useThisVal: 'end'});
         propertyEditingBehavor_text_text_anchor = new propertyEditorBehavor_radioButtons(elemAndValArr,
                                                                                          $propertyEditor_text_text_anchor_expMsg,
-                                                                                         ['text', 'text_anchor']);
+                                                                                         ['text', 'text_anchor'],
+                                                                                         confirmPropertyEditors, // <- Preview開始時に
+                                                                                                                 //    編集中のPropertyEditerのBufferを確定させる
+                                                                                         adjustPropertyEditors); // <- RenderingEvent発行後 or 
+                                                                                                                 //    mouseleave による rollback 後に
+                                                                                                                 //    Node個別編集用 PropertyEditor のみ adjust する
 
         //text.text_fill
         var $propertyEditor_text_text_fill = $propertyEditConsoleElement.find(".propertyEditor.text_text_fill");
@@ -225,13 +220,72 @@
         propertyEditingBehavor_text_text_fill = new propertyEditorBehavor_fill($propertyEditor_text_text_fill_inputElem,
                                                                                $propertyEditor_text_text_fill_picker,
                                                                                $propertyEditor_text_text_fill_expMsg,
-                                                                               ['text', 'text_fill']);
+                                                                               ['text', 'text_fill'],
+                                                                               adjustPropertyEditors); // <- RenderingEvent発行後 or 
+                                                                                                       //    cancel による rollback 後に
+                                                                                                       //    Node個別編集用 PropertyEditor のみ adjust する
+
+        // Property Editor の編集状態を Style Object (Nodeの状態) に合わせる
+        this.adjust = function(computedStyleObj, explicitnessObj){
+            adjustPropertyEditors(computedStyleObj, explicitnessObj);
+        }
+
+        // Property Editor が編集中の場合、編集状態を確定させる
+        this.confirm = function(){
+            confirmPropertyEditors();
+        }
+
+        // Node個別編集用 PropertyEditor を指定dataに対して追加する
+        this.append = function(bindedData){
+
+            switch(bindedData.type){
+                case 'text':
+                {
+                    //text_content
+                    propertyEditingBehavor_text_text_content.append(bindedData);
+                }
+                break;
+
+                default:
+                {
+                    console.warn("unknown data type \`" + bindedData.type + "\` specified. ");
+                }
+                break;
+            }
+        }
+
+        // Node個別編集用 PropertyEditor の フォーカス合わせ
+        // ex <textarea>を使う PropertyEditor なら、キャレットを表示させる
+        this.focus = function(bindedData){
+
+            switch(bindedData.type){
+                case 'text':
+                {
+                    //text_content
+                    propertyEditingBehavor_text_text_content.focus(bindedData);
+                }
+                break;
+
+                default:
+                {
+                    console.warn("unknown data type \`" + bindedData.type + "\` specified. ");
+                }
+                break;
+            }
+        }
+
+        // Node個別編集用 PropertyEditor を終了する
+        this.exit = function(){
+
+            //text_content
+            propertyEditingBehavor_text_text_content.exit();
+        }
 
         //
         // Property Editor の編集状態を Style Object (Nodeの状態) に合わせる
-        // StyleObjectを指定しない場合は、Nodeに対する個別編集用PropertyEditorのみadjustする
+        // StyleObjectを指定しない場合は、Node個別編集用PropertyEditorのみadjustする
         //
-        this.adjust = function(computedStyleObj, explicitnessObj){
+        function adjustPropertyEditors(computedStyleObj, explicitnessObj){
             
             //text_content
             propertyEditingBehavor_text_text_content.adjust();
@@ -262,37 +316,15 @@
             }
         }
 
-        this.exit = function(){
-
-            //text_content
-            propertyEditingBehavor_text_text_content.exit();
-        }
-
-        this.focus = function(bindedData){
-
-            //text_content
-            propertyEditingBehavor_text_text_content.focus(bindedData);
-        }
-
-        this.confirm = function(){
-
+        function confirmPropertyEditors(){
+            
             //text_content
             propertyEditingBehavor_text_text_content.confirm();
 
             //text.text_fill
             propertyEditingBehavor_text_text_fill.confirm();
-
-            
-        }
-
-        this.append = function(bindedData){
-
-            //text_content
-            propertyEditingBehavor_text_text_content.append(bindedData);
-
         }
     }
-
     //----------------------------------------------------------</Element Selections and Settings of PropertyEditor>
 
     //DOM構築
@@ -321,7 +353,6 @@
 
         propertyEditorsManager = new wrapperOfPropertyEditors();
 
-        succeededLoadOf_ExternalComponent = true; //load完了
     });
 
     $3transactionHistoryElement = $3superElement.append("div") //transaction history
@@ -2099,7 +2130,7 @@
 
     function exitEditing(){
 
-        propertyEditorsManager.exit();
+        propertyEditorsManager.exit(); // Node個別編集用 PropertyEditor を終了
         
         //Node選択状態の表示化ループ
         for(var i = 0 ; i < dataset.length ; i++){
@@ -2143,7 +2174,7 @@
     }
 
     function checkSucceededLoadOf_ExternalComponent(){
-        if(!succeededLoadOf_ExternalComponent){ //load未完了の場合
+        if(typeof propertyEditorsManager == 'undefined'){ //load未完了の場合
             console.error("External Component \`" + url_externalComponent + "\` is not loaded yet");
             return false;
         }else{ //load済みの場合
@@ -2384,6 +2415,15 @@
         //指定 Data に対する<textarea>要素を作る
         this.append = function(bindedData){
 
+            //重複チェック
+            for(var i = 0 ; i < editingDataArr.length ; i++){
+                var specifiedKey = editingDataArr[i].bindedData.key;
+                if( specifiedKey == bindedData.key){ //すでに登録済みの場合
+                    console.warn("specified data is already registered a <textarea> element. key:\`" + specifiedKey.toString() + "\`.");
+                    return;
+                }
+            }
+
             //編集先Nodeの<text>SVG要素を非表示にする
             bindedData.$3bindedSVGElement.select("text").style("visibility", "hidden");
 
@@ -2457,12 +2497,17 @@
             adjustEditors();
         }
 
-        //<textarea>を終了する
+        //
+        // <textarea>を終了する
+        // note 終了する<textarea>がない場合はなにもしない
         this.exit = function(){
             exitEditors();
         }
 
-        //指定Dataに紐づけた<textarea>にキャレット(フォーカス)をあわせる
+        //
+        // 指定Dataに紐づけた<textarea>にキャレット(フォーカス)をあわせる
+        //
+        // note 見つからない場合はなにもしない
         this.focus = function(bindedData){
             var i;
             for(i = 0 ; i < editingDataArr.length ; i++){
@@ -2470,9 +2515,6 @@
                     editingDataArr[i].$3textareaElem.node().focus(); //キャレット表示
                     break;
                 }
-            }
-            if(i == editingDataArr.length){ //指定Dataが見つからなかった場合
-                console.warn("<textarea> not exist for specified Data (key:\`" + bindedData.key.toString() + "\`)");
             }
         }
 
@@ -2543,7 +2585,7 @@
     //
     // Radio Buttons タイプ の Property Editor の Behavor
     //
-    function propertyEditorBehavor_radioButtons(elemAndValArr, $expMsgElem, structureArr){
+    function propertyEditorBehavor_radioButtons(elemAndValArr, $expMsgElem, structureArr, callbackBeforePreview, callbackWhenEventDone){
 
         var clicked = false;
         var beforeExpMessage = "";
@@ -2560,7 +2602,7 @@
 
                 if(!($(enteredElem).prop("disabled"))){ //プロパティエディタが有効の場合
 
-                    propertyEditorsManager.confirm(); //todo スパゲッティすぎ
+                    callbackBeforePreview();
 
                     var toRenderObj = makeNestedObj(event.data.useThisVal, structureArr);
 
@@ -2568,7 +2610,7 @@
                     beforeExpMessage = $expMsgElem.text();
 
                     bufTotalReport = fireEvent_PropertyEditConsole_rerender(toRenderObj);
-                    propertyEditorsManager.adjust(); //todo スパゲッティすぎ
+                    callbackWhenEventDone();
 
                     bufTotalReport.message = structureArr.join("/") + ":" + event.data.useThisVal;
     
@@ -2615,7 +2657,7 @@
                     if(!clicked){ //クリックしなかった場合
                         
                         rollbackTransaction(bufTotalReport); //元に戻す
-                        propertyEditorsManager.adjust(); //todo スパゲッティすぎ
+                        callbackWhenEventDone();
                         $expMsgElem.text(beforeExpMessage);
                         leavedElem.classList.remove(className_nodeIsSelected);
                         if(beforeVal != ""){
@@ -2697,7 +2739,7 @@
     //
     // Colopickerとinput要素を使って色指定するタイプ の Property Editor の Behavor
     //
-    function propertyEditorBehavor_fill($inputElem, $pickerElem, $expMsgElem, structureArr){
+    function propertyEditorBehavor_fill($inputElem, $pickerElem, $expMsgElem, structureArr, callbackWhenEventDone){
 
         var bufTotalReport; //<input>要素 or spectrum の編集中に保存する Buffer
         var initExpMessage = null; // cancel 時に戻すべきメッセージ用文字列
@@ -2769,8 +2811,7 @@
             if(!changed){ //`cancel` or `ESC押下` or `▽押下`イベントの場合
             
                 clearBuf();
-                propertyEditorsManager.adjust(); //todo スパゲッティすぎ
-
+                
                 if(tinycolor(initSpectrumStr).isValid()){ //パース可能な場合
                     $pickerElem.spectrum("set", initSpectrumStr);
                 }
@@ -2853,6 +2894,7 @@
         function clearBuf(){
             if(!bufTotalReport.allNG){ //成功したRenderingReportが存在する場合
                 rollbackTransaction(bufTotalReport); //元に戻す
+                callbackWhenEventDone();
                 initializeBufTotalReport(); //バッファ初期化
                 $expMsgElem.text(initExpMessage);
                 initExpMessage = null;
@@ -2870,7 +2912,7 @@
             var renderByThisObj = makeNestedObj(toFillStr, structureArr); //render用Objを作る
             var totalReport = fireEvent_PropertyEditConsole_rerender(renderByThisObj); //render
             
-            propertyEditorsManager.adjust(); //todo スパゲッティすぎ
+            callbackWhenEventDone();
 
             if(!totalReport.allNG){ //1つ以上のNodeで適用成功の場合
                 totalReport.message = structureArr.join('/') + ":" + toFillStr;
