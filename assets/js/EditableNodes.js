@@ -164,9 +164,7 @@
     var lastSelectedData = null;　//最後に選択状態にしたNode
     var transactionHistory = [];  //history
 
-    var func_cancelBufOf_PropertyEditConsole; //Property Editor内のBufferをクリアする関数を格納為の変数
-                                         //外部コンポーネントの読み込み完了時に関数をこの変数に格納する
-
+    
     var firstTotalReport = {};
     firstTotalReport.allOK = true;
     firstTotalReport.reportsArr = [];
@@ -191,13 +189,16 @@
     var className_propertyEditor_text_text_content = "text_text_content";
     
 
-    var propertyEditingBehavor_text_text_content;
-    var propertyEditingBehavor_text_text_anchor;
-    var propertyEditingBehavor_text_text_fill;
     
 
-    // Property Edit Console 内の DOM Element Selection をグローバル変数に展開する
-    function deployElementSelectionsOf_PropertyEditConsle(){
+    var propertyEditorsManager;
+
+    function wrapperOfPropertyEditors(){
+
+        var propertyEditingBehavor_text_text_content;
+        var propertyEditingBehavor_text_text_anchor;
+        var propertyEditingBehavor_text_text_fill;
+
 
         //text.text_content
         propertyEditingBehavor_text_text_content = new propertyEditorBehavor_text(['text','text_content']);
@@ -226,6 +227,70 @@
                                                                                $propertyEditor_text_text_fill_expMsg,
                                                                                ['text', 'text_fill']);
 
+        //
+        // Property Editor の編集状態を Style Object (Nodeの状態) に合わせる
+        // StyleObjectを指定しない場合は、Nodeに対する個別編集用PropertyEditorのみadjustする
+        //
+        this.adjust = function(computedStyleObj, explicitnessObj){
+            
+            //text_content
+            propertyEditingBehavor_text_text_content.adjust();
+
+
+            if((typeof computedStyleObj == 'object') && (typeof computedStyleObj == 'object')){ 
+
+                //text.text_anchor
+                propertyEditingBehavor_text_text_anchor.adjustToStyleObj(computedStyleObj, explicitnessObj);
+                            
+
+                //text_font_family
+                //text_font_size
+
+                //text.text_fill
+                propertyEditingBehavor_text_text_fill.adjustToStyleObj(computedStyleObj, explicitnessObj);
+
+
+                //text_font_weight
+                //text_font_style
+                //text_text_decoration
+                //frame_shape
+                //frame_stroke
+                //frame_stroke_width
+                //frame_stroke_dasharray
+                //frame_fill
+
+            }
+        }
+
+        this.exit = function(){
+
+            //text_content
+            propertyEditingBehavor_text_text_content.exit();
+        }
+
+        this.focus = function(bindedData){
+
+            //text_content
+            propertyEditingBehavor_text_text_content.focus(bindedData);
+        }
+
+        this.confirm = function(){
+
+            //text_content
+            propertyEditingBehavor_text_text_content.confirm();
+
+            //text.text_fill
+            propertyEditingBehavor_text_text_fill.confirm();
+
+            
+        }
+
+        this.append = function(bindedData){
+
+            //text_content
+            propertyEditingBehavor_text_text_content.append(bindedData);
+
+        }
     }
 
     //----------------------------------------------------------</Element Selections and Settings of PropertyEditor>
@@ -254,16 +319,7 @@
             return;
         }
 
-        deployElementSelectionsOf_PropertyEditConsle(); //DomElementへの参照をグローバル変数に展開する
-        
-        
-        // 編集中を破棄する場合の Behavor 登録
-        func_cancelBufOf_PropertyEditConsole = function(){
-            propertyEditingBehavor_text_text_fill.confirm(); //todo ここに書きたくない
-            propertyEditingBehavor_text_text_content.confirm(); //todo ここに書きたくない
-        }
-
-        //---------------------------------------------------------------------------------------------------------</register behavor>
+        propertyEditorsManager = new wrapperOfPropertyEditors();
 
         succeededLoadOf_ExternalComponent = true; //load完了
     });
@@ -367,8 +423,6 @@
         
         if(nowEditng){ // 編集中の場合
 
-            propertyEditingBehavor_text_text_content.exit(); //<textarea>を終了
-            
             exitEditing(); //編集モードの終了
         
         }else{  // 編集中でない場合
@@ -393,8 +447,6 @@
         //External Componentが未loadの場合はハジく
         if(!(checkSucceededLoadOf_ExternalComponent())){return;}
         
-        propertyEditingBehavor_text_text_content.exit(); //<textarea>を終了
-
         exitEditing(); //編集モードの終了
 
         if(!(d3.event.ctrlKey)){ //ctrl key 押下でない場合
@@ -435,8 +487,6 @@
                        // -> 発生し得ないルート
                        //    (直前に呼ばれる単一選択イベントによって、編集中が解除される為)
 
-                       propertyEditingBehavor_text_text_content.exit(); //<textarea>を終了
-
             exitEditing(); //編集モードの終了
         
         }
@@ -455,7 +505,7 @@
         
         editSVGNodes();
         lastSelectedData = d; //最終選択Nodeの記憶
-        propertyEditingBehavor_text_text_content.focus(lastSelectedData);
+        propertyEditorsManager.focus(lastSelectedData);
 
     });
 
@@ -471,7 +521,7 @@
         }else{ // 編集中でない場合
             if(lastSelectedData !== null){ //選択対象Nodeが存在する場合
                 editSVGNodes();
-                propertyEditingBehavor_text_text_content.focus(lastSelectedData);
+                propertyEditorsManager.focus(lastSelectedData);
                 disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
             }
         }
@@ -1877,9 +1927,8 @@
 
                 //property editor内の値をロールバックしたNode状態に合わせる
                 if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
-                    func_cancelBufOf_PropertyEditConsole();
+                    propertyEditorsManager.confirm(); //編集中のPropertyEditorを確定
                     adjustPropertyEditConsole();
-                    propertyEditingBehavor_text_text_content.adjust();
                 }
                 
             //transactionに対するMouseLeaveイベント
@@ -1891,7 +1940,6 @@
                     var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
                     replayHistory(historyIndex + 1);
                     adjustPropertyEditConsole();
-                    propertyEditingBehavor_text_text_content.adjust();
                 }
                 
                 $(clickedElem).attr("data-rollbacked","false"); //rollback実行済み状態をfalseに設定
@@ -2050,6 +2098,8 @@
     }
 
     function exitEditing(){
+
+        propertyEditorsManager.exit();
         
         //Node選択状態の表示化ループ
         for(var i = 0 ; i < dataset.length ; i++){
@@ -2078,7 +2128,7 @@
             if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択状態の場合
                 d.$3bindedSelectionLayerSVGElement.style("visibility","hidden"); //非表示にする
                 
-                propertyEditingBehavor_text_text_content.append(d); //text_content用PropertyEditorを追加
+                propertyEditorsManager.append(d);
 
                 selectionFound = true;
             }
@@ -2086,12 +2136,9 @@
 
         if(selectionFound){
             //選択 Node(s) を元に PropertyEditConsole に反映
-            var computedStylesOfData = adjustPropertyEditConsole();
-            
-            if(computedStylesOfData.length > 0){ //編集対象Nodeが存在する場合
-                $propertyEditConsoleElement.slideDown(100); //PropertyEditorを表示
-                nowEditng = true; //`編集中`状態にする
-            }
+            adjustPropertyEditConsole();
+            $propertyEditConsoleElement.slideDown(100); //PropertyEditorを表示
+            nowEditng = true; //`編集中`状態にする
         }
     }
 
@@ -2169,29 +2216,7 @@
                 }
             }
 
-            //マージしたスタイルをNodeEditConsoleに反映
-            
-            //text_content
-
-            //<text.text_anchor>-------------------------------------------------------------------------------------
-            propertyEditingBehavor_text_text_anchor.applyFromComputedStyleObj(mergedStyle, mergedExplicitness);
-            //------------------------------------------------------------------------------------</text.text_anchor>
-
-            //text_font_family
-            //text_font_size
-
-            //<text.text_fill>---------------------------------------------------------------------------------------
-            propertyEditingBehavor_text_text_fill.applyFromComputedStyleObj(mergedStyle, mergedExplicitness);
-            //--------------------------------------------------------------------------------------</text.text_fill>
-
-            //text_font_weight
-            //text_font_style
-            //text_text_decoration
-            //frame_shape
-            //frame_stroke
-            //frame_stroke_width
-            //frame_stroke_dasharray
-            //frame_fill
+            propertyEditorsManager.adjust(mergedStyle, mergedExplicitness);
 
         }
 
@@ -2209,8 +2234,6 @@
                 }
             }
         }
-
-        return computedStylesOfData;
     }
 
     function disablingKeyEvent(e){
@@ -2508,7 +2531,6 @@
             }
         }
 
-        //todo 共通化
         function clearBufTotalReport(){
             bufTotalReport = {};
             bufTotalReport.allOK = false; 
@@ -2538,8 +2560,7 @@
 
                 if(!($(enteredElem).prop("disabled"))){ //プロパティエディタが有効の場合
 
-                    propertyEditingBehavor_text_text_fill.confirm(); //todo ここに書きたくない
-                    propertyEditingBehavor_text_text_content.confirm(); //todo ここに書きたくない
+                    propertyEditorsManager.confirm(); //todo スパゲッティすぎ
 
                     var toRenderObj = makeNestedObj(event.data.useThisVal, structureArr);
 
@@ -2547,7 +2568,7 @@
                     beforeExpMessage = $expMsgElem.text();
 
                     bufTotalReport = fireEvent_PropertyEditConsole_rerender(toRenderObj);
-                    propertyEditingBehavor_text_text_content.adjust();
+                    propertyEditorsManager.adjust(); //todo スパゲッティすぎ
 
                     bufTotalReport.message = structureArr.join("/") + ":" + event.data.useThisVal;
     
@@ -2594,7 +2615,7 @@
                     if(!clicked){ //クリックしなかった場合
                         
                         rollbackTransaction(bufTotalReport); //元に戻す
-                        propertyEditingBehavor_text_text_content.adjust();
+                        propertyEditorsManager.adjust(); //todo スパゲッティすぎ
                         $expMsgElem.text(beforeExpMessage);
                         leavedElem.classList.remove(className_nodeIsSelected);
                         if(beforeVal != ""){
@@ -2614,7 +2635,7 @@
         }
 
         //PropertyEditorの表示状態をNodeの表示状態にあわせる
-        this.applyFromComputedStyleObj = function(computedStyleObj, explicitnessObj){
+        this.adjustToStyleObj = function(computedStyleObj, explicitnessObj){
 
             //選択状態の解除ループ
             for(var i = 0 ; i < elemAndValArr.length ; i++){
@@ -2748,7 +2769,7 @@
             if(!changed){ //`cancel` or `ESC押下` or `▽押下`イベントの場合
             
                 clearBuf();
-                propertyEditingBehavor_text_text_content.adjust();
+                propertyEditorsManager.adjust(); //todo スパゲッティすぎ
 
                 if(tinycolor(initSpectrumStr).isValid()){ //パース可能な場合
                     $pickerElem.spectrum("set", initSpectrumStr);
@@ -2760,7 +2781,7 @@
         });
 
         //PropertyEditorの表示状態をNodeの表示状態にあわせる
-        this.applyFromComputedStyleObj = function(computedStyleObj, explicitnessObj){
+        this.adjustToStyleObj = function(computedStyleObj, explicitnessObj){
             var valOfNode = getValFromNestObj(structureArr, computedStyleObj);
 
             if(typeof valOfNode == 'undefined'){ //対象のNodeが存在しない
@@ -2819,7 +2840,7 @@
             return (!isColorpickerHidden);
         }
 
-        //Buffer初期化 //todo 共通化
+        //Buffer初期化
         function initializeBufTotalReport(){
             bufTotalReport = {};
             bufTotalReport.allOK = false; 
@@ -2849,7 +2870,7 @@
             var renderByThisObj = makeNestedObj(toFillStr, structureArr); //render用Objを作る
             var totalReport = fireEvent_PropertyEditConsole_rerender(renderByThisObj); //render
             
-            propertyEditingBehavor_text_text_content.adjust();
+            propertyEditorsManager.adjust(); //todo スパゲッティすぎ
 
             if(!totalReport.allNG){ //1つ以上のNodeで適用成功の場合
                 totalReport.message = structureArr.join('/') + ":" + toFillStr;
