@@ -162,6 +162,7 @@
     var nowEditng = false;　      //Property Edit Console が起動中かどうか
     var lastSelectedData = null;　//最後に選択状態にしたNode
     var transactionHistory = [];  //history
+    var pointingIndexOfHistory = -1;      //historyのどのindexが選択されているか
 
     
     var firstTotalReport = {};
@@ -172,7 +173,8 @@
     var $3superElement; //全てのもと
     var $3propertyEditConsoleElement; //Property Edit Console (D3.js selection)
     var $propertyEditConsoleElement;  //Property Edit Console (jQuery selection)
-    var $3transactionHistoryElement;  //Transaction History
+    var $3transactionHistoryElement;  //Transaction History (D3.js selection)
+    var $transactionHistoryElement;   //Transaction History (jQuery selection)
     var $3SVGDrawingAreaElement;      //描画用SVG領域 (D3.js selection)
     var $SVGDrawingAreaElement;       //描画用SVG領域 (jQuery selection)
     var $3nodesGroup;
@@ -366,6 +368,7 @@
         .style("overflow","auto")
         .classed(className_transactionHistoryElement, true)
         .attr("wrap","off");
+    $transactionHistoryElement = $($3transactionHistoryElement.node()).eq(0);
 
     $3SVGDrawingAreaElement = $3superElement.append("svg") //Node描画用SVGの作成
         .classed(className_SVGElementForNodesMapping, true)
@@ -1932,97 +1935,132 @@
 
     function appendHistory(transactionObj){
 
-        var appendedIndex = transactionHistory.length;
+        var clicked = false;
+        var previewedIndex;
+
+        //historyの挿入チェック
+        if((pointingIndexOfHistory + 1) < transactionHistory.length){ //historyの途中に挿入する場合
+            deleteHistory(pointingIndexOfHistory + 1); //不要なhistoryを破棄
+        }
+
+        //現在の選択状態を解除
+        $transactionHistoryElement.children('.transaction[data-history_index="' + pointingIndexOfHistory.toString() + '"]')
+            .eq(0)
+            .removeClass(className_nodeIsSelected);
+
         transactionHistory.push(transactionObj); //Append History
+        pointingIndexOfHistory++;
 
         var $3historyMessageElem = $3transactionHistoryElement.append("div")
-            .classed("transaction",true)
-            .attr("data-history_index", appendedIndex.toString())
-            .attr("data-rollbacked","false");
+            .classed("transaction", true)
+            .classed(className_nodeIsSelected, true)
+            .style("display", "none") // <- 表示用アニメーションの為に、一旦非表示にする
+            .attr("data-history_index", pointingIndexOfHistory.toString());
 
         $3historyMessageElem.append("small")
             .text(transactionObj.message);
-            
         
-        var $historyMessageElem  = $($3historyMessageElem.node());
-        $historyMessageElem.hover(
-
-            //transactionに対するMouseEnterイベント
-            function(){
-                var clickedElem = this;
-                clickedElem.classList.add(className_nodeIsSelected); //選択状態を表すクラス追加
-                $(clickedElem).attr("data-rollbacked","false"); //rollback実行済み状態をfalseに設定
-
-                var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
-                rollbackHistory(historyIndex, false);
-
-                //property editor内の値をロールバックしたNode状態に合わせる
-                if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
-                    propertyEditorsManager.confirm(); //編集中のPropertyEditorを確定
-                    adjustPropertyEditConsole();
-                }
-                
-            //transactionに対するMouseLeaveイベント
-            },function(){
-                var clickedElem = this;
-                clickedElem.classList.remove(className_nodeIsSelected); //選択状態を表すクラス削除
-
-                if($(clickedElem).attr("data-rollbacked") != 'true'){
-                    var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
-                    replayHistory(historyIndex + 1);
-                    adjustPropertyEditConsole();
-                }
-                
-                $(clickedElem).attr("data-rollbacked","false"); //rollback実行済み状態をfalseに設定
-
+        $($3historyMessageElem.node()).slideDown(100); // <- 表示用アニメーション
+        var maxHeight = window.getComputedStyle($transactionHistoryElement.get(0)).maxHeight;
+        if(maxHeight != 'none'){ //maxHeightが定義されている
+            maxHeight = parseFloat(maxHeight);
+            if(maxHeight < $transactionHistoryElement.get(0).scrollHeight){ //historyがmax-heightより大きい
+                $transactionHistoryElement.animate({scrollTop:$transactionHistoryElement.get(0).scrollHeight}); //最下部にスクロール
             }
-        );
+        }
+        
+
+        var $historyMessageElem  = $($3historyMessageElem.node());
+
+        //transactionに対するMouseEnterイベント
+        $historyMessageElem.mouseenter(function(){
+            
+            var thisElem = this;
+            var specifiedIndex = parseInt($(thisElem).attr("data-history_index"));
+
+            if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
+                propertyEditorsManager.confirm(); //property editor内の値をロールバックしたNode状態に合わせる
+            }
+
+            $transactionHistoryElement.children('.transaction[data-history_index="' + pointingIndexOfHistory.toString() + '"]')
+                .eq(0)
+                .removeClass(className_nodeIsSelected); //history選択状態を解除
+            thisElem.classList.add(className_nodeIsSelected); //mouseenterしたhistoryを選択
+            
+            replayHistory(pointingIndexOfHistory, specifiedIndex); //mouseenterしたhistoryをPreview
+            
+            if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
+                adjustPropertyEditConsole();//property editor内の値をロールバックしたNode状態に合わせる
+            }
+
+            previewedIndex = specifiedIndex;
+            
+            clicked = false;
+        });
 
         //transactionに対するクリックイベント
         $historyMessageElem.on("click",function(){
-            var clickedElem = this;
-            var historyIndex = parseInt($(clickedElem).attr("data-history_index"));
+            var thisElem = this;
+            var historyIndex = parseInt($(thisElem).attr("data-history_index"));
             
-            $(clickedElem).attr("data-rollbacked","true"); //rollback実行済み状態をtrueに設定
+            clicked = true;
+            pointingIndexOfHistory = historyIndex; //history[]内の選択indexを変更
 
-            //history[]から historyIndex+1 以降を削除
-            transactionHistory.splice(historyIndex+1, transactionHistory.length - (historyIndex + 1));
+        });
 
-            //history表示の削除ループ
-            var siblings = clickedElem.parentNode.children;
-            for(var i = siblings.length - 1 ; i >= 0 ; i--){ //最終indexからデクリメントで網羅
-                var historyIndexOfItr = parseInt($(siblings[i]).attr("data-history_index"));
-                if(historyIndexOfItr > historyIndex){ //選択したtransactionより後のhistoryだった場合
-                    $(siblings[i]).remove(); //history表示の削除
-                }else{
-                    break;
+        //transactionに対するMouseLeaveイベント
+        $historyMessageElem.mouseleave(function(){
+            var thisElem = this;
+            
+            if(!clicked){ //クリックされていない場合
+                thisElem.classList.remove(className_nodeIsSelected); //history選択状態を解除
+                $transactionHistoryElement.children('.transaction[data-history_index="' + pointingIndexOfHistory.toString() + '"]')
+                    .eq(0)
+                    .addClass(className_nodeIsSelected); //history[]内の選択indexで選択
+
+                replayHistory(previewedIndex, pointingIndexOfHistory); //history[]内の選択indexへもどす
+                
+                if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
+                    adjustPropertyEditConsole();//property editor内の値をロールバックしたNode状態に合わせる
                 }
             }
-
+            
+            clicked = false;
         });
     }
 
-    function rollbackHistory(historyIndex, haveToPopTransaction){
+    function deleteHistory(fromThisIndex){
+        //history[]から historyIndex+1 以降を削除
+        transactionHistory.splice(fromThisIndex, transactionHistory.length - fromThisIndex);
 
-        if(transactionHistory.length < 1){ //Historyが存在しない場合
-            return; //処理をハネる
-        }
-        
-        //指定indexまでのrollbackループ
-        for(var i = transactionHistory.length - 1 ; i > historyIndex ; i--){
-            rollbackTransaction(transactionHistory[i]);
-            
-            if(haveToPopTransaction){ //transactionHistoryから削除`要`の場合
-                transactionHistory.pop(); //
+        //history表示の削除ループ
+        var siblings = $3transactionHistoryElement.node().children;
+        for(var i = siblings.length - 1 ; i >= 0 ; i--){ //最終indexからデクリメントで網羅
+            var historyIndex = parseInt($(siblings[i]).attr("data-history_index"));
+            if(historyIndex >= fromThisIndex){ //選択したtransactionより後のhistoryだった場合
+                $(siblings[i]).remove(); //history表示の削除
+            }else{
+                break;
             }
         }
     }
 
-    function replayHistory(fromThisIndex){
+    function replayHistory(startIndex, endIndex){
 
-        //指定index以降を再度実行するループ
-        for(var i = fromThisIndex ; i < transactionHistory.length ; i ++){
-            replayTransaction(transactionHistory[i]);
+        //increment / decrement 判定
+        if(startIndex == endIndex){ //Replay不要の場合
+            return //nothing to do
+
+        }else if(startIndex < endIndex){ // 旧 → 新 へのReplay
+            for(var i = (startIndex + 1); i <= endIndex ; i++){
+                replayTransaction(transactionHistory[i]);
+            }
+
+        }else{ // 新 → 旧 へのReplay
+            for(var i = startIndex; i > endIndex ; i--){
+                rollbackTransaction(transactionHistory[i]);
+            }
+
         }
     }
 
