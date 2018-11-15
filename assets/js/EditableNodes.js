@@ -192,6 +192,7 @@
         var propertyEditingBehavor_text_font_family;
         var propertyEditingBehavor_text_font_size;
         var propertyEditingBehavor_text_text_fill;
+        var propertyEditingBehavor_text_text_font_weight;
         var propertyEditingBehavor_text_frame_shape;
 
 
@@ -200,7 +201,6 @@
 
         //text.text_anchor
         var $propertyEditor_text_text_anchor = $propertyEditConsoleElement.find(".propertyEditor.text_text_anchor");
-        var $propertyEditor_text_text_anchor_expMsg = $propertyEditor_text_text_anchor.children(".message.explicitness").eq(0);
         var elemAndValArr_text_text_anchor = [];
         elemAndValArr_text_text_anchor.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="start"]').eq(0),
                                              useThisVal: 'start'});
@@ -208,6 +208,7 @@
                                              useThisVal: 'middle'});
         elemAndValArr_text_text_anchor.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="end"]').eq(0),
                                              useThisVal: 'end'});
+        var $propertyEditor_text_text_anchor_expMsg = $propertyEditor_text_text_anchor.children(".message.explicitness").eq(0);
         propertyEditingBehavor_text_text_anchor = new propertyEditorBehavor_radioButtons(elemAndValArr_text_text_anchor,
                                                                                          $propertyEditor_text_text_anchor_expMsg,
                                                                                          ['text', 'text_anchor'],
@@ -217,18 +218,18 @@
                                                                                                                  //    mouseleave による rollback 後に
                                                                                                                  //    Node個別編集用 PropertyEditor のみ adjust する
 
-        //text.font_family
+        //text.text_font_family
         var $propertyEditor_text_font_family = $propertyEditConsoleElement.find(".propertyEditor.text_font_family");
         var $propertyEditor_text_font_family_input = $propertyEditor_text_font_family.children(".text_property").eq(0);
         var $propertyEditor_text_font_family_expMsg = $propertyEditor_text_font_family.children(".message.explicitness").eq(0);
         propertyEditingBehavor_text_font_family = new propertyEditorBehavor_textInput($propertyEditor_text_font_family_input,
-                                                                                  $propertyEditor_text_font_family_expMsg,
-                                                                                  ['text', 'text_font_family'],
-                                                                                  adjustPropertyEditors); // <- RenderingEvent発行後 or 
-                                                                                                          //    mouseleave による rollback 後に
-                                                                                                          //    Node個別編集用 PropertyEditor のみ adjust する
+                                                                                      $propertyEditor_text_font_family_expMsg,
+                                                                                      ['text', 'text_font_family'],
+                                                                                      adjustPropertyEditors); // <- RenderingEvent発行後 or 
+                                                                                                              //    mouseleave による rollback 後に
+                                                                                                              //    Node個別編集用 PropertyEditor のみ adjust する
 
-        //text.font_size
+        //text.text_font_size
         var $propertyEditor_text_font_size = $propertyEditConsoleElement.find(".propertyEditor.text_font_size");
         var $propertyEditor_text_font_size_input = $propertyEditor_text_font_size.children(".number_property").eq(0);
         var $propertyEditor_text_font_size_expMsg = $propertyEditor_text_font_size.children(".message.explicitness").eq(0);
@@ -248,6 +249,24 @@
                                                                                ['text', 'text_fill'],
                                                                                adjustPropertyEditors);
         
+
+        //text.text_font_weight
+        var $propertyEditor_text_font_weight = $propertyEditConsoleElement.find(".propertyEditor.text_font_weight");
+        var elemAndValArr_text_font_weight = [];
+        elemAndValArr_text_font_weight.push({$elem: $propertyEditor_text_font_weight.children('.fontWeightType[data-font_weight_type="normal"]').eq(0),
+                                             useThisVal: 'normal'});
+        elemAndValArr_text_font_weight.push({$elem: $propertyEditor_text_font_weight.children('.fontWeightType[data-font_weight_type="bold"]').eq(0),
+                                             useThisVal: 'bold'});
+        var $propertyEditor_text_font_weight_expMsg = $propertyEditor_text_font_weight.children(".message.explicitness").eq(0);
+        propertyEditingBehavor_text_text_font_weight = new propertyEditorBehavor_radioButtons(elemAndValArr_text_font_weight,
+                                                                                              $propertyEditor_text_font_weight_expMsg,
+                                                                                              ['text', 'text_font_weight'],
+                                                                                              confirmPropertyEditors,
+                                                                                              adjustPropertyEditors);
+
+        //text.font_style
+        //text.text_decoration
+
         //text.frame_shape
         var $propertyEditor_text_frame_shape = $propertyEditConsoleElement.find(".propertyEditor.text_frame_shape");
         var $propertyEditor_text_frame_shape_expMsg = $propertyEditor_text_frame_shape.children(".message.explicitness").eq(0);
@@ -261,11 +280,13 @@
         propertyEditingBehavor_text_frame_shape = new propertyEditorBehavor_radioButtons(elemAndValArr_text_frame_shape,
                                                                                          $propertyEditor_text_frame_shape_expMsg,
                                                                                          ['text', 'frame_shape'],
-                                                                                         confirmPropertyEditors, // <- Preview開始時に
-                                                                                                                 //    編集中のPropertyEditerのBufferを確定させる
-                                                                                         adjustPropertyEditors); // <- RenderingEvent発行後 or 
-                                                                                                                 //    mouseleave による rollback 後に
-                                                                                                                 //    Node個別編集用 PropertyEditor のみ adjust する
+                                                                                         confirmPropertyEditors,
+                                                                                         adjustPropertyEditors);
+                                                                                         
+        //text.frame_stroke
+        //text.frame_stroke_width
+        //text.frame_stroke_dasharray
+        //text.frame_fill
         
         // Property Editor の編集状態を Style Object (Nodeの状態) に合わせる
         this.adjust = function(computedStyleObj, explicitnessObj){
@@ -337,13 +358,20 @@
 
                 propertyEditingBehavor_text_text_anchor.adjustToStyleObj(computedStyleObj, explicitnessObj);
                 propertyEditingBehavor_text_font_family.adjustToStyleObj(computedStyleObj, explicitnessObj);
-
-                //text_font_size
                 propertyEditingBehavor_text_font_size.adjustToStyleObj(computedStyleObj, explicitnessObj);
-
                 propertyEditingBehavor_text_text_fill.adjustToStyleObj(computedStyleObj, explicitnessObj);
 
-                //text_font_weight
+                //text_font_weight は Radio Button Type の Behavor が
+                //`normal` == `400`, `bold` == '700' を判定できないので、変換しておく
+                if(typeof computedStyleObj.text != 'undefined'){
+                    if(computedStyleObj.text.text_font_weight === '400'){
+                        computedStyleObj.text.text_font_weight = 'normal';
+                    }else if(computedStyleObj.text.text_font_weight === '700'){
+                        computedStyleObj.text.text_font_weight = 'bold';
+                    }
+                }
+                propertyEditingBehavor_text_text_font_weight.adjustToStyleObj(computedStyleObj, explicitnessObj);
+                
                 //text_font_style
                 //text_text_decoration
                 
@@ -362,13 +390,12 @@
             propertyEditingBehavor_text_text_content.confirm();
             propertyEditingBehavor_text_text_anchor.confirm();
             propertyEditingBehavor_text_font_family.confirm();
-
-            //text_font_size
             propertyEditingBehavor_text_font_size.confirm();
-
             propertyEditingBehavor_text_text_fill.confirm();
 
             //text_font_weight
+            propertyEditingBehavor_text_text_font_weight.confirm();
+
             //text_font_style
             //text_text_decoration
 

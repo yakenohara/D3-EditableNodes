@@ -50,7 +50,8 @@
 
 /* <構造定義>------------------------------------------------------ */
 
-#editableNode .propertyEditConsole .propertyEditor.text_text_anchor,.text_frame_shape{
+/* div要素リストを横並びにする為に設定する */
+#editableNode .propertyEditConsole .propertyEditor.text_text_anchor,.text_frame_shape,.text_font_weight{
     font-size:0;
 }
 
@@ -82,6 +83,13 @@
     border-width: 1px;
     border-color: rgb(145, 118, 93);
     padding:4px;
+}
+
+#editableNode .propertyEditConsole .propertyEditor .fontWeightType{
+    display: inline-block;
+    padding: 4px;
+    cursor: pointer;
+    font-size:15px;
 }
 
 #editableNode .propertyEditConsole .propertyEditor .message.explicitness{
