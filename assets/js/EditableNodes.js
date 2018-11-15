@@ -2627,8 +2627,6 @@
         //編集を確定する
         this.confirm = function(){
             comfirmBufTotalReport(); //Bufferの確定
-            
-            //todo 成功が存在しない状態で　confirm　すると　<input>　内文字列が元に戻らない
         }
 
         //すべての<textarea>の表示状態をSVGNodeの表示状態にあわせる
@@ -2741,6 +2739,11 @@
                 
                 if(valOfNode !== null){ // merged Styleが算出できた
                     $inputElem.val(valOfNode);
+                    lastAppliedStr = valOfNode;
+                
+                }else{ // merged Styleが算出できなかった
+                    $inputElem.val("");
+                    lastAppliedStr = "";
                 }
 
                 var valOfExp = getValFromNestObj(structureArr, explicitnessObj);
@@ -2783,13 +2786,11 @@
         //バッファに積んだ Rendering Report を 確定させる
         function confirmBufTotalReport(){
             if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
-
-                $inputElem.val(lastAppliedStr); //最後に反映したtextで<input>要素を更新
-                
                 appendHistory(bufTotalReport);
                 initializeBufTotalReport(); //ログ用バッファ初期化
 
             }
+            $inputElem.val(lastAppliedStr); //最後に反映したtextで<input>要素を更新
             initExpMessage = null;
         }
     }
@@ -2801,7 +2802,7 @@
         
         var bufTotalReport; //編集中に保存する Buffer
         var initExpMessage = null;
-        var lastAppliedVal = 0;    // confirm 時に<input>要素に適用する文字列
+        var lastAppliedStr = "";    // confirm 時に<input>要素に適用する文字列
 
         //initialize
         initializeBufTotalReport();
@@ -2835,7 +2836,7 @@
                 }else{ //1部Nodeで適用失敗の場合
                     $expMsgElem.text("explicit (some part)");
                 }
-                lastAppliedVal = toApplyVal;
+                lastAppliedStr = toApplyVal.toString();
             }
         }
 
@@ -2859,7 +2860,13 @@
                 $inputElem.prop('disabled', false); //<input>要素を有効化
                 
                 if(valOfNode !== null){ // merged Styleが算出できた
-                    $inputElem.val(valOfNode.toString());
+                    applyThisStr = valOfNode.toString();
+                    $inputElem.val(applyThisStr);
+                    lastAppliedStr = applyThisStr;
+                
+                }else{ // merged Styleが算出できなかった
+                    $inputElem.val("");
+                    lastAppliedStr = "";
                 }
 
                 var valOfExp = getValFromNestObj(structureArr, explicitnessObj);
@@ -2902,13 +2909,10 @@
         //バッファに積んだ Rendering Report を 確定させる
         function confirmBufTotalReport(){
             if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
-
-                $inputElem.val(lastAppliedVal.toString()); //最後に反映した値で<input>要素を更新
-                
                 appendHistory(bufTotalReport);
                 initializeBufTotalReport(); //ログ用バッファ初期化
-
             }
+            $inputElem.val(lastAppliedStr); //最後に反映したtextで<input>要素を更新
             initExpMessage = null;
         }
     }
@@ -3194,6 +3198,12 @@
                 if(valOfNode !== null){ // merged Styleが算出できた
                     $inputElem.val(valOfNode);
                     $pickerElem.spectrum("set", valOfNode);
+                    lastAppliedStr = valOfNode;
+                
+                }else{ // merged Styleが算出できなかった
+                    $inputElem.val("");
+                    $pickerElem.spectrum("set", null);
+                    lastAppliedStr = "";
                 }
 
                 var valOfExp = getValFromNestObj(structureArr, explicitnessObj);
@@ -3285,14 +3295,12 @@
         //バッファに積んだ Rendering Report を 確定させる
         function confirmBufTotalReport(){
             if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
-
-                $inputElem.val(lastAppliedStr); //最後に反映したカラーで<input>要素を更新
-                $pickerElem.spectrum("set", lastAppliedStr); //spectrum (color picker) に反映
-
                 appendHistory(bufTotalReport);
                 initializeBufTotalReport(); //ログ用バッファ初期化
 
             }
+            $inputElem.val(lastAppliedStr); //最後に反映したカラーで<input>要素を更新
+            $pickerElem.spectrum("set", lastAppliedStr); //spectrum (color picker) に反映
             initExpMessage = null;
         }
     }
