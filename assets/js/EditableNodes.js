@@ -170,7 +170,7 @@
     firstTotalReport.reportsArr = [];
 
     
-    var $3superElement; //全てのもと
+    var $3motherElement; //全てのもと
     var $3propertyEditConsoleElement; //Property Edit Console (D3.js selection)
     var $propertyEditConsoleElement;  //Property Edit Console (jQuery selection)
     var $3transactionHistoryElement;  //Transaction History (D3.js selection)
@@ -189,6 +189,7 @@
 
         var propertyEditingBehavor_text_text_content;
         var propertyEditingBehavor_text_text_anchor;
+        var propertyEditingBehavor_text_font_family;
         var propertyEditingBehavor_text_text_fill;
         var propertyEditingBehavor_text_frame_shape;
 
@@ -214,6 +215,17 @@
                                                                                          adjustPropertyEditors); // <- RenderingEvent発行後 or 
                                                                                                                  //    mouseleave による rollback 後に
                                                                                                                  //    Node個別編集用 PropertyEditor のみ adjust する
+
+        //text.font_family
+        var $propertyEditor_text_font_family = $propertyEditConsoleElement.find(".propertyEditor.text_font_family");
+        var $propertyEditor_text_font_family_input = $propertyEditor_text_font_family.children(".text_property").eq(0);
+        var $propertyEditor_text_font_family_expMsg = $propertyEditor_text_font_family.children(".message.explicitness").eq(0);
+        propertyEditingBehavor_text_font_family = new propertyEditorBehavor_input($propertyEditor_text_font_family_input,
+                                                                                  $propertyEditor_text_font_family_expMsg,
+                                                                                  ['text', 'text_font_family'],
+                                                                                  adjustPropertyEditors); // <- RenderingEvent発行後 or 
+                                                                                                          //    mouseleave による rollback 後に
+                                                                                                          //    Node個別編集用 PropertyEditor のみ adjust する
 
         //text.text_fill
         var $propertyEditor_text_text_fill = $propertyEditConsoleElement.find(".propertyEditor.text_text_fill");
@@ -315,22 +327,17 @@
 
             if((typeof computedStyleObj == 'object') && (typeof computedStyleObj == 'object')){ 
 
-                //text.text_anchor
                 propertyEditingBehavor_text_text_anchor.adjustToStyleObj(computedStyleObj, explicitnessObj);
-                            
+                propertyEditingBehavor_text_font_family.adjustToStyleObj(computedStyleObj, explicitnessObj);
 
-                //text_font_family
                 //text_font_size
 
-                //text.text_fill
                 propertyEditingBehavor_text_text_fill.adjustToStyleObj(computedStyleObj, explicitnessObj);
-
 
                 //text_font_weight
                 //text_font_style
                 //text_text_decoration
                 
-                //frame_shape
                 propertyEditingBehavor_text_frame_shape.adjustToStyleObj(computedStyleObj, explicitnessObj);
 
                 //frame_stroke
@@ -342,21 +349,34 @@
         }
 
         function confirmPropertyEditors(){
-            
-            //text_content
-            propertyEditingBehavor_text_text_content.confirm();
 
-            //text.text_fill
+            propertyEditingBehavor_text_text_content.confirm();
+            propertyEditingBehavor_text_text_anchor.confirm();
+            propertyEditingBehavor_text_font_family.confirm();
+
+            //text_font_size
+
             propertyEditingBehavor_text_text_fill.confirm();
+
+            //text_font_weight
+            //text_font_style
+            //text_text_decoration
+
+            propertyEditingBehavor_text_frame_shape.confirm();
+
+            //frame_stroke
+            //frame_stroke_width
+            //frame_stroke_dasharray
+            //frame_fill
         }
     }
     //----------------------------------------------------------</Element Selections and Settings of PropertyEditor>
 
     //DOM構築
-    $3superElement = d3.select("#" + idName_superElement) //全てのもと
+    $3motherElement = d3.select("#" + idName_superElement) //全てのもと
         .style("position", "relative");
 
-    $3propertyEditConsoleElement = $3superElement.append("div") //Property Edit Console
+    $3propertyEditConsoleElement = $3motherElement.append("div") //Property Edit Console
         .style("position", "absolute")
         .style("z-index", 10)
         .style("margin", 0)
@@ -380,7 +400,7 @@
 
     });
 
-    $3transactionHistoryElement = $3superElement.append("div") //transaction history
+    $3transactionHistoryElement = $3motherElement.append("div") //transaction history
         .style("position", "absolute")
         .style("z-index", 10)
         .style("margin", 0)
@@ -393,7 +413,7 @@
         .attr("wrap","off");
     $transactionHistoryElement = $($3transactionHistoryElement.node()).eq(0);
 
-    $3SVGDrawingAreaElement = $3superElement.append("svg") //Node描画用SVGの作成
+    $3SVGDrawingAreaElement = $3motherElement.append("svg") //Node描画用SVGの作成
         .classed(className_SVGElementForNodesMapping, true)
         .style("vertical-align", "bottom");
 
@@ -425,7 +445,7 @@
             
             //座標追加
             d.coordinate = {
-                x: ($3superElement.node().offsetWidth / 2), //<-仮の処理
+                x: ($3motherElement.node().offsetWidth / 2), //<-仮の処理
                 y: (60*(i+1)) //<-仮の処理
             };
 
@@ -2392,7 +2412,7 @@
 
         //<textarea>表示の為のtop位置を算出
         var halfLeading = (parseFloat(textareaStyle_fontSize) * (valOfLineHightInText - 1.0)) / 2;
-        var textareaStyle_top = parseFloat($3SVGnodeElem_text.attr("y")) - getPxDistanceOf_textBeforeEdge_baseline(textareaStyle_fontSize, textareaStyle_fontFamily, $3superElement.node()) - halfLeading;
+        var textareaStyle_top = parseFloat($3SVGnodeElem_text.attr("y")) - getPxDistanceOf_textBeforeEdge_baseline(textareaStyle_fontSize, textareaStyle_fontFamily, $3motherElement.node()) - halfLeading;
         textareaStyle_top += "px";
 
         //font-weightの取得
@@ -2491,7 +2511,7 @@
             var textareaValue = getValFromNestObj(structureArr, bindedData);
 
             //<textarea>要素の追加
-            var $3textareaElem = $3superElement.append("textarea")
+            var $3textareaElem = $3motherElement.append("textarea")
                 .style("position", "absolute")
                 .style("margin", 0)
                 .style("border", 0)
@@ -2646,6 +2666,118 @@
     //
     // Radio Buttons タイプ の Property Editor の Behavor
     //
+    function propertyEditorBehavor_input($inputElem, $expMsgElem, structureArr, callbackWhenEventDone){
+        
+        var bufTotalReport; //編集中に保存する Buffer
+        var initExpMessage = null;
+        var lastAppliedStr = ""    // confirm 時に<input>要素に適用する文字列
+
+        //initialize
+        initializeBufTotalReport();
+
+        //<input>要素内のキータイピングイベント
+        $inputElem.get(0).oninput = function(){
+            if(initExpMessage === null){ //初回の場合(Buffering 1回目の場合)
+                initExpMessage = $expMsgElem.text(); //現在の表示状態を保存
+            }
+
+            //SVGNodeへの反映
+            var toApplyText = $inputElem.val();
+            var renderByThisObj = makeNestedObj(toApplyText, structureArr); //render用Objを作る
+            var totalReport = fireEvent_PropertyEditConsole_rerender(renderByThisObj); //render
+
+            callbackWhenEventDone();
+
+            if(!totalReport.allNG){ //1つ以上のNodeで適用成功の場合
+                totalReport.message = structureArr.join('/') + ":" + toApplyText;
+                overWriteScceededTransaction(totalReport, bufTotalReport);
+
+                if(totalReport.allOK){ //全てのNodeで適用成功の場合
+                    $expMsgElem.text("explicit");
+
+                }else{ //1部Nodeで適用失敗の場合
+                    $expMsgElem.text("explicit (some part)");
+                }
+                lastAppliedStr = toApplyText;
+            }
+        }
+
+        //<input>要素からフォーカスが離れた時のイベント
+        $inputElem.get(0).onblur = function(){
+            confirmBufTotalReport(); //Bufferを確定する
+        }
+
+        //PropertyEditorの表示状態をNodeの表示状態にあわせる
+        this.adjustToStyleObj = function(computedStyleObj, explicitnessObj){
+            var valOfNode = getValFromNestObj(structureArr, computedStyleObj);
+
+            if(typeof valOfNode == 'undefined'){ //対象のNodeが存在しない
+                
+                $inputElem.prop('disabled', true); //<input>要素を無効化
+                $expMsgElem.text("no nodes");
+            
+            }else{ //描画対象のスタイルが存在する
+                
+                $inputElem.prop('disabled', false); //<input>要素を有効化
+                
+                if(valOfNode !== null){ // merged Styleが算出できた
+                    $inputElem.val(valOfNode);
+                }
+
+                var valOfExp = getValFromNestObj(structureArr, explicitnessObj);
+
+                if(valOfExp === null){ // explicitly defined している Node は一部だけだった
+                    $expMsgElem.text("explicit (some part)");
+                }else if(valOfExp){    // explicitly defined している Node は全部
+                    $expMsgElem.text("explicit");
+                }else{                 // explicitly defined していない
+                    $expMsgElem.text("");
+                }
+            }
+        }
+
+        //編集をcancelする
+        this.cancel = function(){
+            if(!bufTotalReport.allNG){ //成功したRenderingReportが存在する場合
+                rollbackTransaction(bufTotalReport); //元に戻す
+                callbackWhenEventDone();
+                initializeBufTotalReport(); //バッファ初期化
+                $expMsgElem.text(initExpMessage);
+                initExpMessage = null;
+            }
+        }
+
+        //編集を確定する
+        this.confirm = function(){
+            confirmBufTotalReport();
+        }
+
+        //Buffer初期化
+        function initializeBufTotalReport(){
+            bufTotalReport = {};
+            bufTotalReport.allOK = false; 
+            bufTotalReport.allNG = true; // <- falseとなった場合は、
+                                         //    historyに残すべきTransactionが少なくとも1件以上存在する事を表す
+            bufTotalReport.reportsArr = [];
+        }
+
+        //バッファに積んだ Rendering Report を 確定させる
+        function confirmBufTotalReport(){
+            if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
+
+                $inputElem.val(lastAppliedStr); //最後に反映したカラーで<input>要素を更新
+                
+                appendHistory(bufTotalReport);
+                initializeBufTotalReport(); //ログ用バッファ初期化
+
+            }
+            initExpMessage = null;
+        }
+    }
+
+    //
+    // Radio Buttons タイプ の Property Editor の Behavor
+    //
     function propertyEditorBehavor_radioButtons(elemAndValArr, $expMsgElem, structureArr, callbackBeforePreview, callbackWhenEventDone){
 
         var clicked = false;
@@ -2785,6 +2917,14 @@
             }
         }
 
+        this.cancel = function(){
+            //nothing to do
+        }
+
+        this.confirm = function(){
+            //nothing to do
+        }
+
         function get$elemByVal(val){
             var toRet$elem;
             for(var i = 0; i < elemAndValArr.length ; i++){
@@ -2885,6 +3025,12 @@
             canceled = false;
         });
 
+        //`cancel`ボタンの存在チェック <- spectrum の 公式document に、
+        //`.sp-cancel`で`cancel`ボタンが定義されている事が明記されていない為確認する
+        if($spectrumElem.find(".sp-cancel").length == 0){
+            console.error("\`cancel\` Button not found in spectrum.");
+        }
+        
         //spectrum (color picker)のcancelボタンクリックイベント
         $spectrumElem.find(".sp-cancel").on("click",function(){
             canceled = true;
@@ -3001,11 +3147,8 @@
         function confirmBufTotalReport(){
             if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
 
-                //最後に反映したカラーをログから取得
-                var latestTextFill = lastAppliedStr;
-
-                $inputElem.val(latestTextFill); //最後に反映したカラーで<input>要素を更新
-                $pickerElem.spectrum("set", latestTextFill); //spectrum (color picker) に反映
+                $inputElem.val(lastAppliedStr); //最後に反映したカラーで<input>要素を更新
+                $pickerElem.spectrum("set", lastAppliedStr); //spectrum (color picker) に反映
 
                 appendHistory(bufTotalReport);
                 initializeBufTotalReport(); //ログ用バッファ初期化
