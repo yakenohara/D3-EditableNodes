@@ -190,6 +190,7 @@
         var propertyEditingBehavor_text_text_content;
         var propertyEditingBehavor_text_text_anchor;
         var propertyEditingBehavor_text_font_family;
+        var propertyEditingBehavor_text_font_size;
         var propertyEditingBehavor_text_text_fill;
         var propertyEditingBehavor_text_frame_shape;
 
@@ -220,12 +221,21 @@
         var $propertyEditor_text_font_family = $propertyEditConsoleElement.find(".propertyEditor.text_font_family");
         var $propertyEditor_text_font_family_input = $propertyEditor_text_font_family.children(".text_property").eq(0);
         var $propertyEditor_text_font_family_expMsg = $propertyEditor_text_font_family.children(".message.explicitness").eq(0);
-        propertyEditingBehavor_text_font_family = new propertyEditorBehavor_input($propertyEditor_text_font_family_input,
+        propertyEditingBehavor_text_font_family = new propertyEditorBehavor_textInput($propertyEditor_text_font_family_input,
                                                                                   $propertyEditor_text_font_family_expMsg,
                                                                                   ['text', 'text_font_family'],
                                                                                   adjustPropertyEditors); // <- RenderingEvent発行後 or 
                                                                                                           //    mouseleave による rollback 後に
                                                                                                           //    Node個別編集用 PropertyEditor のみ adjust する
+
+        //text.font_size
+        var $propertyEditor_text_font_size = $propertyEditConsoleElement.find(".propertyEditor.text_font_size");
+        var $propertyEditor_text_font_size_input = $propertyEditor_text_font_size.children(".number_property").eq(0);
+        var $propertyEditor_text_font_size_expMsg = $propertyEditor_text_font_size.children(".message.explicitness").eq(0);
+        propertyEditingBehavor_text_font_size = new propertyEditorBehavor_numberInput($propertyEditor_text_font_size_input,
+                                                                                      $propertyEditor_text_font_size_expMsg,
+                                                                                      ['text', 'text_font_size'],
+                                                                                      adjustPropertyEditors);
 
         //text.text_fill
         var $propertyEditor_text_text_fill = $propertyEditConsoleElement.find(".propertyEditor.text_text_fill");
@@ -236,9 +246,7 @@
                                                                                $propertyEditor_text_text_fill_picker,
                                                                                $propertyEditor_text_text_fill_expMsg,
                                                                                ['text', 'text_fill'],
-                                                                               adjustPropertyEditors); // <- RenderingEvent発行後 or 
-                                                                                                       //    cancel による rollback 後に
-                                                                                                       //    Node個別編集用 PropertyEditor のみ adjust する
+                                                                               adjustPropertyEditors);
         
         //text.frame_shape
         var $propertyEditor_text_frame_shape = $propertyEditConsoleElement.find(".propertyEditor.text_frame_shape");
@@ -331,6 +339,7 @@
                 propertyEditingBehavor_text_font_family.adjustToStyleObj(computedStyleObj, explicitnessObj);
 
                 //text_font_size
+                propertyEditingBehavor_text_font_size.adjustToStyleObj(computedStyleObj, explicitnessObj);
 
                 propertyEditingBehavor_text_text_fill.adjustToStyleObj(computedStyleObj, explicitnessObj);
 
@@ -355,6 +364,7 @@
             propertyEditingBehavor_text_font_family.confirm();
 
             //text_font_size
+            propertyEditingBehavor_text_font_size.confirm();
 
             propertyEditingBehavor_text_text_fill.confirm();
 
@@ -1115,44 +1125,50 @@
                 reportObj.FailuredMessages.text.text_font_size = wrn;
             
             }else{ //型がnumber
-                var applyThisFontSize = renderByThisObj.text.text_font_size + "px";
-                $3SVGnodeElem_text.style("font-size", applyThisFontSize);
-
-                //適用可否チェック
-                var appliedFontSize = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-size");
                 var pixcelNumberRegex = new RegExp(/^[-]?[0-9]+(\.[0-9]+)?px$/);
+                var applyThisFontSize = renderByThisObj.text.text_font_size + "px";
 
-                if(!(pixcelNumberRegex.test(appliedFontSize))){ // `0.0px`形式に設定できていない場合
-                                                                // 指数表記になるような極端な数値も、このルートに入る
-
-                    var wrn = "Specified style in \`renderByThisObj.text.text_font_size\` did not applied. " +
-                            "specified style:\`" + applyThisFontSize + "\`, browser applied style:\`" + appliedFontSize + "\`.";
+                if(!(pixcelNumberRegex.test(applyThisFontSize))){ //指定数値が `0.0px`形式にならない場合(ex: NaNを指定) //todo 外でも同様の処理が必要
+                    var wrn = "Invalid Number \`" + renderByThisObj.text.text_font_size.toString() + "\` specified.";
                     console.warn(wrn);
                     reportObj.FailuredMessages.text.text_font_size = wrn;
-
-                    $3SVGnodeElem_text.style("font-size", prevFontSize); //変更前の状態に戻す
-
                 }else{
-                    if( Math.abs(parseFloat(appliedFontSize) - renderByThisObj.text.text_font_size) >= 0.1){ //適用されたfont-sizeと指定したfont-sizeの差分が大きすぎる
+                    $3SVGnodeElem_text.style("font-size", applyThisFontSize);
+
+                    //適用可否チェック
+                    var appliedFontSize = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-size");
+    
+                    if(!(pixcelNumberRegex.test(appliedFontSize))){ // `0.0px`形式に設定できていない場合
+                                                                    // 指数表記になるような極端な数値も、このルートに入る
+    
                         var wrn = "Specified style in \`renderByThisObj.text.text_font_size\` did not applied. " +
                                 "specified style:\`" + applyThisFontSize + "\`, browser applied style:\`" + appliedFontSize + "\`.";
                         console.warn(wrn);
                         reportObj.FailuredMessages.text.text_font_size = wrn;
-
+    
                         $3SVGnodeElem_text.style("font-size", prevFontSize); //変更前の状態に戻す
-                    
-                    }else{ //適用された場合
-                        if(prevFontSize !== null){
-                            prevFontSize = parseFloat(prevFontSize);
+    
+                    }else{
+                        if( Math.abs(parseFloat(appliedFontSize) - renderByThisObj.text.text_font_size) >= 0.1){ //適用されたfont-sizeと指定したfont-sizeの差分が大きすぎる
+                            var wrn = "Specified style in \`renderByThisObj.text.text_font_size\` did not applied. " +
+                                    "specified style:\`" + applyThisFontSize + "\`, browser applied style:\`" + appliedFontSize + "\`.";
+                            console.warn(wrn);
+                            reportObj.FailuredMessages.text.text_font_size = wrn;
+    
+                            $3SVGnodeElem_text.style("font-size", prevFontSize); //変更前の状態に戻す
+                        
+                        }else{ //適用された場合
+                            if(prevFontSize !== null){
+                                prevFontSize = parseFloat(prevFontSize);
+                            }
+                            reportObj.PrevObj.text.text_font_size = prevFontSize;
+                            reportObj.RenderedObj.text.text_font_size = renderByThisObj.text.text_font_size;
+                            bindedData.text.text_font_size = renderByThisObj.text.text_font_size;
+                            haveToUpdateFrame = true;
                         }
-                        reportObj.PrevObj.text.text_font_size = prevFontSize;
-                        reportObj.RenderedObj.text.text_font_size = renderByThisObj.text.text_font_size;
-                        bindedData.text.text_font_size = renderByThisObj.text.text_font_size;
-                        haveToUpdateFrame = true;
                     }
                 }
             }
-
             untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("text_font_size"), 1); //未処理プロパティリストから削除
         }
 
@@ -2611,6 +2627,8 @@
         //編集を確定する
         this.confirm = function(){
             comfirmBufTotalReport(); //Bufferの確定
+            
+            //todo 成功が存在しない状態で　confirm　すると　<input>　内文字列が元に戻らない
         }
 
         //すべての<textarea>の表示状態をSVGNodeの表示状態にあわせる
@@ -2664,13 +2682,13 @@
     }
 
     //
-    // Radio Buttons タイプ の Property Editor の Behavor
+    // <input type="text"> タイプ の Property Editor の Behavor
     //
-    function propertyEditorBehavor_input($inputElem, $expMsgElem, structureArr, callbackWhenEventDone){
+    function propertyEditorBehavor_textInput($inputElem, $expMsgElem, structureArr, callbackWhenEventDone){
         
         var bufTotalReport; //編集中に保存する Buffer
         var initExpMessage = null;
-        var lastAppliedStr = ""    // confirm 時に<input>要素に適用する文字列
+        var lastAppliedStr = "";    // confirm 時に<input>要素に適用する文字列
 
         //initialize
         initializeBufTotalReport();
@@ -2713,6 +2731,7 @@
 
             if(typeof valOfNode == 'undefined'){ //対象のNodeが存在しない
                 
+                $inputElem.val("");
                 $inputElem.prop('disabled', true); //<input>要素を無効化
                 $expMsgElem.text("no nodes");
             
@@ -2765,7 +2784,7 @@
         function confirmBufTotalReport(){
             if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
 
-                $inputElem.val(lastAppliedStr); //最後に反映したカラーで<input>要素を更新
+                $inputElem.val(lastAppliedStr); //最後に反映したtextで<input>要素を更新
                 
                 appendHistory(bufTotalReport);
                 initializeBufTotalReport(); //ログ用バッファ初期化
@@ -2775,6 +2794,125 @@
         }
     }
 
+    //
+    // <input type="number"> タイプ の Property Editor の Behavor
+    //
+    function propertyEditorBehavor_numberInput($inputElem, $expMsgElem, structureArr, callbackWhenEventDone){
+        
+        var bufTotalReport; //編集中に保存する Buffer
+        var initExpMessage = null;
+        var lastAppliedVal = 0;    // confirm 時に<input>要素に適用する文字列
+
+        //initialize
+        initializeBufTotalReport();
+
+        //<input>要素内のキータイピングイベント
+        $inputElem.get(0).oninput = function(){
+            if(initExpMessage === null){ //初回の場合(Buffering 1回目の場合)
+                initExpMessage = $expMsgElem.text(); //現在の表示状態を保存
+            }
+
+            //有効数値チェック
+            var toApplyVal = parseFloat($inputElem.val());
+            if(typeof toApplyVal != 'number' ){ //数値型でない場合
+                console.warn("Cannot parse \`" + $inputElem.val() + "\` as number.");
+                return;
+            }
+
+            //SVGNodeへの反映
+            var renderByThisObj = makeNestedObj(toApplyVal, structureArr); //render用Objを作る
+            var totalReport = fireEvent_PropertyEditConsole_rerender(renderByThisObj); //render
+
+            callbackWhenEventDone();
+
+            if(!totalReport.allNG){ //1つ以上のNodeで適用成功の場合
+                totalReport.message = structureArr.join('/') + ":" + toApplyVal.toString();
+                overWriteScceededTransaction(totalReport, bufTotalReport);
+
+                if(totalReport.allOK){ //全てのNodeで適用成功の場合
+                    $expMsgElem.text("explicit");
+
+                }else{ //1部Nodeで適用失敗の場合
+                    $expMsgElem.text("explicit (some part)");
+                }
+                lastAppliedVal = toApplyVal;
+            }
+        }
+
+        //<input>要素からフォーカスが離れた時のイベント
+        $inputElem.get(0).onblur = function(){
+            confirmBufTotalReport(); //Bufferを確定する
+        }
+
+        //PropertyEditorの表示状態をNodeの表示状態にあわせる
+        this.adjustToStyleObj = function(computedStyleObj, explicitnessObj){
+            var valOfNode = getValFromNestObj(structureArr, computedStyleObj);
+
+            if(typeof valOfNode == 'undefined'){ //対象のNodeが存在しない
+                
+                $inputElem.val("");
+                $inputElem.prop('disabled', true); //<input>要素を無効化
+                $expMsgElem.text("no nodes");
+            
+            }else{ //描画対象のスタイルが存在する
+                
+                $inputElem.prop('disabled', false); //<input>要素を有効化
+                
+                if(valOfNode !== null){ // merged Styleが算出できた
+                    $inputElem.val(valOfNode.toString());
+                }
+
+                var valOfExp = getValFromNestObj(structureArr, explicitnessObj);
+
+                if(valOfExp === null){ // explicitly defined している Node は一部だけだった
+                    $expMsgElem.text("explicit (some part)");
+                }else if(valOfExp){    // explicitly defined している Node は全部
+                    $expMsgElem.text("explicit");
+                }else{                 // explicitly defined していない
+                    $expMsgElem.text("");
+                }
+            }
+        }
+
+        //編集をcancelする
+        this.cancel = function(){
+            if(!bufTotalReport.allNG){ //成功したRenderingReportが存在する場合
+                rollbackTransaction(bufTotalReport); //元に戻す
+                callbackWhenEventDone();
+                initializeBufTotalReport(); //バッファ初期化
+                $expMsgElem.text(initExpMessage);
+                initExpMessage = null;
+            }
+        }
+
+        //編集を確定する
+        this.confirm = function(){
+            confirmBufTotalReport();
+        }
+
+        //Buffer初期化
+        function initializeBufTotalReport(){
+            bufTotalReport = {};
+            bufTotalReport.allOK = false; 
+            bufTotalReport.allNG = true; // <- falseとなった場合は、
+                                         //    historyに残すべきTransactionが少なくとも1件以上存在する事を表す
+            bufTotalReport.reportsArr = [];
+        }
+
+        //バッファに積んだ Rendering Report を 確定させる
+        function confirmBufTotalReport(){
+            if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
+
+                $inputElem.val(lastAppliedVal.toString()); //最後に反映した値で<input>要素を更新
+                
+                appendHistory(bufTotalReport);
+                initializeBufTotalReport(); //ログ用バッファ初期化
+
+            }
+            initExpMessage = null;
+        }
+    }
+    
     //
     // Radio Buttons タイプ の Property Editor の Behavor
     //
@@ -2947,7 +3085,7 @@
         var initSpectrumStr = "";  // cancel 時に戻すべきspectrum(color picker)用文字列
         var changed = false; // spectrum (color picker) によって'change' イベントが発行されたか
         var canceled = false;
-        var lastAppliedStr = ""    // confirm 時に<input>要素に適用する文字列
+        var lastAppliedStr = "";    // confirm 時に<input>要素に適用する文字列
         var $spectrumElem;
 
         //initialize
@@ -3042,6 +3180,7 @@
 
             if(typeof valOfNode == 'undefined'){ //対象のNodeが存在しない
                 
+                $inputElem.val("");
                 $inputElem.prop('disabled', true); //<input>要素を無効化
                 $pickerElem.spectrum("disable"); //spectrum (color picker) を無効化
                 
