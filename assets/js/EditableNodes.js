@@ -190,6 +190,7 @@
         var propertyEditingBehavor_text_text_content;
         var propertyEditingBehavor_text_text_anchor;
         var propertyEditingBehavor_text_text_fill;
+        var propertyEditingBehavor_text_frame_shape;
 
 
         //text.text_content
@@ -198,14 +199,14 @@
         //text.text_anchor
         var $propertyEditor_text_text_anchor = $propertyEditConsoleElement.find(".propertyEditor.text_text_anchor");
         var $propertyEditor_text_text_anchor_expMsg = $propertyEditor_text_text_anchor.children(".message.explicitness").eq(0);
-        var elemAndValArr = [];
-        elemAndValArr.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="start"]').eq(0),
-                            useThisVal: 'start'});
-        elemAndValArr.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="middle"]').eq(0),
-                            useThisVal: 'middle'});
-        elemAndValArr.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="end"]').eq(0),
-                            useThisVal: 'end'});
-        propertyEditingBehavor_text_text_anchor = new propertyEditorBehavor_radioButtons(elemAndValArr,
+        var elemAndValArr_text_text_anchor = [];
+        elemAndValArr_text_text_anchor.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="start"]').eq(0),
+                                             useThisVal: 'start'});
+        elemAndValArr_text_text_anchor.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="middle"]').eq(0),
+                                             useThisVal: 'middle'});
+        elemAndValArr_text_text_anchor.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="end"]').eq(0),
+                                             useThisVal: 'end'});
+        propertyEditingBehavor_text_text_anchor = new propertyEditorBehavor_radioButtons(elemAndValArr_text_text_anchor,
                                                                                          $propertyEditor_text_text_anchor_expMsg,
                                                                                          ['text', 'text_anchor'],
                                                                                          confirmPropertyEditors, // <- Preview開始時に
@@ -226,7 +227,26 @@
                                                                                adjustPropertyEditors); // <- RenderingEvent発行後 or 
                                                                                                        //    cancel による rollback 後に
                                                                                                        //    Node個別編集用 PropertyEditor のみ adjust する
-
+        
+        //text.frame_shape
+        var $propertyEditor_text_frame_shape = $propertyEditConsoleElement.find(".propertyEditor.text_frame_shape");
+        var $propertyEditor_text_frame_shape_expMsg = $propertyEditor_text_frame_shape.children(".message.explicitness").eq(0);
+        var elemAndValArr_text_frame_shape = [];
+        elemAndValArr_text_frame_shape.push({$elem: $propertyEditor_text_frame_shape.children('.frameShapeType[data-frame_shape_type="rect"]').eq(0),
+                                             useThisVal: 'rect'});
+        elemAndValArr_text_frame_shape.push({$elem: $propertyEditor_text_frame_shape.children('.frameShapeType[data-frame_shape_type="circle"]').eq(0),
+                                             useThisVal: 'circle'});
+        elemAndValArr_text_frame_shape.push({$elem: $propertyEditor_text_frame_shape.children('.frameShapeType[data-frame_shape_type="ellipse"]').eq(0),
+                                             useThisVal: 'ellipse'});
+        propertyEditingBehavor_text_frame_shape = new propertyEditorBehavor_radioButtons(elemAndValArr_text_frame_shape,
+                                                                                         $propertyEditor_text_frame_shape_expMsg,
+                                                                                         ['text', 'frame_shape'],
+                                                                                         confirmPropertyEditors, // <- Preview開始時に
+                                                                                                                 //    編集中のPropertyEditerのBufferを確定させる
+                                                                                         adjustPropertyEditors); // <- RenderingEvent発行後 or 
+                                                                                                                 //    mouseleave による rollback 後に
+                                                                                                                 //    Node個別編集用 PropertyEditor のみ adjust する
+        
         // Property Editor の編集状態を Style Object (Nodeの状態) に合わせる
         this.adjust = function(computedStyleObj, explicitnessObj){
             adjustPropertyEditors(computedStyleObj, explicitnessObj);
@@ -309,7 +329,10 @@
                 //text_font_weight
                 //text_font_style
                 //text_text_decoration
+                
                 //frame_shape
+                propertyEditingBehavor_text_frame_shape.adjustToStyleObj(computedStyleObj, explicitnessObj);
+
                 //frame_stroke
                 //frame_stroke_width
                 //frame_stroke_dasharray
@@ -2783,6 +2806,7 @@
         var initExpMessage = null; // cancel 時に戻すべきメッセージ用文字列
         var initSpectrumStr = "";  // cancel 時に戻すべきspectrum(color picker)用文字列
         var changed = false; // spectrum (color picker) によって'change' イベントが発行されたか
+        var canceled = false;
         var lastAppliedStr = ""    // confirm 時に<input>要素に適用する文字列
         var $spectrumElem;
 
@@ -2793,7 +2817,7 @@
         var spectrumContainerClassName   =  getUniqueClassName(structureArr.join("_"));
         forSpectrumRegisteringOptionObj.containerClassName = spectrumContainerClassName; //pikcerに紐づくspectrum要素検索用のClass名
         $pickerElem.spectrum(forSpectrumRegisteringOptionObj); //登録
-        $spectrumElem = $(forSpectrumRegisteringOptionObj);
+        $spectrumElem = $("." + spectrumContainerClassName);
 
         //<input>要素内のキータイピングイベント
         $inputElem.get(0).oninput = function(){
@@ -2822,6 +2846,8 @@
             }else{
                 initSpectrumStr = colObj.toRgbString();
             }
+            changed = false;
+            canceled = false;
         });
 
         //spectrum (color picker) のドラッグイベント
@@ -2846,8 +2872,7 @@
         // note `chooseボタンクリック` or `範囲外クリック`でも発火する
         $pickerElem.on('hide.spectrum', function(e, tinycolorObj) {
 
-            if(!changed){ //`cancel` or `ESC押下` or `▽押下`イベントの場合
-            
+            if(!changed || canceled){ // `ESC押下` or `▽押下` or `cancel`イベントの場合
                 clearBuf();
                 
                 if(tinycolor(initSpectrumStr).isValid()){ //パース可能な場合
@@ -2857,6 +2882,12 @@
                 $inputElem.val(initSpectrumStr);
             }
             changed = false;
+            canceled = false;
+        });
+
+        //spectrum (color picker)のcancelボタンクリックイベント
+        $spectrumElem.find(".sp-cancel").on("click",function(){
+            canceled = true;
         });
 
         //PropertyEditorの表示状態をNodeの表示状態にあわせる

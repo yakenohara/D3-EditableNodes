@@ -50,11 +50,11 @@
 
 /* <構造定義>------------------------------------------------------ */
 
-#editableNode .propertyEditConsole .propertyEditor.text_text_anchor{
+#editableNode .propertyEditConsole .propertyEditor.text_text_anchor,.text_frame_shape{
     font-size:0;
 }
 
-#editableNode .propertyEditConsole .propertyEditor .textAnchorType{
+#editableNode .propertyEditConsole .propertyEditor .textAnchorType,.frameShapeType{
     display: inline-block;
     padding: 2px;
     cursor: pointer;
@@ -76,6 +76,7 @@
     border-color: rgb(145, 118, 93);
     padding:4px;
 }
+
 
 #editableNode .transactionHistory{
     width: 200px;
