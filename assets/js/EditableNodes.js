@@ -193,6 +193,7 @@
         var propertyEditingBehavor_text_font_size;
         var propertyEditingBehavor_text_text_fill;
         var propertyEditingBehavor_text_text_font_weight;
+        var propertyEditingBehavor_text_text_font_style;
         var propertyEditingBehavor_text_frame_shape;
 
 
@@ -265,6 +266,18 @@
                                                                                               adjustPropertyEditors);
 
         //text.font_style
+        var $propertyEditor_text_font_style = $propertyEditConsoleElement.find(".propertyEditor.text_font_style");
+        var elemAndValArr_text_font_style = [];
+        elemAndValArr_text_font_style.push({$elem: $propertyEditor_text_font_style.children('.fontStyleType[data-font_style_type="normal"]').eq(0),
+                                             useThisVal: 'normal'});
+        elemAndValArr_text_font_style.push({$elem: $propertyEditor_text_font_style.children('.fontStyleType[data-font_style_type="italic"]').eq(0),
+                                             useThisVal: 'italic'});
+        var $propertyEditor_text_font_style_expMsg = $propertyEditor_text_font_style.children(".message.explicitness").eq(0);
+        propertyEditingBehavor_text_text_font_style = new propertyEditorBehavor_radioButtons(elemAndValArr_text_font_style,
+                                                                                              $propertyEditor_text_font_style_expMsg,
+                                                                                              ['text', 'text_font_style'],
+                                                                                              confirmPropertyEditors,
+                                                                                              adjustPropertyEditors);
         //text.text_decoration
 
         //text.frame_shape
@@ -356,11 +369,6 @@
 
             if((typeof computedStyleObj == 'object') && (typeof computedStyleObj == 'object')){ 
 
-                propertyEditingBehavor_text_text_anchor.adjustToStyleObj(computedStyleObj, explicitnessObj);
-                propertyEditingBehavor_text_font_family.adjustToStyleObj(computedStyleObj, explicitnessObj);
-                propertyEditingBehavor_text_font_size.adjustToStyleObj(computedStyleObj, explicitnessObj);
-                propertyEditingBehavor_text_text_fill.adjustToStyleObj(computedStyleObj, explicitnessObj);
-
                 //text_font_weight は Radio Button Type の Behavor が
                 //`normal` == `400`, `bold` == '700' を判定できないので、変換しておく
                 if(typeof computedStyleObj.text != 'undefined'){
@@ -370,9 +378,16 @@
                         computedStyleObj.text.text_font_weight = 'bold';
                     }
                 }
+                
+                propertyEditingBehavor_text_text_anchor.adjustToStyleObj(computedStyleObj, explicitnessObj);
+                propertyEditingBehavor_text_font_family.adjustToStyleObj(computedStyleObj, explicitnessObj);
+                propertyEditingBehavor_text_font_size.adjustToStyleObj(computedStyleObj, explicitnessObj);
+                propertyEditingBehavor_text_text_fill.adjustToStyleObj(computedStyleObj, explicitnessObj);
                 propertyEditingBehavor_text_text_font_weight.adjustToStyleObj(computedStyleObj, explicitnessObj);
                 
                 //text_font_style
+                propertyEditingBehavor_text_text_font_style.adjustToStyleObj(computedStyleObj, explicitnessObj);
+
                 //text_text_decoration
                 
                 propertyEditingBehavor_text_frame_shape.adjustToStyleObj(computedStyleObj, explicitnessObj);
@@ -392,11 +407,11 @@
             propertyEditingBehavor_text_font_family.confirm();
             propertyEditingBehavor_text_font_size.confirm();
             propertyEditingBehavor_text_text_fill.confirm();
-
-            //text_font_weight
             propertyEditingBehavor_text_text_font_weight.confirm();
 
             //text_font_style
+            propertyEditingBehavor_text_text_font_style.confirm();
+
             //text_text_decoration
 
             propertyEditingBehavor_text_frame_shape.confirm();
@@ -861,7 +876,7 @@
         return reportObj;
     }
 
-    function renderTextTypeSVGNode(bindedData, renderByThisObj){
+    function renderTextTypeSVGNode(bindedData, renderByThisObj){ //todo frame_shapeを変更するとstrokeの設定が消えてしまう
 
         //text property存在チェック
         if(typeof (renderByThisObj.text) == 'undefined'){
@@ -2836,6 +2851,13 @@
 
         //<input>要素内のキータイピングイベント
         $inputElem.get(0).oninput = function(){
+
+            if(!document.activeElement.isEqualNode($inputElem.get(0))){ //別のDom要素が選択されていた場合
+                                                                        // -> スピンボタンによるoninput
+                $inputElem.get(0).focus(); // 自分の<input>要素をfocus
+                                           // -> 別 Property Editor の onblur を発火させる
+            }
+
             if(initExpMessage === null){ //初回の場合(Buffering 1回目の場合)
                 initExpMessage = $expMsgElem.text(); //現在の表示状態を保存
             }

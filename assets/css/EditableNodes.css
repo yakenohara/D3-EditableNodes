@@ -51,11 +51,15 @@
 /* <構造定義>------------------------------------------------------ */
 
 /* div要素リストを横並びにする為に設定する */
-#editableNode .propertyEditConsole .propertyEditor.text_text_anchor,.text_frame_shape,.text_font_weight{
+#editableNode .propertyEditConsole .propertyEditor.text_text_anchor,
+.text_frame_shape,
+.text_font_weight,
+.text_font_style{
     font-size:0;
 }
 
-#editableNode .propertyEditConsole .propertyEditor .textAnchorType,.frameShapeType{
+#editableNode .propertyEditConsole .propertyEditor .textAnchorType,
+.frameShapeType{
     display: inline-block;
     padding: 2px;
     cursor: pointer;
@@ -85,7 +89,8 @@
     padding:4px;
 }
 
-#editableNode .propertyEditConsole .propertyEditor .fontWeightType{
+#editableNode .propertyEditConsole .propertyEditor .fontWeightType,
+.fontStyleType{
     display: inline-block;
     padding: 4px;
     cursor: pointer;
