@@ -298,7 +298,7 @@
                                                                                              confirmPropertyEditors,
                                                                                              adjustPropertyEditors);
 
-        //text.text_decoration //todo 適用・取得できない
+        //text.text_decoration
         var $propertyEditor_text_text_decoration = $propertyEditConsoleElement.find(".propertyEditor.text_text_decoration");
         var $propertyEditor_text_text_decoration_input = $propertyEditor_text_text_decoration.children(".text_property").eq(0);
         var $propertyEditor_text_text_decoration_defaultBtnElem = $propertyEditor_text_text_decoration.children(".setAsDefault").eq(0);
@@ -354,7 +354,7 @@
                                                                                       confirmPropertyEditors,
                                                                                       adjustPropertyEditors);
                                                                                       
-        //text.frame_stroke_dasharray //todo 未設定の場合の初期値が'none'になってしまう
+        //text.frame_stroke_dasharray
         var $propertyEditor_frame_stroke_dasharray = $propertyEditConsoleElement.find(".propertyEditor.frame_stroke_dasharray");
         var $propertyEditor_frame_stroke_dasharray_input = $propertyEditor_frame_stroke_dasharray.children(".text_property").eq(0);
         var $propertyEditor_frame_stroke_dasharray_defaultBtnElem = $propertyEditor_frame_stroke_dasharray.children(".setAsDefault").eq(0);
@@ -3532,14 +3532,14 @@
         if(typeof structureArr == 'undefined'){ //'undefined'の場合は全て削除する
             toRenderObj = {};
             toRenderObj.text = {};
-            toRenderObj.text.text_text_anchor = null;;
+            toRenderObj.text.text_anchor = null;;
             toRenderObj.text.text_font_family = null;
             toRenderObj.text.text_font_size = null;
-            toRenderObj.text.text_text_fill = null;
+            toRenderObj.text.text_fill = null;
             toRenderObj.text.text_text_font_weight = null;
             toRenderObj.text.text_text_font_style = null;
             toRenderObj.text.text_text_decoration = null;
-            toRenderObj.text.text_frame_shape = null;
+            toRenderObj.text.frame_shape = null;
             toRenderObj.text.frame_stroke = null;
             toRenderObj.text.frame_stroke_width = null;
             toRenderObj.text.frame_stroke_dasharray = null;
