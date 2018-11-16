@@ -222,13 +222,14 @@
         //text.text_font_family
         var $propertyEditor_text_font_family = $propertyEditConsoleElement.find(".propertyEditor.text_font_family");
         var $propertyEditor_text_font_family_input = $propertyEditor_text_font_family.children(".text_property").eq(0);
+        var $propertyEditor_text_font_family_defaultBtnElem = $propertyEditor_text_font_family.children(".setAsDefault").eq(0);
         var $propertyEditor_text_font_family_expMsg = $propertyEditor_text_font_family.children(".message.explicitness").eq(0);
         propertyEditingBehavor_text_font_family = new propertyEditorBehavor_textInput($propertyEditor_text_font_family_input,
+                                                                                      $propertyEditor_text_font_family_defaultBtnElem,
                                                                                       $propertyEditor_text_font_family_expMsg,
                                                                                       ['text', 'text_font_family'],
-                                                                                      adjustPropertyEditors); // <- RenderingEvent発行後 or 
-                                                                                                              //    mouseleave による rollback 後に
-                                                                                                              //    Node個別編集用 PropertyEditor のみ adjust する
+                                                                                      confirmPropertyEditors,
+                                                                                      adjustPropertyEditors);
 
         //text.text_font_size
         var $propertyEditor_text_font_size = $propertyEditConsoleElement.find(".propertyEditor.text_font_size");
@@ -2772,14 +2773,21 @@
     //
     // <input type="text"> タイプ の Property Editor の Behavor
     //
-    function propertyEditorBehavor_textInput($inputElem, $expMsgElem, structureArr, callbackWhenEventDone){
+    function propertyEditorBehavor_textInput($inputElem, $defaultButtonElem, $expMsgElem, structureArr, callbackBeforePreview, callbackWhenEventDone){
         
         var bufTotalReport; //編集中に保存する Buffer
         var initExpMessage = null;
         var lastAppliedStr = "";    // confirm 時に<input>要素に適用する文字列
+        var propertyEditingBehavor_setAsdefault;
 
         //initialize
         initializeBufTotalReport();
+
+        //Default化ボタンの登録
+        propertyEditingBehavor_setAsdefault = new propertyEditorBehavor_setAsDefault($defaultButtonElem,
+                                                                                     structureArr,
+                                                                                     callbackBeforePreview,
+                                                                                     adjustPropertyEditConsole);
 
         //<input>要素内のキータイピングイベント
         $inputElem.get(0).oninput = function(){
@@ -2822,10 +2830,12 @@
                 $inputElem.val("");
                 $inputElem.prop('disabled', true); //<input>要素を無効化
                 $expMsgElem.text("no nodes");
+                propertyEditingBehavor_setAsdefault.disable();
             
             }else{ //描画対象のスタイルが存在する
                 
                 $inputElem.prop('disabled', false); //<input>要素を有効化
+                propertyEditingBehavor_setAsdefault.enable();
                 
                 if(valOfNode !== null){ // merged Styleが算出できた
                     $inputElem.val(valOfNode);
