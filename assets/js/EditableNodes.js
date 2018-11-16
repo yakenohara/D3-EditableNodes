@@ -1516,6 +1516,13 @@
                 
                 }else{ //型はstring
 
+                    //frameオブジェクト削除前に、描画済みスタイルをバックアップ
+                    var computedStyleOf_SVGnodeElem_DOTframe_frame = window.getComputedStyle($3SVGnodeElem_DOTframe_frame.node());
+                    var bkup_frame_stroke = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke");
+                    var bkup_frame_stroke_width = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-width");
+                    var bkup_frame_stroke_dasharray = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-dasharray"); //未設定の場合は"none"が取得される
+                    var bkup_frame_fill = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("fill");
+
                     //frame shape 変更分岐
                     switch(renderByThisObj.text.frame_shape.toLowerCase()){
                         
@@ -1525,8 +1532,16 @@
                             $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
                             bindedData.$3bindedSelectionLayerSVGElement.node().removeChild(bindedData.$3bindedSelectionLayerSVGElement.node().firstChild);
 
-                            //rect描画
-                            resizeTextTypeSVGNode_rectFrame($3SVGnodeElem_DOTframe.append("rect"), //Frame
+                            $3SVGnodeElem_DOTframe_frame = $3SVGnodeElem_DOTframe.append("rect"); //circle追加
+
+                            //古いframeオブジェクトでバックアップしたスタイルで回復
+                            $3SVGnodeElem_DOTframe_frame.style("stroke", bkup_frame_stroke);
+                            $3SVGnodeElem_DOTframe_frame.style("stroke-width", bkup_frame_stroke_width);
+                            if(bkup_frame_stroke_dasharray != "none"){$3SVGnodeElem_DOTframe_frame.style("stroke-dasharray", bkup_frame_stroke_dasharray);} //"none"の場合は適用しない
+                            $3SVGnodeElem_DOTframe_frame.style("fill", bkup_frame_fill);
+
+                            //サイズ調整
+                            resizeTextTypeSVGNode_rectFrame($3SVGnodeElem_DOTframe_frame, //Frame
                                                             textRectArea,
                                                             valOfpadding_frame_text,
                                                             pxNumOfStrokeWidth);
@@ -1548,8 +1563,16 @@
                             $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
                             bindedData.$3bindedSelectionLayerSVGElement.node().removeChild(bindedData.$3bindedSelectionLayerSVGElement.node().firstChild);
 
-                            //circle描画
-                            resizeTextTypeSVGNode_circleFrame($3SVGnodeElem_DOTframe.append("circle"), //Frame
+                            $3SVGnodeElem_DOTframe_frame = $3SVGnodeElem_DOTframe.append("circle"); //circle追加
+
+                            //古いframeオブジェクトでバックアップしたスタイルで回復
+                            $3SVGnodeElem_DOTframe_frame.style("stroke", bkup_frame_stroke);
+                            $3SVGnodeElem_DOTframe_frame.style("stroke-width", bkup_frame_stroke_width);
+                            if(bkup_frame_stroke_dasharray != "none"){$3SVGnodeElem_DOTframe_frame.style("stroke-dasharray", bkup_frame_stroke_dasharray);} //"none"の場合は適用しない
+                            $3SVGnodeElem_DOTframe_frame.style("fill", bkup_frame_fill);
+
+                            //サイズ調整
+                            resizeTextTypeSVGNode_circleFrame($3SVGnodeElem_DOTframe_frame, //Frame
                                                             textRectArea,
                                                             valOfpadding_frame_text,
                                                             pxNumOfStrokeWidth);
@@ -1571,8 +1594,16 @@
                             $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
                             bindedData.$3bindedSelectionLayerSVGElement.node().removeChild(bindedData.$3bindedSelectionLayerSVGElement.node().firstChild);
 
-                            //ellipse描画
-                            resizeTextTypeSVGNode_ellipseFrame($3SVGnodeElem_DOTframe.append("ellipse"), // Frame
+                            $3SVGnodeElem_DOTframe_frame = $3SVGnodeElem_DOTframe.append("ellipse"); //circle追加
+
+                            //古いframeオブジェクトでバックアップしたスタイルで回復
+                            $3SVGnodeElem_DOTframe_frame.style("stroke", bkup_frame_stroke);
+                            $3SVGnodeElem_DOTframe_frame.style("stroke-width", bkup_frame_stroke_width);
+                            if(bkup_frame_stroke_dasharray != "none"){$3SVGnodeElem_DOTframe_frame.style("stroke-dasharray", bkup_frame_stroke_dasharray);} //"none"の場合は適用しない
+                            $3SVGnodeElem_DOTframe_frame.style("fill", bkup_frame_fill);
+
+                            //サイズ調整
+                            resizeTextTypeSVGNode_ellipseFrame($3SVGnodeElem_DOTframe_frame, // Frame
                                                             textRectArea,
                                                             valOfpadding_frame_text,
                                                             pxNumOfStrokeWidth);
