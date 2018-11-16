@@ -200,6 +200,8 @@
         var propertyEditingBehavor_text_text_decoration;
         var propertyEditingBehavor_text_frame_shape;
         var propertyEditingBehavor_frame_stroke;
+        var propertyEditingBehavor_frame_stroke_width;
+        var propertyEditingBehavor_frame_stroke_dasharray;
 
 
         //text.text_content
@@ -264,7 +266,6 @@
                                                                                confirmPropertyEditors,
                                                                                adjustPropertyEditors);
         
-
         //text.text_font_weight
         var $propertyEditor_text_font_weight = $propertyEditConsoleElement.find(".propertyEditor.text_font_weight");
         var elemAndValArr_text_font_weight = [];
@@ -342,7 +343,29 @@
                                                                              adjustPropertyEditors);
 
         //text.frame_stroke_width
-        //text.frame_stroke_dasharray
+        var $propertyEditor_frame_stroke_width = $propertyEditConsoleElement.find(".propertyEditor.frame_stroke_width");
+        var $propertyEditor_frame_stroke_width_input = $propertyEditor_frame_stroke_width.children(".number_property").eq(0);
+        var $propertyEditor_frame_stroke_width_defaultBtnElem = $propertyEditor_frame_stroke_width.children(".setAsDefault").eq(0);
+        var $propertyEditor_frame_stroke_width_expMsg = $propertyEditor_frame_stroke_width.children(".message.explicitness").eq(0);
+        propertyEditingBehavor_frame_stroke_width = new propertyEditorBehavor_numberInput($propertyEditor_frame_stroke_width_input,
+                                                                                      $propertyEditor_frame_stroke_width_defaultBtnElem,
+                                                                                      $propertyEditor_frame_stroke_width_expMsg,
+                                                                                      ['text', 'frame_stroke_width'],
+                                                                                      confirmPropertyEditors,
+                                                                                      adjustPropertyEditors);
+                                                                                      
+        //text.frame_stroke_dasharray //todo 未設定の場合の初期値が'none'になってしまう
+        var $propertyEditor_frame_stroke_dasharray = $propertyEditConsoleElement.find(".propertyEditor.frame_stroke_dasharray");
+        var $propertyEditor_frame_stroke_dasharray_input = $propertyEditor_frame_stroke_dasharray.children(".text_property").eq(0);
+        var $propertyEditor_frame_stroke_dasharray_defaultBtnElem = $propertyEditor_frame_stroke_dasharray.children(".setAsDefault").eq(0);
+        var $propertyEditor_frame_stroke_dasharray_expMsg = $propertyEditor_frame_stroke_dasharray.children(".message.explicitness").eq(0);
+        propertyEditingBehavor_frame_stroke_dasharray = new propertyEditorBehavor_textInput($propertyEditor_frame_stroke_dasharray_input,
+                                                                                            $propertyEditor_frame_stroke_dasharray_defaultBtnElem,
+                                                                                            $propertyEditor_frame_stroke_dasharray_expMsg,
+                                                                                            ['text', 'frame_stroke_dasharray'],
+                                                                                            confirmPropertyEditors,
+                                                                                            adjustPropertyEditors);
+
         //text.frame_fill
         
         // Property Editor の編集状態を Style Object (Nodeの状態) に合わせる
@@ -432,9 +455,9 @@
                 propertyEditingBehavor_text_text_decoration.adjustToStyleObj(computedStyleObj, explicitnessObj);
                 propertyEditingBehavor_text_frame_shape.adjustToStyleObj(computedStyleObj, explicitnessObj);
                 propertyEditingBehavor_frame_stroke.adjustToStyleObj(computedStyleObj, explicitnessObj);
+                propertyEditingBehavor_frame_stroke_width.adjustToStyleObj(computedStyleObj, explicitnessObj);
+                propertyEditingBehavor_frame_stroke_dasharray.adjustToStyleObj(computedStyleObj, explicitnessObj);
 
-                //frame_stroke_width
-                //frame_stroke_dasharray
                 //frame_fill
 
             }
@@ -452,9 +475,9 @@
             propertyEditingBehavor_text_text_decoration.confirm();
             propertyEditingBehavor_text_frame_shape.confirm();
             propertyEditingBehavor_frame_stroke.confirm();
+            propertyEditingBehavor_frame_stroke_width.confirm();
+            propertyEditingBehavor_frame_stroke_dasharray.confirm();
 
-            //frame_stroke_width
-            //frame_stroke_dasharray
             //frame_fill
         }
     }
