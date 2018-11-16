@@ -243,11 +243,14 @@
         var $propertyEditor_text_text_fill = $propertyEditConsoleElement.find(".propertyEditor.text_text_fill");
         var $propertyEditor_text_text_fill_picker = $propertyEditor_text_text_fill.children(".picker").eq(0);
         var $propertyEditor_text_text_fill_inputElem = $propertyEditor_text_text_fill.children(".pickedColorText").eq(0);
+        var $propertyEditor_text_text_fill_defaultBtnElem = $propertyEditor_text_text_fill.children(".setAsDefault").eq(0);
         var $propertyEditor_text_text_fill_expMsg = $propertyEditor_text_text_fill.children(".message.explicitness").eq(0);
         propertyEditingBehavor_text_text_fill = new propertyEditorBehavor_fill($propertyEditor_text_text_fill_inputElem,
                                                                                $propertyEditor_text_text_fill_picker,
+                                                                               $propertyEditor_text_text_fill_defaultBtnElem,
                                                                                $propertyEditor_text_text_fill_expMsg,
                                                                                ['text', 'text_fill'],
+                                                                               confirmPropertyEditors,
                                                                                adjustPropertyEditors);
         
 
@@ -3176,7 +3179,7 @@
     //
     // Colopickerとinput要素を使って色指定するタイプ の Property Editor の Behavor
     //
-    function propertyEditorBehavor_fill($inputElem, $pickerElem, $expMsgElem, structureArr, callbackWhenEventDone){
+    function propertyEditorBehavor_fill($inputElem, $pickerElem, $defaultButtonElem, $expMsgElem, structureArr, callbackBeforePreview, callbackWhenEventDone){
 
         var bufTotalReport; //<input>要素 or spectrum の編集中に保存する Buffer
         var initExpMessage = null; // cancel 時に戻すべきメッセージ用文字列
@@ -3185,9 +3188,16 @@
         var canceled = false;
         var lastAppliedStr = "";    // confirm 時に<input>要素に適用する文字列
         var $spectrumElem;
+        var propertyEditingBehavor_setAsdefault;
 
         //initialize
         initializeBufTotalReport();
+
+        //Default化ボタンの登録
+        propertyEditingBehavor_setAsdefault = new propertyEditorBehavor_setAsDefault($defaultButtonElem,
+                                                                                     structureArr,
+                                                                                     callbackBeforePreview,
+                                                                                     adjustPropertyEditConsole);
 
         //spectrum(color picker)の登録
         var spectrumContainerClassName   =  getUniqueClassName(structureArr.join("_"));
@@ -3281,6 +3291,7 @@
                 $inputElem.val("");
                 $inputElem.prop('disabled', true); //<input>要素を無効化
                 $pickerElem.spectrum("disable"); //spectrum (color picker) を無効化
+                propertyEditingBehavor_setAsdefault.disable();
                 
                 $expMsgElem.text("no nodes");
             
@@ -3288,6 +3299,7 @@
                 
                 $inputElem.prop('disabled', false); //<input>要素を有効化
                 $pickerElem.spectrum("enable"); //spectrum (color picker) を有効化
+                propertyEditingBehavor_setAsdefault.enable();
                 
                 if(valOfNode !== null){ // merged Styleが算出できた
                     $inputElem.val(valOfNode);
@@ -3296,7 +3308,7 @@
                 
                 }else{ // merged Styleが算出できなかった
                     $inputElem.val("");
-                    $pickerElem.spectrum("set", null);
+                    $pickerElem.spectrum("set", null); //<- clearする方法が不明なので、とりあえずnullにしている
                     lastAppliedStr = "";
                 }
 
@@ -3396,6 +3408,58 @@
             $inputElem.val(lastAppliedStr); //最後に反映したカラーで<input>要素を更新
             $pickerElem.spectrum("set", lastAppliedStr); //spectrum (color picker) に反映
             initExpMessage = null;
+        }
+    }
+
+    //
+    // 各Property Editor で Default に戻すボタンの Behavor
+    //
+    function propertyEditorBehavor_setAsDefault($buttunElem, structureArr, callbackBeforePreview, callbackWhenEventDone){
+        
+        var bufTotalReport = null; //Rendering Report 用バッファ
+        var clicked = false;
+        var toRenderObj = makeNestedObj(null, structureArr);
+
+        // Mouse Enter Event
+        $buttunElem.mouseenter(function(){
+            if(!($buttunElem.prop("disabled"))){ //ボタンが有効の場合
+                clicked = false;
+                callbackBeforePreview();
+                bufTotalReport = fireEvent_PropertyEditConsole_rerender(toRenderObj); 
+                callbackWhenEventDone();
+                bufTotalReport.message = structureArr.join("/") + ":null";
+            }
+        });
+
+        // Mouse Click Event
+        $buttunElem.click(function(){
+            if(!($buttunElem.prop("disabled"))){ //ボタンが有効の場合
+                appendHistory(bufTotalReport);
+                clicked = true;
+            }
+        });
+
+        // Mouse Leave Event
+        $buttunElem.mouseleave(function(){
+            if(!($buttunElem.prop("disabled"))){ //ボタンが有効の場合
+                if(!clicked){ //クリックしなかった場合
+                        
+                    rollbackTransaction(bufTotalReport); //元に戻す
+                    callbackWhenEventDone();         
+                }
+                bufTotalReport = null;
+                clicked = false;
+            }
+        });
+
+        //ボタンを無効にする
+        this.disable = function(){
+            $buttunElem.prop("disabled", true);
+        }
+
+        //ボタンを有効にする
+        this.enable = function(){
+            $buttunElem.prop("disabled", false);
         }
     }
 
