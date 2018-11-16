@@ -342,7 +342,7 @@
                                                                              confirmPropertyEditors,
                                                                              adjustPropertyEditors);
 
-        //text.frame_stroke_width //todo defaultボタンからのmouseleaveでロールバックしない
+        //text.frame_stroke_width
         var $propertyEditor_frame_stroke_width = $propertyEditConsoleElement.find(".propertyEditor.frame_stroke_width");
         var $propertyEditor_frame_stroke_width_input = $propertyEditor_frame_stroke_width.children(".number_property").eq(0);
         var $propertyEditor_frame_stroke_width_defaultBtnElem = $propertyEditor_frame_stroke_width.children(".setAsDefault").eq(0);
@@ -1511,6 +1511,7 @@
         }
 
         var $3SVGnodeElem_DOTframe_frame = d3.select($3SVGnodeElem_DOTframe.node().firstChild);
+        var prevStrokeWidth;
 
         //枠
         if(haveToUpdateFrame){
@@ -1518,6 +1519,13 @@
             //stroke-width設定の抽出
             var pxNumOfStrokeWidth;
             if(typeof renderByThisObj.text.frame_stroke_width != 'undefined'){ //frame stroke-width指定有り
+
+                //変更前状態を取得
+                var inlineStyleOf_SVGnodeElem_DOTframe_frame = $3SVGnodeElem_DOTframe_frame.node().style;
+                prevStrokeWidth = inlineStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-width");
+                if(prevStrokeWidth == ""){
+                    prevStrokeWidth = null;
+                }
 
                 if(renderByThisObj.text.frame_stroke_width === null){ //削除指定の場合
                     $3SVGnodeElem_DOTframe_frame.style("stroke-width", null); //`window.getComputedStyle` 出来るようにする為、削除だけ先に行う
@@ -1795,12 +1803,6 @@
         //枠線の太さ
         if(typeof renderByThisObj.text.frame_stroke_width != 'undefined'){ //frame stroke-width指定有り
             
-            //変更前状態を取得
-            var prevStrokeWidth = inlineStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-width");
-            if(prevStrokeWidth == ""){
-                prevStrokeWidth = null;
-            }
-
             if(renderByThisObj.text.frame_stroke_width === null){ //削除指定の場合
                 
                 //$3SVGnodeElem_DOTframe_frame.style("stroke-width", null); // <- not nedded.
