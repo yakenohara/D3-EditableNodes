@@ -2917,6 +2917,9 @@
                 propertyEditingBehavor_setAsdefault.enable();
                 
                 if(valOfNode !== null){ // merged Styleが算出できた
+                    if(valOfNode == 'none'){ //未設定の場合
+                        valOfNode = "";
+                    }
                     $inputElem.val(valOfNode);
                     lastAppliedStr = valOfNode;
                 
