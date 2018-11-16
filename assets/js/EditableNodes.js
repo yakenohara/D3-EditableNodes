@@ -202,7 +202,7 @@
         var propertyEditingBehavor_frame_stroke;
         var propertyEditingBehavor_frame_stroke_width;
         var propertyEditingBehavor_frame_stroke_dasharray;
-
+        var propertyEditingBehavor_frame_fill;
 
         //text.text_content
         propertyEditingBehavor_text_text_content = new propertyEditorBehavor_text(['text','text_content']);
@@ -367,6 +367,18 @@
                                                                                             adjustPropertyEditors);
 
         //text.frame_fill
+        var $propertyEditor_frame_fill = $propertyEditConsoleElement.find(".propertyEditor.frame_fill");
+        var $propertyEditor_frame_fill_picker = $propertyEditor_frame_fill.children(".picker").eq(0);
+        var $propertyEditor_frame_fill_inputElem = $propertyEditor_frame_fill.children(".pickedColorText").eq(0);
+        var $propertyEditor_frame_fill_defaultBtnElem = $propertyEditor_frame_fill.children(".setAsDefault").eq(0);
+        var $propertyEditor_frame_fill_expMsg = $propertyEditor_frame_fill.children(".message.explicitness").eq(0);
+        propertyEditingBehavor_frame_fill = new propertyEditorBehavor_fill($propertyEditor_frame_fill_inputElem,
+                                                                           $propertyEditor_frame_fill_picker,
+                                                                           $propertyEditor_frame_fill_defaultBtnElem,
+                                                                           $propertyEditor_frame_fill_expMsg,
+                                                                           ['text', 'frame_fill'],
+                                                                           confirmPropertyEditors,
+                                                                           adjustPropertyEditors);
         
         // Property Editor の編集状態を Style Object (Nodeの状態) に合わせる
         this.adjust = function(computedStyleObj, explicitnessObj){
@@ -457,9 +469,7 @@
                 propertyEditingBehavor_frame_stroke.adjustToStyleObj(computedStyleObj, explicitnessObj);
                 propertyEditingBehavor_frame_stroke_width.adjustToStyleObj(computedStyleObj, explicitnessObj);
                 propertyEditingBehavor_frame_stroke_dasharray.adjustToStyleObj(computedStyleObj, explicitnessObj);
-
-                //frame_fill
-
+                propertyEditingBehavor_frame_fill.adjustToStyleObj(computedStyleObj, explicitnessObj);
             }
         }
 
@@ -477,8 +487,7 @@
             propertyEditingBehavor_frame_stroke.confirm();
             propertyEditingBehavor_frame_stroke_width.confirm();
             propertyEditingBehavor_frame_stroke_dasharray.confirm();
-
-            //frame_fill
+            propertyEditingBehavor_frame_fill.confirm();
         }
     }
     //----------------------------------------------------------</Element Selections and Settings of PropertyEditor>
