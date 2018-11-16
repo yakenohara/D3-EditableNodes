@@ -140,6 +140,9 @@
 
     /* <Hard cords>---------------------------------------------------------------------------------------------- */
 
+    // frameType 未指定時に設定する Default Shape
+    var defaultTextFrameShape = "rect";
+
     //frameとtext間のpadding
     var valOfpadding_frame_text = 5;
 
@@ -209,8 +212,10 @@
                                              useThisVal: 'middle'});
         elemAndValArr_text_text_anchor.push({$elem: $propertyEditor_text_text_anchor.children('.textAnchorType[data-text_anchor_type="end"]').eq(0),
                                              useThisVal: 'end'});
+        var $propertyEditor_text_text_anchor_defaultBtnElem = $propertyEditor_text_text_anchor.children(".setAsDefault").eq(0);
         var $propertyEditor_text_text_anchor_expMsg = $propertyEditor_text_text_anchor.children(".message.explicitness").eq(0);
         propertyEditingBehavor_text_text_anchor = new propertyEditorBehavor_radioButtons(elemAndValArr_text_text_anchor,
+                                                                                         $propertyEditor_text_text_anchor_defaultBtnElem,
                                                                                          $propertyEditor_text_text_anchor_expMsg,
                                                                                          ['text', 'text_anchor'],
                                                                                          confirmPropertyEditors, // <- Preview開始時に
@@ -262,8 +267,10 @@
                                              useThisVal: 'normal'});
         elemAndValArr_text_font_weight.push({$elem: $propertyEditor_text_font_weight.children('.fontWeightType[data-font_weight_type="bold"]').eq(0),
                                              useThisVal: 'bold'});
+        var $propertyEditor_text_font_weight_defaultBtnElem = $propertyEditor_text_font_weight.children(".setAsDefault").eq(0);
         var $propertyEditor_text_font_weight_expMsg = $propertyEditor_text_font_weight.children(".message.explicitness").eq(0);
         propertyEditingBehavor_text_text_font_weight = new propertyEditorBehavor_radioButtons(elemAndValArr_text_font_weight,
+                                                                                              $propertyEditor_text_font_weight_defaultBtnElem,
                                                                                               $propertyEditor_text_font_weight_expMsg,
                                                                                               ['text', 'text_font_weight'],
                                                                                               confirmPropertyEditors,
@@ -276,17 +283,18 @@
                                              useThisVal: 'normal'});
         elemAndValArr_text_font_style.push({$elem: $propertyEditor_text_font_style.children('.fontStyleType[data-font_style_type="italic"]').eq(0),
                                              useThisVal: 'italic'});
+        var $propertyEditor_text_font_style_defaultBtnElem = $propertyEditor_text_font_style.children(".setAsDefault").eq(0);
         var $propertyEditor_text_font_style_expMsg = $propertyEditor_text_font_style.children(".message.explicitness").eq(0);
         propertyEditingBehavor_text_text_font_style = new propertyEditorBehavor_radioButtons(elemAndValArr_text_font_style,
-                                                                                              $propertyEditor_text_font_style_expMsg,
-                                                                                              ['text', 'text_font_style'],
-                                                                                              confirmPropertyEditors,
-                                                                                              adjustPropertyEditors);
+                                                                                             $propertyEditor_text_font_style_defaultBtnElem,
+                                                                                             $propertyEditor_text_font_style_expMsg,
+                                                                                             ['text', 'text_font_style'],
+                                                                                             confirmPropertyEditors,
+                                                                                             adjustPropertyEditors);
         //text.text_decoration
 
         //text.frame_shape
         var $propertyEditor_text_frame_shape = $propertyEditConsoleElement.find(".propertyEditor.text_frame_shape");
-        var $propertyEditor_text_frame_shape_expMsg = $propertyEditor_text_frame_shape.children(".message.explicitness").eq(0);
         var elemAndValArr_text_frame_shape = [];
         elemAndValArr_text_frame_shape.push({$elem: $propertyEditor_text_frame_shape.children('.frameShapeType[data-frame_shape_type="rect"]').eq(0),
                                              useThisVal: 'rect'});
@@ -294,7 +302,10 @@
                                              useThisVal: 'circle'});
         elemAndValArr_text_frame_shape.push({$elem: $propertyEditor_text_frame_shape.children('.frameShapeType[data-frame_shape_type="ellipse"]').eq(0),
                                              useThisVal: 'ellipse'});
+        var $propertyEditor_text_frame_shape_expMsg = $propertyEditor_text_frame_shape.children(".message.explicitness").eq(0);
+        var $propertyEditor_text_frame_shape_defaultBtnElem = $propertyEditor_text_frame_shape.children(".setAsDefault").eq(0);
         propertyEditingBehavor_text_frame_shape = new propertyEditorBehavor_radioButtons(elemAndValArr_text_frame_shape,
+                                                                                         $propertyEditor_text_frame_shape_defaultBtnElem,
                                                                                          $propertyEditor_text_frame_shape_expMsg,
                                                                                          ['text', 'frame_shape'],
                                                                                          confirmPropertyEditors,
@@ -794,7 +805,7 @@
                 checkThisData.text.text_content = ""; //空文字を定義
             }
             if(typeof (checkThisData.text.frame_shape) == 'undefined'){
-                checkThisData.text.frame_shape = "rect" //矩形
+                checkThisData.text.frame_shape = defaultTextFrameShape; //デフォルトShapeを設定
             }
         }
     }
@@ -1420,8 +1431,8 @@
 
         //frame存在チェック
         if(!($3SVGnodeElem_DOTframe.node().firstChild)){ //frameの描画要素が存在しない場合
-            $3SVGnodeElem_DOTframe.append("rect");
-            bindedData.$3bindedSelectionLayerSVGElement.append("rect"); //SelectionLayerも追加
+            $3SVGnodeElem_DOTframe.append(defaultTextFrameShape);
+            bindedData.$3bindedSelectionLayerSVGElement.append(defaultTextFrameShape); //SelectionLayerも追加
             haveToUpdateFrame = true;
         }
 
@@ -1512,9 +1523,13 @@
             if(typeof renderByThisObj.text.frame_shape != 'undefined'){ //frame shape指定有り
 
                 //変更前状態を取得
-                var prevShape = $3SVGnodeElem_DOTframe.node().firstChild.tagName.toLowerCase();  //1回目の描画時は `frame存在チェック`で設定した "rect"になる。
+                var prevShape = $3SVGnodeElem_DOTframe.node().firstChild.tagName.toLowerCase();  //1回目の描画時は `frame存在チェック`で設定した defaultShapeになる。
                                                                                                 // -> 仕様とする
                 
+                if(renderByThisObj.text.frame_shape === null){ //削除指定された場合は、Defaultに戻す指定をみなす
+                    renderByThisObj.text.frame_shape = defaultTextFrameShape;
+                }
+
                 if(typeof renderByThisObj.text.frame_shape != 'string'){ //型がstringでない
                     var wrn = "Wrong type specified in \`renderByThisObj.text.frame_shape\`. " +
                             "specified type:\`" + (typeof (renderByThisObj.text.frame_shape)) + "\`, expected type:\`string\`.";
@@ -2070,7 +2085,7 @@
 
         //frame_shape
         if(typeof reportObj.FailuredMessages.text.frame_shape != 'undefined'){
-            bindedData.text.frame_shape = "rect"; //プロパティ削除ではなく、"rect"にする
+            bindedData.text.frame_shape = defaultTextFrameShape; //プロパティ削除ではなく、defaultShapeにする
             propertyNames.splice("frame_shape",1); //プロパティ削除対象から外す
         }
         
@@ -3027,12 +3042,19 @@
     //
     // Radio Buttons タイプ の Property Editor の Behavor
     //
-    function propertyEditorBehavor_radioButtons(elemAndValArr, $expMsgElem, structureArr, callbackBeforePreview, callbackWhenEventDone){
+    function propertyEditorBehavor_radioButtons(elemAndValArr, $defaultButtonElem, $expMsgElem, structureArr, callbackBeforePreview, callbackWhenEventDone){
 
         var clicked = false;
         var beforeExpMessage = "";
         var beforeVal = "";
         var bufTotalReport = null; //Rendering Report 用バッファ
+        var propertyEditingBehavor_setAsdefault;
+
+        //Default化ボタンの登録
+        propertyEditingBehavor_setAsdefault = new propertyEditorBehavor_setAsDefault($defaultButtonElem,
+                                                                                     structureArr,
+                                                                                     callbackBeforePreview,
+                                                                                     adjustPropertyEditConsole);
 
         //各Elementに対するBehavor登録
         for(var itr = 0 ; itr < elemAndValArr.length ; itr++){
@@ -3135,6 +3157,7 @@
                     elemAndValArr[i].$elem.prop('disabled', true); //要素無効化
                 }
                 $expMsgElem.text("no nodes");
+                propertyEditingBehavor_setAsdefault.disable();
 
             }else{ //描画対象のスタイルが存在する
 
@@ -3142,6 +3165,7 @@
                 for(var i = 0 ; i < elemAndValArr.length ; i++){
                     elemAndValArr[i].$elem.prop('disabled', false); //要素有効化
                 }
+                propertyEditingBehavor_setAsdefault.enable();
 
                 if(valOfNode !== null){// merged Styleが算出できた
 
