@@ -2177,7 +2177,11 @@
             .eq(0)
             .removeClass(className_nodeIsSelected);
 
-        transactionHistory.push(transactionObj); //Append History
+        //
+        var toSaveTransactionObj = {};
+        mergeObj(transactionObj, toSaveTransactionObj, true);
+
+        transactionHistory.push(toSaveTransactionObj); //Append History
         pointingIndexOfHistory++;
 
         var $3historyMessageElem = $3transactionHistoryElement.append("div")
@@ -2187,7 +2191,7 @@
             .attr("data-history_index", pointingIndexOfHistory.toString());
 
         $3historyMessageElem.append("small")
-            .text(transactionObj.message);
+            .text(toSaveTransactionObj.message);
         
         $($3historyMessageElem.node()).slideDown(100); // <- 表示用アニメーション
         var maxHeight = window.getComputedStyle($transactionHistoryElement.get(0)).maxHeight;
@@ -2229,11 +2233,13 @@
 
         //transactionに対するクリックイベント
         $historyMessageElem.on("click",function(){
-            var thisElem = this;
-            var historyIndex = parseInt($(thisElem).attr("data-history_index"));
-            
-            clicked = true;
-            pointingIndexOfHistory = historyIndex; //history[]内の選択indexを変更
+            if(!clicked){ //1回目のクリックの場合
+                var thisElem = this;
+                var historyIndex = parseInt($(thisElem).attr("data-history_index"));
+                
+                clicked = true;
+                pointingIndexOfHistory = historyIndex; //history[]内の選択indexを変更
+            }
 
         });
 
@@ -3181,7 +3187,7 @@
                 
                 var clickedElem = this;
 
-                if(!($(clickedElem).prop("disabled"))){ //プロパティエディタが有効の場合
+                if(!($(clickedElem).prop("disabled")) && !clicked){ //プロパティエディタが有効 && クリックしていない場合
                     appendHistory(bufTotalReport);
                     clicked = true;
                 }
@@ -3569,7 +3575,7 @@
 
         // Mouse Click Event
         $buttunElem.click(function(){
-            if(!($buttunElem.prop("disabled"))){ //ボタンが有効の場合
+            if(!($buttunElem.prop("disabled")) && !clicked){ //ボタンが有効でまだclickしていない場合
                 appendHistory(bufTotalReport);
                 clicked = true;
             }
