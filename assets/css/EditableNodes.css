@@ -114,6 +114,9 @@
     padding:4px;
 }
 
+#editableNode .propertyEditConsole .propertyEditor button{
+    border-style: none;
+}
 
 #editableNode .transactionHistory{
     width: 200px;

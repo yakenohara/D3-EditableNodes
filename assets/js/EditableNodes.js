@@ -342,7 +342,7 @@
                                                                              confirmPropertyEditors,
                                                                              adjustPropertyEditors);
 
-        //text.frame_stroke_width
+        //text.frame_stroke_width //todo defaultボタンからのmouseleaveでロールバックしない
         var $propertyEditor_frame_stroke_width = $propertyEditConsoleElement.find(".propertyEditor.frame_stroke_width");
         var $propertyEditor_frame_stroke_width_input = $propertyEditor_frame_stroke_width.children(".number_property").eq(0);
         var $propertyEditor_frame_stroke_width_defaultBtnElem = $propertyEditor_frame_stroke_width.children(".setAsDefault").eq(0);
@@ -380,6 +380,15 @@
                                                                            confirmPropertyEditors,
                                                                            adjustPropertyEditors);
         
+        // Default all
+        var $propertyEditor_all = $propertyEditConsoleElement.find(".propertyEditor.all");
+        var $propertyEditor_all_defaultBtnElem = $propertyEditor_all.children(".setAsDefault").eq(0);
+        var dummuyFor_propertyEditor_all;
+        new propertyEditorBehavor_setAsDefault($propertyEditor_all_defaultBtnElem,
+                                               dummuyFor_propertyEditor_all, // <- 'undefined'を渡して、全て削除とする
+                                               confirmPropertyEditors,
+                                               adjustPropertyEditConsole); // <- 全てのProperty Editor を adjustする
+
         // Property Editor の編集状態を Style Object (Nodeの状態) に合わせる
         this.adjust = function(computedStyleObj, explicitnessObj){
             adjustPropertyEditors(computedStyleObj, explicitnessObj);
@@ -3514,8 +3523,33 @@
         
         var bufTotalReport = null; //Rendering Report 用バッファ
         var clicked = false;
-        var toRenderObj = makeNestedObj(null, structureArr);
+        var toRenderObj;
+        var messageTitle = "";
+        
+        //toRenderObjの作成
+        if(typeof structureArr == 'undefined'){ //'undefined'の場合は全て削除する
+            toRenderObj = {};
+            toRenderObj.text = {};
+            toRenderObj.text.text_text_anchor = null;;
+            toRenderObj.text.text_font_family = null;
+            toRenderObj.text.text_font_size = null;
+            toRenderObj.text.text_text_fill = null;
+            toRenderObj.text.text_text_font_weight = null;
+            toRenderObj.text.text_text_font_style = null;
+            toRenderObj.text.text_text_decoration = null;
+            toRenderObj.text.text_frame_shape = null;
+            toRenderObj.text.frame_stroke = null;
+            toRenderObj.text.frame_stroke_width = null;
+            toRenderObj.text.frame_stroke_dasharray = null;
+            toRenderObj.text.frame_fill = null;
 
+            messageTitle = "All Property:defalt"
+
+        }else{
+            toRenderObj = makeNestedObj(null, structureArr);
+            messageTitle = structureArr.join("/") + ":default";
+        }
+        
         // Mouse Enter Event
         $buttunElem.mouseenter(function(){
             if(!($buttunElem.prop("disabled"))){ //ボタンが有効の場合
@@ -3523,7 +3557,8 @@
                 callbackBeforePreview();
                 bufTotalReport = fireEvent_PropertyEditConsole_rerender(toRenderObj); 
                 callbackWhenEventDone();
-                bufTotalReport.message = structureArr.join("/") + ":default";
+                bufTotalReport.message = messageTitle;
+                $buttunElem.addClass(className_nodeIsSelected);
             }
         });
 
@@ -3545,6 +3580,7 @@
                 }
                 bufTotalReport = null;
                 clicked = false;
+                $buttunElem.removeClass(className_nodeIsSelected);
             }
         });
 
