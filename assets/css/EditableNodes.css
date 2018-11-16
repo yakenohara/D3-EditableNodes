@@ -102,7 +102,7 @@
 }
 
 
-#editableNode .propertyEditConsole .propertyEditor.text_text_fill .pickedColorText{
+#editableNode .propertyEditConsole .propertyEditor .pickedColorText{
     vertical-align: middle;
 
     width:150px;

@@ -199,6 +199,7 @@
         var propertyEditingBehavor_text_text_font_style;
         var propertyEditingBehavor_text_text_decoration;
         var propertyEditingBehavor_text_frame_shape;
+        var propertyEditingBehavor_frame_stroke;
 
 
         //text.text_content
@@ -327,6 +328,19 @@
                                                                                          adjustPropertyEditors);
                                                                                          
         //text.frame_stroke
+        var $propertyEditor_frame_stroke = $propertyEditConsoleElement.find(".propertyEditor.frame_stroke");
+        var $propertyEditor_frame_stroke_picker = $propertyEditor_frame_stroke.children(".picker").eq(0);
+        var $propertyEditor_frame_stroke_inputElem = $propertyEditor_frame_stroke.children(".pickedColorText").eq(0);
+        var $propertyEditor_frame_stroke_defaultBtnElem = $propertyEditor_frame_stroke.children(".setAsDefault").eq(0);
+        var $propertyEditor_frame_stroke_expMsg = $propertyEditor_frame_stroke.children(".message.explicitness").eq(0);
+        propertyEditingBehavor_frame_stroke = new propertyEditorBehavor_fill($propertyEditor_frame_stroke_inputElem,
+                                                                             $propertyEditor_frame_stroke_picker,
+                                                                             $propertyEditor_frame_stroke_defaultBtnElem,
+                                                                             $propertyEditor_frame_stroke_expMsg,
+                                                                             ['text', 'frame_stroke'],
+                                                                             confirmPropertyEditors,
+                                                                             adjustPropertyEditors);
+
         //text.frame_stroke_width
         //text.frame_stroke_dasharray
         //text.frame_fill
@@ -416,10 +430,9 @@
                 propertyEditingBehavor_text_text_font_weight.adjustToStyleObj(computedStyleObj, explicitnessObj);
                 propertyEditingBehavor_text_text_font_style.adjustToStyleObj(computedStyleObj, explicitnessObj);
                 propertyEditingBehavor_text_text_decoration.adjustToStyleObj(computedStyleObj, explicitnessObj);
-                
                 propertyEditingBehavor_text_frame_shape.adjustToStyleObj(computedStyleObj, explicitnessObj);
+                propertyEditingBehavor_frame_stroke.adjustToStyleObj(computedStyleObj, explicitnessObj);
 
-                //frame_stroke
                 //frame_stroke_width
                 //frame_stroke_dasharray
                 //frame_fill
@@ -437,10 +450,9 @@
             propertyEditingBehavor_text_text_font_weight.confirm();
             propertyEditingBehavor_text_text_font_style.confirm();
             propertyEditingBehavor_text_text_decoration.confirm();
-
             propertyEditingBehavor_text_frame_shape.confirm();
+            propertyEditingBehavor_frame_stroke.confirm();
 
-            //frame_stroke
             //frame_stroke_width
             //frame_stroke_dasharray
             //frame_fill
