@@ -876,7 +876,7 @@
         return reportObj;
     }
 
-    function renderTextTypeSVGNode(bindedData, renderByThisObj){ //todo frame_shapeを変更するとstrokeの設定が消えてしまう
+    function renderTextTypeSVGNode(bindedData, renderByThisObj){
 
         //text property存在チェック
         if(typeof (renderByThisObj.text) == 'undefined'){
@@ -1170,7 +1170,7 @@
                 var pixcelNumberRegex = new RegExp(/^[-]?[0-9]+(\.[0-9]+)?px$/);
                 var applyThisFontSize = renderByThisObj.text.text_font_size + "px";
 
-                if(!(pixcelNumberRegex.test(applyThisFontSize))){ //指定数値が `0.0px`形式にならない場合(ex: NaNを指定) //todo 外でも同様の処理が必要
+                if(!(pixcelNumberRegex.test(applyThisFontSize))){ //指定数値が `0.0px`形式にならない場合(ex: NaNを指定)
                     var wrn = "Invalid Number \`" + renderByThisObj.text.text_font_size.toString() + "\` specified.";
                     console.warn(wrn);
                     reportObj.FailuredMessages.text.text_font_size = wrn;
@@ -1451,7 +1451,12 @@
                     //※エラーレポート処理はstroke-width描画処理内で行う※
 
                 }else{ //型はnumber
-                    pxNumOfStrokeWidth = parseFloat(renderByThisObj.text.frame_stroke_width);
+                    var pixcelNumberRegex = new RegExp(/^[-]?[0-9]+(\.[0-9]+)?px$/);
+                    var applyThisFontSize = renderByThisObj.text.frame_stroke_width + "px";
+
+                    if(pixcelNumberRegex.test(applyThisFontSize)){ //`0.0px`形式の場合
+                        pxNumOfStrokeWidth = parseFloat(renderByThisObj.text.frame_stroke_width);
+                    }
                 }
             }
             
@@ -1734,25 +1739,24 @@
                 reportObj.FailuredMessages.text.frame_stroke_width = wrn;
 
             }else{ //型はnumber
-                var applyThisStrokeWidth = renderByThisObj.text.frame_stroke_width + "px";
-                $3SVGnodeElem_DOTframe_frame.style("stroke-width", applyThisStrokeWidth);
-
-                //適用可否チェック
-                var appliedStrokeWidth = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-width");
                 var pixcelNumberRegex = new RegExp(/^[-]?[0-9]+(\.[0-9]+)?px$/);
+                var applyThisStrokeWidth = renderByThisObj.text.frame_stroke_width + "px";
 
-                if(!(pixcelNumberRegex.test(appliedStrokeWidth))){ // `0.0px`形式に設定できていない場合
-                                                                // 指数表記になるような極端な数値も、このルートに入る
-                    
-                    var wrn = "Specified style in \`renderByThisObj.text.frame_stroke_width\` did not applied. " +
-                            "specified style:\`" + applyThisStrokeWidth + "\`, browser applied style:\`" + appliedStrokeWidth + "\`.";
+                if(!(pixcelNumberRegex.test(applyThisStrokeWidth))){ //指定数値が `0.0px`形式にならない場合(ex: NaNを指定)
+                    var wrn = "Invalid Number \`" + renderByThisObj.text.frame_stroke_width.toString() + "\` specified.";
                     console.warn(wrn);
                     reportObj.FailuredMessages.text.frame_stroke_width = wrn;
 
-                    $3SVGnodeElem_DOTframe_frame.style("stroke-width", prevStrokeWidth); //変更前の状態に戻す
-                
                 }else{
-                    if( Math.abs(parseFloat(appliedStrokeWidth) - renderByThisObj.text.frame_stroke_width) >= 0.1){ //適用されたfont-sizeと指定したfont-sizeの差分が大きすぎる
+                    $3SVGnodeElem_DOTframe_frame.style("stroke-width", applyThisStrokeWidth);
+
+                    //適用可否チェック
+                    var appliedStrokeWidth = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-width");
+                    
+
+                    if(!(pixcelNumberRegex.test(appliedStrokeWidth))){ // `0.0px`形式に設定できていない場合
+                                                                    // 指数表記になるような極端な数値も、このルートに入る
+                        
                         var wrn = "Specified style in \`renderByThisObj.text.frame_stroke_width\` did not applied. " +
                                 "specified style:\`" + applyThisStrokeWidth + "\`, browser applied style:\`" + appliedStrokeWidth + "\`.";
                         console.warn(wrn);
@@ -1760,13 +1764,23 @@
 
                         $3SVGnodeElem_DOTframe_frame.style("stroke-width", prevStrokeWidth); //変更前の状態に戻す
                     
-                    }else{ //適用された場合
-                        if(prevStrokeWidth !== null){
-                            prevStrokeWidth = parseFloat(prevStrokeWidth);
+                    }else{
+                        if( Math.abs(parseFloat(appliedStrokeWidth) - renderByThisObj.text.frame_stroke_width) >= 0.1){ //適用されたfont-sizeと指定したfont-sizeの差分が大きすぎる
+                            var wrn = "Specified style in \`renderByThisObj.text.frame_stroke_width\` did not applied. " +
+                                    "specified style:\`" + applyThisStrokeWidth + "\`, browser applied style:\`" + appliedStrokeWidth + "\`.";
+                            console.warn(wrn);
+                            reportObj.FailuredMessages.text.frame_stroke_width = wrn;
+
+                            $3SVGnodeElem_DOTframe_frame.style("stroke-width", prevStrokeWidth); //変更前の状態に戻す
+                        
+                        }else{ //適用された場合
+                            if(prevStrokeWidth !== null){
+                                prevStrokeWidth = parseFloat(prevStrokeWidth);
+                            }
+                            reportObj.PrevObj.text.frame_stroke_width = prevStrokeWidth;
+                            reportObj.RenderedObj.text.frame_stroke_width = renderByThisObj.text.frame_stroke_width;
+                            bindedData.text.frame_stroke_width = renderByThisObj.text.frame_stroke_width;
                         }
-                        reportObj.PrevObj.text.frame_stroke_width = prevStrokeWidth;
-                        reportObj.RenderedObj.text.frame_stroke_width = renderByThisObj.text.frame_stroke_width;
-                        bindedData.text.frame_stroke_width = renderByThisObj.text.frame_stroke_width;
                     }
                 }
             }
