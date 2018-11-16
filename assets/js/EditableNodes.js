@@ -197,6 +197,7 @@
         var propertyEditingBehavor_text_text_fill;
         var propertyEditingBehavor_text_text_font_weight;
         var propertyEditingBehavor_text_text_font_style;
+        var propertyEditingBehavor_text_text_decoration;
         var propertyEditingBehavor_text_frame_shape;
 
 
@@ -294,7 +295,18 @@
                                                                                              ['text', 'text_font_style'],
                                                                                              confirmPropertyEditors,
                                                                                              adjustPropertyEditors);
-        //text.text_decoration
+
+        //text.text_decoration //todo 適用・取得できない
+        var $propertyEditor_text_text_decoration = $propertyEditConsoleElement.find(".propertyEditor.text_text_decoration");
+        var $propertyEditor_text_text_decoration_input = $propertyEditor_text_text_decoration.children(".text_property").eq(0);
+        var $propertyEditor_text_text_decoration_defaultBtnElem = $propertyEditor_text_text_decoration.children(".setAsDefault").eq(0);
+        var $propertyEditor_text_text_decoration_expMsg = $propertyEditor_text_text_decoration.children(".message.explicitness").eq(0);
+        propertyEditingBehavor_text_text_decoration = new propertyEditorBehavor_textInput($propertyEditor_text_text_decoration_input,
+                                                                                      $propertyEditor_text_text_decoration_defaultBtnElem,
+                                                                                      $propertyEditor_text_text_decoration_expMsg,
+                                                                                      ['text', 'text_text_decoration'],
+                                                                                      confirmPropertyEditors,
+                                                                                      adjustPropertyEditors);
 
         //text.frame_shape
         var $propertyEditor_text_frame_shape = $propertyEditConsoleElement.find(".propertyEditor.text_frame_shape");
@@ -402,11 +414,8 @@
                 propertyEditingBehavor_text_font_size.adjustToStyleObj(computedStyleObj, explicitnessObj);
                 propertyEditingBehavor_text_text_fill.adjustToStyleObj(computedStyleObj, explicitnessObj);
                 propertyEditingBehavor_text_text_font_weight.adjustToStyleObj(computedStyleObj, explicitnessObj);
-                
-                //text_font_style
                 propertyEditingBehavor_text_text_font_style.adjustToStyleObj(computedStyleObj, explicitnessObj);
-
-                //text_text_decoration
+                propertyEditingBehavor_text_text_decoration.adjustToStyleObj(computedStyleObj, explicitnessObj);
                 
                 propertyEditingBehavor_text_frame_shape.adjustToStyleObj(computedStyleObj, explicitnessObj);
 
@@ -426,11 +435,8 @@
             propertyEditingBehavor_text_font_size.confirm();
             propertyEditingBehavor_text_text_fill.confirm();
             propertyEditingBehavor_text_text_font_weight.confirm();
-
-            //text_font_style
             propertyEditingBehavor_text_text_font_style.confirm();
-
-            //text_text_decoration
+            propertyEditingBehavor_text_text_decoration.confirm();
 
             propertyEditingBehavor_text_frame_shape.confirm();
 
