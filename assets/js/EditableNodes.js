@@ -1,93 +1,3 @@
-var toAppendDatas = [
-    {
-        type: "text",
-        text: {
-            text_content: "untitled node",
-            text_anchor: "start",
-            text_font_family: "helvetica, arial, 'hiragino kaku gothic pro', meiryo, 'ms pgothic', sans-serif",
-            text_font_size: 16,
-            text_fill: "rgb(251, 255, 14)",
-            frame_shape: "rect",
-            frame_stroke: "rgb(0, 0, 0)",
-            frame_stroke_width: 10,
-            frame_stroke_dasharray: "10,3",
-            frame_fill: "rgba(34, 172, 41, 0.74)",
-        }
-    },
-    {
-        type: "text",
-        text: {
-            text_content: "default design",
-        }
-    },
-    {
-        type: "text",
-        text: {
-            text_content: "no stroke",
-            frame_stroke_width: 0,
-            frame_fill: "rgb(22, 126, 19)",
-        }
-    },
-    {
-    },
-    {
-        type:"text",
-        text:{
-            text_content:"circle frame",
-            frame_shape:"circle"
-        }
-    },
-    {
-        type:"text",
-        text:{
-            text_content:"ellipse frame",
-            frame_shape:"ellipse"
-        }
-    },
-    {
-        type:"text",
-        text:{
-            text_content:"text-anchor\n\`start\`"
-        }
-    },
-    {
-        type:"text",
-        text:{
-            text_content:"text-anchor\n\`middle\`",
-            text_anchor: "middle"
-        }
-    },
-    {
-        type:"text",
-        text:{
-            text_content:"text-anchor\n\`end\`",
-            text_anchor: "end"
-        }
-    },
-    {
-        type:"text",
-        text:{
-            text_content:"Bold",
-            text_font_size: 15,
-            text_font_weight: "bold"
-        }
-    },
-    {
-        type:"text",
-        text:{
-            text_content:"italic",
-            text_font_style: "italic"
-        }
-    },
-    {
-        type:"text",
-        text:{
-            text_content:"line-through",
-            text_text_decoration: "line-through"
-        }
-    }
-];
-
 (function () {
 
     /* <settings>------------------------------------------------------------------------------------------------ */
@@ -546,6 +456,53 @@ var toAppendDatas = [
     $3nodes = $3nodesGroup.selectAll("g") // ノード追加
         .data(dataset, function(d){return d.key});
 
+    //ファイルのDragoverイベント
+    $SVGDrawingAreaElement.get(0).addEventListener('dragover', function(e){
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+    //ファイルをDropした場合
+    $SVGDrawingAreaElement.get(0).addEventListener('drop', function(e){ //todo 複数ファイルを連続で読み込めない
+        
+        //ドロップされた各ファイルへのループ
+        for(var i = 0 ; i < e.dataTransfer.files.length ; i++){
+            
+            var droppedFileObj = e.dataTransfer.files[i];
+            
+            switch(droppedFileObj.type){
+                
+                case 'application/json':
+                {
+                    var file_reader = new FileReader();
+                    file_reader.onload = function(e){
+                        
+                        try{
+                            var parsedObj = JSON.parse(file_reader.result); //SyntaxErrorをthrowする可能性がある
+                            appendNodes(parsedObj);
+                        
+                        }catch(e){ //SyntaxErrorの場合
+                            console.warn(e);
+                        }
+                    };
+                    file_reader.readAsText(droppedFileObj);
+                    break;
+                }
+
+                default:
+                {
+                    console.warn("unknown file type \`" + droppedFileObj.type + "\` detected in \`" + droppedFileObj.name + "\`.");
+                    break;
+                }
+            }
+        }
+
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+    //ファイルをD&DせずにLeaveした場合
+    $SVGDrawingAreaElement.get(0).addEventListener('dragleave', function(e){
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
     
     // Node以外に対する click event
     $SVGDrawingAreaElement.on('click', function(e){
@@ -618,11 +575,17 @@ var toAppendDatas = [
 
     // -------------------------------------------------------------------------------</TBD 複数Nodeのブラシ選択>
 
+    function appendNodes(appendThisObjArr){
 
-    //todo データ追加
+        //引数チェック
+        if(!Array.isArray(appendThisObjArr)){ //Arrayでない場合
+            console.warn("specified argment is not array");
+            return;
+        }
 
-    for(var i = 0 ; i < toAppendDatas.length ; i++){
-        appendNode(toAppendDatas[i]);
+        for(var i = 0 ; i < appendThisObjArr.length ; i++){
+            appendNode(appendThisObjArr[i]);
+        }
     }
 
     function appendNode(appendThisObj){

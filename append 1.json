@@ -1,0 +1,10 @@
+[
+    {
+        "type": "text",
+        "text": {
+            "text_content": "no stroke",
+            "frame_stroke_width": 0,
+            "frame_fill": "rgb(22, 126, 19)"
+        }
+    }
+]
