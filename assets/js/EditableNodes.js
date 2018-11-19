@@ -1,106 +1,94 @@
-(function () {
-
-    var dataset = [
-        {
-            key: 0, //todo 未指定時のハンドリング
-            type: "text",
-            text: {
-                text_content: "untitled node",
-                text_anchor: "start",
-                text_font_family: "helvetica, arial, 'hiragino kaku gothic pro', meiryo, 'ms pgothic', sans-serif",
-                text_font_size: 16,
-                text_fill: "rgb(251, 255, 14)",
-                frame_shape: "rect",
-                frame_stroke: "rgb(0, 0, 0)",
-                frame_stroke_width: 10,
-                frame_stroke_dasharray: "10,3",
-                frame_fill: "rgba(34, 172, 41, 0.74)",
-            }
-        },
-        {
-            key: 1,
-            type: "text",
-            text: {
-                text_content: "default design",
-            }
-        },
-        {
-            key: 2,
-            type: "text",
-            text: {
-                text_content: "no stroke",
-                frame_stroke_width: 0,
-                frame_fill: "rgb(22, 126, 19)",
-            }
-        },
-        {
-            key:3
-        },
-        {
-            key:4,
-            type:"text",
-            text:{
-                text_content:"circle frame",
-                frame_shape:"circle"
-            }
-        },
-        {
-            key:5,
-            type:"text",
-            text:{
-                text_content:"ellipse frame",
-                frame_shape:"ellipse"
-            }
-        },
-        {
-            key:6,
-            type:"text",
-            text:{
-                text_content:"text-anchor\n\`start\`"
-            }
-        },
-        {
-            key:7,
-            type:"text",
-            text:{
-                text_content:"text-anchor\n\`middle\`",
-                text_anchor: "middle"
-            }
-        },
-        {
-            key:8,
-            type:"text",
-            text:{
-                text_content:"text-anchor\n\`end\`",
-                text_anchor: "end"
-            }
-        },
-        {
-            key:9,
-            type:"text",
-            text:{
-                text_content:"Bold",
-                text_font_size: 15,
-                text_font_weight: "bold"
-            }
-        },
-        {
-            key:10,
-            type:"text",
-            text:{
-                text_content:"italic",
-                text_font_style: "italic"
-            }
-        },
-        {
-            key:11,
-            type:"text",
-            text:{
-                text_content:"line-through",
-                text_text_decoration: "line-through"
-            }
+var toAppendDatas = [
+    {
+        type: "text",
+        text: {
+            text_content: "untitled node",
+            text_anchor: "start",
+            text_font_family: "helvetica, arial, 'hiragino kaku gothic pro', meiryo, 'ms pgothic', sans-serif",
+            text_font_size: 16,
+            text_fill: "rgb(251, 255, 14)",
+            frame_shape: "rect",
+            frame_stroke: "rgb(0, 0, 0)",
+            frame_stroke_width: 10,
+            frame_stroke_dasharray: "10,3",
+            frame_fill: "rgba(34, 172, 41, 0.74)",
         }
-    ];
+    },
+    {
+        type: "text",
+        text: {
+            text_content: "default design",
+        }
+    },
+    {
+        type: "text",
+        text: {
+            text_content: "no stroke",
+            frame_stroke_width: 0,
+            frame_fill: "rgb(22, 126, 19)",
+        }
+    },
+    {
+    },
+    {
+        type:"text",
+        text:{
+            text_content:"circle frame",
+            frame_shape:"circle"
+        }
+    },
+    {
+        type:"text",
+        text:{
+            text_content:"ellipse frame",
+            frame_shape:"ellipse"
+        }
+    },
+    {
+        type:"text",
+        text:{
+            text_content:"text-anchor\n\`start\`"
+        }
+    },
+    {
+        type:"text",
+        text:{
+            text_content:"text-anchor\n\`middle\`",
+            text_anchor: "middle"
+        }
+    },
+    {
+        type:"text",
+        text:{
+            text_content:"text-anchor\n\`end\`",
+            text_anchor: "end"
+        }
+    },
+    {
+        type:"text",
+        text:{
+            text_content:"Bold",
+            text_font_size: 15,
+            text_font_weight: "bold"
+        }
+    },
+    {
+        type:"text",
+        text:{
+            text_content:"italic",
+            text_font_style: "italic"
+        }
+    },
+    {
+        type:"text",
+        text:{
+            text_content:"line-through",
+            text_text_decoration: "line-through"
+        }
+    }
+];
+
+(function () {
 
     /* <settings>------------------------------------------------------------------------------------------------ */
 
@@ -162,6 +150,7 @@
     
     /* ---------------------------------------------------------------------------------------------</Hard cords> */
     
+    var dataset = [];             //Bind用Dataset
     var nowEditng = false;　      //Property Edit Console が起動中かどうか
     var lastSelectedData = null;　//最後に選択状態にしたNode
     var transactionHistory = [];  //history
@@ -555,69 +544,9 @@
         .classed(className_SVGGroupForSelectionLayers, true);
 
     $3nodes = $3nodesGroup.selectAll("g") // ノード追加
-        .data(dataset)
-        .enter()
-        .append("g")
-        .classed("node", true)
-        .each(function(d ,i){
+        .data(dataset, function(d){return d.key});
 
-            var bindedSVGElement = this;
-            d.$3bindedSVGElement = d3.select(this);
-
-            d.$3bindedSelectionLayerSVGElement = $3selectionLayersGroup.append("g")
-                .classed("selectionLayer",true)
-                .style("pointer-events", "none")
-                .style("visibility", "hidden")
-                .attr("data-selected", "false");
-
-            checkToBindData(d); //data書式のチェック
-            
-            //座標追加
-            d.coordinate = {
-                x: ($3motherElement.node().offsetWidth / 2), //<-仮の処理
-                y: (60*(i+1)) //<-仮の処理
-            };
-
-            var renderReport = renderSVGNode(d,d); //SVGレンダリング
-            backToDefaulIfWarn(renderReport, d);
-            
-            //失敗が発生した場合は、firstTotalReportも失敗とする
-            if(!renderReport.allOK){
-                firstTotalReport.allOK = false;
-            }
-
-            firstTotalReport.reportsArr.push(renderReport);
-
-            //EventListener登録
-            bindedSVGElement.addEventListener("propertyEditConsole_rerender",function(eventObj){
-
-                if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //自分のNodeが選択中の場合
-            
-                    //引数チェック
-                    if(typeof eventObj.argObj == 'undefined'){ //引数なし
-                        console.warn("propertyEditConsole_rerender was not specified \`argObj\`.");
-                        return;
-                    }
-                    if(typeof eventObj.argObj.renderByThisObj != 'object'){ //nodeレンダリング用objが存在しない
-                        console.warn("propertyEditConsole_rerender was not specified \`argObj.renderByThisObj\`.");
-                        return;
-                    }
-            
-                    var renderReport = renderTextTypeSVGNode(d, eventObj.argObj.renderByThisObj);
-            
-                    if(typeof eventObj.argObj.clbkFunc == 'function'){ //コールバック関数が存在する
-                        eventObj.argObj.clbkFunc(renderReport);
-                    }
-                }
-                
-            });
-        });
-
-    //Append History
-    transactionHistory.push(firstTotalReport);
-
-    //<UI TRAP>---------------------------------------------------------------------
-
+    
     // Node以外に対する click event
     $SVGDrawingAreaElement.on('click', function(e){
 
@@ -640,79 +569,6 @@
             }
             lastSelectedData = null;
         }
-    });
-
-    //
-    // SVGノードの単一選択イベント 
-    //
-    // note doubleclick時に2回呼ばれて不要がTogglingが発生するが、
-    //      .on('dblclick', function()~ によって強制的に選択状態にされる
-    //
-    $3nodes.on('click', function(d){
-
-        //External Componentが未loadの場合はハジく
-        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
-        
-        exitEditing(); //編集モードの終了
-
-        if(!(d3.event.ctrlKey)){ //ctrl key 押下でない場合
-
-            //別ノードすべてを選択解除する
-            for(var i = 0 ; i < dataset.length ; i++){
-                if(dataset[i].key != d.key){ //自分のノードでない場合
-                    dataset[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
-                        .attr("data-selected", "false"); //選択解除
-                }
-            }
-        }
-
-        var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
-
-        //選択状態を切り替える
-        if(isSelected){ //選択状態の場合
-            d.$3bindedSelectionLayerSVGElement.style("visibility","hidden") //非表示にする
-                .attr("data-selected", "false"); //選択解除
-            lastSelectedData = null; //最終選択Nodeをnullにする(すべてのNodeが非選択になる為)
-
-        }else{ //非選択状態の場合
-            d.$3bindedSelectionLayerSVGElement.style("visibility",null) //表示状態にする
-                .attr("data-selected", "true"); //選択解除
-            
-            lastSelectedData = d; //最終選択Nodeの記憶
-        }
-
-    });
-
-    // Nodeに対する単一編集イベント
-    $3nodes.on('dblclick', function(d){
-
-        //External Componentが未loadの場合はハジく
-        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
-        
-        if(nowEditng){ // 編集中の場合
-                       // -> 発生し得ないルート
-                       //    (直前に呼ばれる単一選択イベントによって、編集中が解除される為)
-
-            exitEditing(); //編集モードの終了
-        
-        }
-
-        //別ノードすべてを選択解除して、自分のノードのみ選択状態にする
-        for(var i = 0 ; i < dataset.length ; i++){
-            if(dataset[i].key != d.key){ //自分のノードでない場合
-                dataset[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden") //選択解除
-                    .attr("data-selected", "false"); //選択解除
-            
-            }else{ //自分のノードの場合
-                dataset[i].$3bindedSelectionLayerSVGElement.style("visibility",null) //選択
-                    .attr("data-selected", "true"); //選択解除
-            }
-        }
-        
-        editSVGNodes();
-        lastSelectedData = d; //最終選択Nodeの記憶
-        propertyEditorsManager.focus(lastSelectedData);
-
     });
 
     // Nodeに対する複数編集イベント
@@ -761,6 +617,164 @@
     // }
 
     // -------------------------------------------------------------------------------</TBD 複数Nodeのブラシ選択>
+
+
+    //todo データ追加
+
+    for(var i = 0 ; i < toAppendDatas.length ; i++){
+        appendNode(toAppendDatas[i]);
+    }
+
+    function appendNode(appendThisObj){
+
+        //dataset[]へ追加
+        var toAppendObj = {};
+        mergeObj(appendThisObj, toAppendObj, false);
+        var appendedIdx = dataset.push(toAppendObj) - 1;
+        dataset[appendedIdx].key = appendedIdx;
+
+        //bind using D3.js
+        $3nodes = $3nodesGroup.selectAll("g") // ノード追加
+            .data(dataset, function(d){return d.key});
+
+        //描画 & リスナ登録
+        $3nodes.enter()
+            .append("g")
+            .classed("node", true)
+            .each(function(d ,i){
+
+                var bindedSVGElement = this;
+                d.$3bindedSVGElement = d3.select(this);
+
+                d.$3bindedSelectionLayerSVGElement = $3selectionLayersGroup.append("g")
+                    .classed("selectionLayer",true)
+                    .style("pointer-events", "none")
+                    .style("visibility", "hidden")
+                    .attr("data-selected", "false");
+
+                checkToBindData(d); //data書式のチェック
+                
+                //座標追加
+                d.coordinate = {
+                    x: ($3motherElement.node().offsetWidth / 2), //<-仮の処理
+                    y: (60*(i+1)) //<-仮の処理
+                };
+
+                var renderReport = renderSVGNode(d,d); //SVGレンダリング
+                backToDefaulIfWarn(renderReport, d);
+                
+                //失敗が発生した場合は、firstTotalReportも失敗とする
+                if(!renderReport.allOK){
+                    firstTotalReport.allOK = false;
+                }
+
+                firstTotalReport.reportsArr.push(renderReport);
+
+                //Property変更用EventListener
+                bindedSVGElement.addEventListener("propertyEditConsole_rerender",function(eventObj){
+
+                    if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //自分のNodeが選択中の場合
+                
+                        //引数チェック
+                        if(typeof eventObj.argObj == 'undefined'){ //引数なし
+                            console.warn("propertyEditConsole_rerender was not specified \`argObj\`.");
+                            return;
+                        }
+                        if(typeof eventObj.argObj.renderByThisObj != 'object'){ //nodeレンダリング用objが存在しない
+                            console.warn("propertyEditConsole_rerender was not specified \`argObj.renderByThisObj\`.");
+                            return;
+                        }
+                
+                        var renderReport = renderTextTypeSVGNode(d, eventObj.argObj.renderByThisObj);
+                
+                        if(typeof eventObj.argObj.clbkFunc == 'function'){ //コールバック関数が存在する
+                            eventObj.argObj.clbkFunc(renderReport);
+                        }
+                    }
+                    
+                });
+
+                //
+                // SVGノードの単一選択イベント 
+                //
+                // note doubleclick時に2回呼ばれて不要がTogglingが発生するが、
+                //      .on('dblclick', function()~ によって強制的に選択状態にされる
+                //
+                d.$3bindedSVGElement.on('click', function(d){
+
+                    //External Componentが未loadの場合はハジく
+                    if(!(checkSucceededLoadOf_ExternalComponent())){return;}
+                    
+                    exitEditing(); //編集モードの終了
+            
+                    if(!(d3.event.ctrlKey)){ //ctrl key 押下でない場合
+            
+                        //別ノードすべてを選択解除する
+                        for(var i = 0 ; i < dataset.length ; i++){
+                            if(dataset[i].key != d.key){ //自分のノードでない場合
+                                dataset[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
+                                    .attr("data-selected", "false"); //選択解除
+                            }
+                        }
+                    }
+            
+                    var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
+            
+                    //選択状態を切り替える
+                    if(isSelected){ //選択状態の場合
+                        d.$3bindedSelectionLayerSVGElement.style("visibility","hidden") //非表示にする
+                            .attr("data-selected", "false"); //選択解除
+                        lastSelectedData = null; //最終選択Nodeをnullにする(すべてのNodeが非選択になる為)
+            
+                    }else{ //非選択状態の場合
+                        d.$3bindedSelectionLayerSVGElement.style("visibility",null) //表示状態にする
+                            .attr("data-selected", "true"); //選択解除
+                        
+                        lastSelectedData = d; //最終選択Nodeの記憶
+                    }
+            
+                });
+
+                // Nodeに対する単一編集イベント
+                d.$3bindedSVGElement.on('dblclick', function(d){
+
+                    //External Componentが未loadの場合はハジく
+                    if(!(checkSucceededLoadOf_ExternalComponent())){return;}
+                    
+                    if(nowEditng){ // 編集中の場合
+                                // -> 発生し得ないルート
+                                //    (直前に呼ばれる単一選択イベントによって、編集中が解除される為)
+            
+                        exitEditing(); //編集モードの終了
+                    
+                    }
+            
+                    //別ノードすべてを選択解除して、自分のノードのみ選択状態にする
+                    for(var i = 0 ; i < dataset.length ; i++){
+                        if(dataset[i].key != d.key){ //自分のノードでない場合
+                            dataset[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden") //選択解除
+                                .attr("data-selected", "false"); //選択解除
+                        
+                        }else{ //自分のノードの場合
+                            dataset[i].$3bindedSelectionLayerSVGElement.style("visibility",null) //選択
+                                .attr("data-selected", "true"); //選択解除
+                        }
+                    }
+                    
+                    editSVGNodes();
+                    lastSelectedData = d; //最終選択Nodeの記憶
+                    propertyEditorsManager.focus(lastSelectedData);
+            
+                });
+
+            });
+
+        $3nodes = $3nodesGroup.selectAll("g");
+
+        //Append History
+        transactionHistory.push(firstTotalReport);
+
+    }
 
     function fireEvent_PropertyEditConsole_rerender(argObj){
         var totalReport = {};
