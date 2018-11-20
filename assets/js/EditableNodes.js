@@ -13,6 +13,15 @@
     //外部コンポーネントパス
     var url_externalComponent = "assets/components/EditableNodes_components.html";
 
+    // frameType 未指定時に設定する Default Shape
+    var defaultTextFrameShape = "rect";
+    
+    //frameとtext間のpadding
+    var valOfpadding_frame_text = 5;
+    
+    //<text>要素内での行間 note:単位は[em]
+    var valOfLineHightInText = 1.3;
+
     //全ての親となるDOM要素のID名
     var idName_superElement = "editableNode";
 
@@ -35,20 +44,10 @@
     var className_nodeIsSelected = "selected";
 
     /* -----------------------------------------------------------------------------------------------</settings> */
-
-
+    
     /* <Hard cords>---------------------------------------------------------------------------------------------- */
 
-    // frameType 未指定時に設定する Default Shape
-    var defaultTextFrameShape = "rect";
-
-    //frameとtext間のpadding
-    var valOfpadding_frame_text = 5;
-
-    //<text>要素内での行間 note:単位は[em]
-    var valOfLineHightInText = 1.3;
-
-    var forSpectrumRegisteringOptionObj = { //register spectrum for text.text_fill
+    var forSpectrumRegisteringOptionObj = {
         showAlpha: true,
         allowEmpty: false,
         showInitial: true,
@@ -1752,11 +1751,17 @@
                 }else{ //型はstring
 
                     //frameオブジェクト削除前に、描画済みスタイルをバックアップ
-                    var computedStyleOf_SVGnodeElem_DOTframe_frame = window.getComputedStyle($3SVGnodeElem_DOTframe_frame.node());
-                    var bkup_frame_stroke = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke");
-                    var bkup_frame_stroke_width = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-width");
-                    var bkup_frame_stroke_dasharray = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-dasharray"); //未設定の場合は"none"が取得される
-                    var bkup_frame_fill = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("fill");
+                    var inlineStyleOf_SVGnodeElem_DOTframe_frame = $3SVGnodeElem_DOTframe_frame.node().style;
+                    var bkup_frame_stroke = inlineStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke");
+                    var bkup_frame_stroke_width = inlineStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-width");
+                    var bkup_frame_stroke_dasharray = inlineStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-dasharray"); //未設定の場合は"none"が取得される
+                    var bkup_frame_fill = inlineStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("fill");
+
+                    //空文字(未指定)はnullに変更
+                    if(bkup_frame_stroke == ""){bkup_frame_stroke = null;}
+                    if(bkup_frame_stroke_width == ""){bkup_frame_stroke_width = null;}
+                    if(bkup_frame_stroke_dasharray == ""){bkup_frame_stroke_dasharray = null;}
+                    if(bkup_frame_fill == ""){bkup_frame_fill = null;}
 
                     var renderThisShape;
 
@@ -1781,7 +1786,7 @@
                             //古いframeオブジェクトでバックアップしたスタイルで回復
                             $3SVGnodeElem_DOTframe_frame.style("stroke", bkup_frame_stroke);
                             $3SVGnodeElem_DOTframe_frame.style("stroke-width", bkup_frame_stroke_width);
-                            if(bkup_frame_stroke_dasharray != "none"){$3SVGnodeElem_DOTframe_frame.style("stroke-dasharray", bkup_frame_stroke_dasharray);} //"none"の場合は適用しない
+                            $3SVGnodeElem_DOTframe_frame.style("stroke-dasharray", bkup_frame_stroke_dasharray);
                             $3SVGnodeElem_DOTframe_frame.style("fill", bkup_frame_fill);
 
                             //サイズ調整
@@ -1812,7 +1817,7 @@
                             //古いframeオブジェクトでバックアップしたスタイルで回復
                             $3SVGnodeElem_DOTframe_frame.style("stroke", bkup_frame_stroke);
                             $3SVGnodeElem_DOTframe_frame.style("stroke-width", bkup_frame_stroke_width);
-                            if(bkup_frame_stroke_dasharray != "none"){$3SVGnodeElem_DOTframe_frame.style("stroke-dasharray", bkup_frame_stroke_dasharray);} //"none"の場合は適用しない
+                            $3SVGnodeElem_DOTframe_frame.style("stroke-dasharray", bkup_frame_stroke_dasharray);
                             $3SVGnodeElem_DOTframe_frame.style("fill", bkup_frame_fill);
 
                             //サイズ調整
@@ -1843,7 +1848,7 @@
                             //古いframeオブジェクトでバックアップしたスタイルで回復
                             $3SVGnodeElem_DOTframe_frame.style("stroke", bkup_frame_stroke);
                             $3SVGnodeElem_DOTframe_frame.style("stroke-width", bkup_frame_stroke_width);
-                            if(bkup_frame_stroke_dasharray != "none"){$3SVGnodeElem_DOTframe_frame.style("stroke-dasharray", bkup_frame_stroke_dasharray);} //"none"の場合は適用しない
+                            $3SVGnodeElem_DOTframe_frame.style("stroke-dasharray", bkup_frame_stroke_dasharray);
                             $3SVGnodeElem_DOTframe_frame.style("fill", bkup_frame_fill);
 
                             //サイズ調整
