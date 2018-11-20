@@ -468,31 +468,31 @@
         for(var i = 0 ; i < e.dataTransfer.files.length ; i++){
             
             var droppedFileObj = e.dataTransfer.files[i];
-            
-            switch(droppedFileObj.type){
-                
-                case 'application/json':
-                {
-                    var file_reader = new FileReader();
-                    file_reader.onload = function(e){
-                        
-                        try{
-                            var parsedObj = JSON.parse(file_reader.result); //SyntaxErrorをthrowする可能性がある
-                            appendNodes(parsedObj);
-                        
-                        }catch(e){ //SyntaxErrorの場合
-                            console.warn(e);
-                        }
-                    };
-                    file_reader.readAsText(droppedFileObj);
-                    break;
-                }
+            var typ = droppedFileObj.type;
+            var nm = droppedFileObj.name;
+            var dots = nm.split('.');
+            var ext = (dots[dots.length - 1]).toLowerCase();
 
-                default:
-                {
-                    console.warn("unknown file type \`" + droppedFileObj.type + "\` detected in \`" + droppedFileObj.name + "\`.");
-                    break;
-                }
+            if((ext == 'json') &&
+                ((typ == 'application/json') || //テキスト形式の場合
+                 (typ == '' && ext))){
+
+                var file_reader = new FileReader();
+                file_reader.onload = function(e){
+                    
+                    try{
+                        var parsedObj = JSON.parse(file_reader.result); //SyntaxErrorをthrowする可能性がある
+                        appendNodes(parsedObj);
+                    
+                    }catch(e){ //SyntaxErrorの場合
+                        console.warn(e);
+                    }
+                };
+                file_reader.readAsText(droppedFileObj);
+                break;
+
+            }else{
+                console.warn("unknown file type \`" + typ + "\` detected in \`" + nm + "\`.");
             }
         }
 
