@@ -464,18 +464,28 @@
     //ファイルをDropした場合
     $SVGDrawingAreaElement.get(0).addEventListener('drop', function(e){ //todo 複数ファイルを連続で読み込めない
         
-        //ドロップされた各ファイルへのループ
-        for(var i = 0 ; i < e.dataTransfer.files.length ; i++){
-            
-            var droppedFileObj = e.dataTransfer.files[i];
+        var files = e.dataTransfer.files;
+        
+        readFilesSequential(0); //ドロップされた各ファイルへのループ
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+
+        //ドロップされたファイルを順次読み込みする
+        function readFilesSequential(indexOfFiles){
+
+            if(indexOfFiles >= files.length){ //読み込むファイルがない場合
+                return;
+            }
+
+            var droppedFileObj = files[indexOfFiles];
             var typ = droppedFileObj.type;
             var nm = droppedFileObj.name;
             var dots = nm.split('.');
             var ext = (dots[dots.length - 1]).toLowerCase();
 
-            if((ext == 'json') &&
-                ((typ == 'application/json') || //テキスト形式の場合
-                 (typ == '' && ext))){
+            //ファイル形式判定
+            if((ext == 'json') &&               //
+                ((typ == 'application/json') || //
+                 (typ == '' && ext))){          // -> json形式の場合
 
                 var file_reader = new FileReader();
                 file_reader.onload = function(e){
@@ -487,16 +497,15 @@
                     }catch(e){ //SyntaxErrorの場合
                         console.warn(e);
                     }
+                    readFilesSequential(indexOfFiles+1); //次のファイルを読み込み
                 };
                 file_reader.readAsText(droppedFileObj);
-                break;
 
-            }else{
+            }else{ //不明なファイル形式の場合
                 console.warn("unknown file type \`" + typ + "\` detected in \`" + nm + "\`.");
+                readFilesSequential(indexOfFiles+1); //次のファイルを読み込み
             }
         }
-
-        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
     //ファイルをD&DせずにLeaveした場合
