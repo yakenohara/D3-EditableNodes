@@ -453,7 +453,7 @@
     $3selectionLayersGroup = $3SVGDrawingAreaElement.append("g") //Selection Layer 用グループの作成
         .classed(className_SVGGroupForSelectionLayers, true);
 
-    $3nodes = $3nodesGroup.selectAll("g") // ノード追加
+    $3nodes = $3nodesGroup.selectAll("g.node") // ノード追加
         .data(dataset, function(d){return d.key});
 
     //ファイルのDragoverイベント
@@ -606,7 +606,7 @@
         dataset[appendedIdx].key = appendedIdx;
 
         //bind using D3.js
-        $3nodes = $3nodesGroup.selectAll("g") // ノード追加
+        $3nodes = $3nodesGroup.selectAll("g.node") // ノード追加
             .data(dataset, function(d){return d.key});
 
         //描画 & リスナ登録
@@ -741,7 +741,7 @@
 
             });
 
-        $3nodes = $3nodesGroup.selectAll("g");
+        $3nodes = $3nodesGroup.selectAll("g.node");
 
         //Append History
         transactionHistory.push(firstTotalReport);
@@ -2415,6 +2415,7 @@
 
         //選択状態のNodeに対するSelectionLayerを非表示にする
         $3nodes.each(function(d,i){
+
             if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択状態の場合
                 d.$3bindedSelectionLayerSVGElement.style("visibility","hidden"); //非表示にする
                 
