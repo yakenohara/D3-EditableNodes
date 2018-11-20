@@ -2,11 +2,12 @@
 
     /* <settings>------------------------------------------------------------------------------------------------ */
 
-    //キー操作設定
-    var keySettings = {
-        editSVGNodes: "f2", //`Mousetrap` event
-        submitEditingTextTypeSVGNode: "enter", //`Mousetrap` event
-        insertLF: "alt+enter", //`Mousetrap` event
+    //キー操作設定 `Mousetrap` event
+    var keySettings = { 
+        editSVGNodes: "f2", //Node編集モードの開始
+        submitEditingTextTypeSVGNode: "enter", //Node編集状態の確定
+        insertLF: "alt+enter", //textTypeのNode編集時に改行を挿入する
+        deleteNodes: "del", //Nodeの削除
     };
 
     //外部コンポーネントパス
@@ -555,6 +556,23 @@
         }
     });
 
+    // Nodeに対する削除イベント
+    Mousetrap.bind(keySettings.deleteNodes, function(e){
+
+        //External Componentが未loadの場合はハジく
+        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
+
+        if(nowEditng){ // 編集中の場合
+            //nothing to do
+        
+        }else{ // 編集中でない場合
+
+            deleteSVGNodes(); //選択状態のNode(s)を削除
+            lastSelectedData = null;
+            disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+        }
+    });
+
     //--------------------------------------------------------------------</UI TRAP>
     
     // <TBD 複数Nodeのブラシ選択>--------------------------------------------------------------------------------
@@ -746,6 +764,42 @@
         //Append History
         transactionHistory.push(firstTotalReport);
 
+    }
+
+    function deleteNode(deleteByThisKey){
+
+        var toDeleteData;
+        var toDeleteIdxInDataset;
+
+        //削除対象Nodeの検索
+        for(var i = 0 ; i < dataset.length ; i++){
+            if(dataset[i].key == deleteByThisKey){
+                toDeleteData = dataset[i];
+                toDeleteIdxInDataset = dataset.indexOf(dataset[i]);
+                break;
+            }
+        }
+        
+        if(typeof toDeleteData != 'undefined'){ //削除対象Nodeが見つかった場合
+            dataset.splice(toDeleteIdxInDataset,1); //dataset[]から削除
+
+            //bind using D3.js
+            $3nodes = $3nodesGroup.selectAll("g.node") // ノード追加
+                .data(dataset, function(d){return d.key});
+
+            $3nodes.exit()
+                .each(function(d,i){
+                    
+                    // ↓ .remove();で削除されない為ここで削除する ↓
+                    //    (多分 selection.data() で紐づけたSVG要素でなない事が原因)
+                    d.$3bindedSelectionLayerSVGElement.remove();                                              
+                })
+                .remove();
+
+            $3nodes = $3nodesGroup.selectAll("g.node");
+
+            //todo history
+        }
     }
 
     function fireEvent_PropertyEditConsole_rerender(argObj){
@@ -2431,6 +2485,19 @@
             $propertyEditConsoleElement.slideDown(100); //PropertyEditorを表示
             nowEditng = true; //`編集中`状態にする
         }
+    }
+
+    //
+    //SVGノード(複数)を削除する
+    //
+    function deleteSVGNodes(){
+        
+        //削除ループ
+        $3nodes.each(function(d,i){
+            if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択状態の場合
+                deleteNode(d.key); //削除
+            }
+        });
     }
 
     function checkSucceededLoadOf_ExternalComponent(){
