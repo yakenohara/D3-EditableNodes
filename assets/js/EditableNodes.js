@@ -61,11 +61,13 @@
     
     /* ---------------------------------------------------------------------------------------------</Hard cords> */
     
-    var dataset = [];             //Bind用Dataset
+    //todo
+    dataset = [];             //Bind用Dataset
+    transactionHistory = [];  //history
+
     var maxKey = -1; //dataset[]の最大key
     var nowEditng = false;　      //Property Edit Console が起動中かどうか
-    var lastSelectedData = null;　//最後に選択状態にしたNode
-    var transactionHistory = [];  //history
+    var lastSelectedData = null;　//最後に選択状態にしたNode    
     var pointingIndexOfHistory = -1;      //historyのどのindexが選択されているか
     
     
@@ -1002,9 +1004,6 @@
             if(typeof (checkThisData.text.text_content) == 'undefined'){
                 checkThisData.text.text_content = ""; //空文字を定義
             }
-            if(typeof (checkThisData.text.frame_shape) == 'undefined'){
-                checkThisData.text.frame_shape = defaultTextFrameShape; //デフォルトShapeを設定
-            }
         }
     }
 
@@ -1627,11 +1626,23 @@
             untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("text_fill"), 1); //未処理プロパティリストから削除
         }
 
+        var prevShape;
+
         //frame存在チェック
-        if(!($3SVGnodeElem_DOTframe.node().firstChild)){ //frameの描画要素が存在しない場合
+        if(!($3SVGnodeElem_DOTframe.node().firstChild)){ //frameの描画要素が存在しない場合(= 1回目の描画の場合)
             $3SVGnodeElem_DOTframe.append(defaultTextFrameShape);
             bindedData.$3bindedSelectionLayerSVGElement.append(defaultTextFrameShape); //SelectionLayerも追加
+            prevShape = null;
+
             haveToUpdateFrame = true;
+
+        }else{ //frameの描画要素が存在しない場合(= 2回目以降の描画の場合)
+            
+            if(typeof bindedData.text.frame_shape == 'undefined'){ //前回は未指定の場合
+                prevShape = null;
+            }else{
+                prevShape = bindedData.text.frame_shape;
+            }
         }
 
         //frame設定変更によるframe自体の再描画要否チェック
@@ -1728,15 +1739,9 @@
             
             if(typeof renderByThisObj.text.frame_shape != 'undefined'){ //frame shape指定有り
 
-                //変更前状態を取得
-                var prevShape = $3SVGnodeElem_DOTframe.node().firstChild.tagName.toLowerCase();  //1回目の描画時は `frame存在チェック`で設定した defaultShapeになる。
-                                                                                                // -> 仕様とする
+                //変更前状態はframe存在チェックの時に実施済み
                 
-                if(renderByThisObj.text.frame_shape === null){ //削除指定された場合は、Defaultに戻す指定をみなす
-                    renderByThisObj.text.frame_shape = defaultTextFrameShape;
-                }
-
-                if(typeof renderByThisObj.text.frame_shape != 'string'){ //型がstringでない
+                if(typeof renderByThisObj.text.frame_shape != 'string' && renderByThisObj.text.frame_shape !== null){ //型がstringでない
                     var wrn = "Wrong type specified in \`renderByThisObj.text.frame_shape\`. " +
                             "specified type:\`" + (typeof (renderByThisObj.text.frame_shape)) + "\`, expected type:\`string\`.";
                     console.warn(wrn);
@@ -1753,16 +1758,25 @@
                     var bkup_frame_stroke_dasharray = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("stroke-dasharray"); //未設定の場合は"none"が取得される
                     var bkup_frame_fill = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("fill");
 
+                    var renderThisShape;
+
+                    if(renderByThisObj.text.frame_shape === null){ //削除指定の場合 -> defaultShapeにする
+                        renderThisShape = defaultTextFrameShape;
+
+                    }else{ //renderingObjに指定がある場合
+                        renderThisShape = renderByThisObj.text.frame_shape.toLowerCase();
+                    }
+
                     //frame shape 変更分岐
-                    switch(renderByThisObj.text.frame_shape.toLowerCase()){
-                        
+                    switch(renderThisShape){
+                            
                         case "rect":
                         {
                             //古いframeオブジェクト・SelectionLayerを削除
                             $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
                             bindedData.$3bindedSelectionLayerSVGElement.node().removeChild(bindedData.$3bindedSelectionLayerSVGElement.node().firstChild);
 
-                            $3SVGnodeElem_DOTframe_frame = $3SVGnodeElem_DOTframe.append("rect"); //circle追加
+                            $3SVGnodeElem_DOTframe_frame = $3SVGnodeElem_DOTframe.append("rect"); //rect追加
 
                             //古いframeオブジェクトでバックアップしたスタイルで回復
                             $3SVGnodeElem_DOTframe_frame.style("stroke", bkup_frame_stroke);
@@ -1824,7 +1838,7 @@
                             $3SVGnodeElem_DOTframe.node().removeChild($3SVGnodeElem_DOTframe.node().firstChild);
                             bindedData.$3bindedSelectionLayerSVGElement.node().removeChild(bindedData.$3bindedSelectionLayerSVGElement.node().firstChild);
 
-                            $3SVGnodeElem_DOTframe_frame = $3SVGnodeElem_DOTframe.append("ellipse"); //circle追加
+                            $3SVGnodeElem_DOTframe_frame = $3SVGnodeElem_DOTframe.append("ellipse"); //ellipse追加
 
                             //古いframeオブジェクトでバックアップしたスタイルで回復
                             $3SVGnodeElem_DOTframe_frame.style("stroke", bkup_frame_stroke);
@@ -1858,6 +1872,11 @@
                             rerender = true;
                         }
                         break;
+                    }
+
+                    if(renderByThisObj.text.frame_shape === null){ //削除指定の場合
+                        reportObj.RenderedObj.text.frame_shape = null;
+                        delete bindedData.text.frame_shape;
                     }
                 }
 
@@ -2283,12 +2302,6 @@
             propertyNames.splice("text_content",1); //プロパティ削除対象から外す
         }
 
-        //frame_shape
-        if(typeof reportObj.FailuredMessages.text.frame_shape != 'undefined'){
-            bindedData.text.frame_shape = defaultTextFrameShape; //プロパティ削除ではなく、defaultShapeにする
-            propertyNames.splice("frame_shape",1); //プロパティ削除対象から外す
-        }
-        
         //Property削除ループ
         propertyNames.forEach(function(propertyName, idx){
             delete bindedData.text[propertyName];
@@ -3955,7 +3968,7 @@
 
         //frame_shape
         computedStyleObj.text.frame_shape = SVGnodeElem_DOTframe_frame.tagName.toLowerCase();
-        explicitnessObj.text.frame_shape = true; //常に明示的な指定として扱う
+        explicitnessObj.text.frame_shape = (typeof bindedData.text.frame_shape != 'undefined');
 
         var computedStyleOf_SVGnodeElem_DOTframe_frame = window.getComputedStyle(SVGnodeElem_DOTframe_frame);
 
