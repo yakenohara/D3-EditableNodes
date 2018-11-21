@@ -449,7 +449,8 @@
             return;
         }
 
-        propertyEditorsManager = new wrapperOfPropertyEditors();
+        propertyEditorsManager = new wrapperOfPropertyEditors(); //PropertyEditConsole
+        toggleBeforeLoadEvent(); //ページ移動前確認イベントをaddEvent
 
     });
 
@@ -488,6 +489,9 @@
 
     //ファイルをDropした場合
     $SVGDrawingAreaElement.get(0).addEventListener('drop', function(e){
+
+        //External Componentが未loadの場合はハジく
+        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
         
         var files = e.dataTransfer.files;
         
@@ -597,6 +601,15 @@
             disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
         }
     });
+
+    //ページ移動前確認(外部コンポーネントload後にaddEventする)
+    var func_checkBeforePageMoving = function(e){
+        e.returnValue = "Are you sure to leave this page?"; //仮のメッセージ
+    }
+    function toggleBeforeLoadEvent(){
+        window.addEventListener('beforeunload', func_checkBeforePageMoving, false);
+    }
+        
 
     //--------------------------------------------------------------------</UI TRAP>
     
