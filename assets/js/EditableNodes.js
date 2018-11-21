@@ -13,6 +13,9 @@
     //外部コンポーネントパス
     var url_externalComponent = "assets/components/EditableNodes_components.html";
 
+    //ファイル出力(Export)時に設定するファイル名
+    var fileName_Export = "Nodes.json";
+
     // frameType 未指定時に設定する Default Shape
     var defaultTextFrameShape = "rect";
     
@@ -567,22 +570,79 @@
         }
     });
 
+    // Node以外に対する right click event
+    var clsNameForCntxtMenu = getUniqueClassName('context-menu-');
+    $3SVGDrawingAreaElement.classed(clsNameForCntxtMenu, true);
+    $.contextMenu({
+        selector: '.' + clsNameForCntxtMenu,
+        items: {
+            edit:{
+                //編集開始
+                name: "Edit (" + keySettings.editSVGNodes.toUpperCase() + ")",
+                //accesskey の handling は keySettings.editSVGNodes に任せる
+                callback: function(itemKey, opt){
+                    call_editSVGNodes(false);
+                }
+            },
+            export: {
+                //エクスポート
+                name: "Export (E)",
+                accesskey: 'e',
+                items:{
+                    export_all:{
+                        name: "Export All (A)",
+                        accesskey: 'a',
+                        callback: function(itemKey, opt){
+                            //DL確認画面終了後にhide出来ないことがあるので、先にhideする
+                            opt.$menu.trigger("contextmenu:hide");
+
+                            exportNodes(false); //全Node(s)ファイル吐き出し
+                        }
+                    },
+                    export_selected:{
+                        name: "Export Selected (S)",
+                        accesskey: 's',
+                        callback: function(itemKey, opt){
+                            //DL確認画面終了後にhide出来ないことがあるので、先にhideする
+                            opt.$menu.trigger("contextmenu:hide");
+
+                            exportNodes(true); //選択Node(s)ファイル吐き出し
+                        }
+                    },
+                }
+                
+            },
+        },
+        callback: function(itemKey, opt){ //keyup event
+            //DL確認画面終了後にhide出来ないことがあるので、先にhideする
+            opt.$menu.trigger("contextmenu:hide");
+            
+            console.warn("Unkown Item selected. Itemkey:\`" + itemKey + "\`, DOM: ", opt.$trigger.get(0));
+        }
+    });
+
+    // right click context menu の mouse enter event
+    $(document.body).on("contextmenu:focus", ".context-menu-item", 
+        function(e){ 
+            //console.log("focus:", this); 
+        }
+    );
+
+    // right click context menu の mouse leave event
+    //
+    //caution
+    //context-mexuのいずれかのitemをclickしてhideした後も、
+    //すべてのitemに対してcallされる
+    $(document.body).on("contextmenu:blur", ".context-menu-item",
+        function(e){ 
+            //console.log("blur:", this);    
+        }
+    );
+
     // Nodeに対する複数編集イベント
     Mousetrap.bind(keySettings.editSVGNodes, function(e){
-
-        //External Componentが未loadの場合はハジく
-        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
-        
-        if(nowEditng){ // 編集中の場合
-            //nothing to do
-        
-        }else{ // 編集中でない場合
-            if(lastSelectedData !== null){ //選択対象Nodeが存在する場合
-                editSVGNodes();
-                propertyEditorsManager.focus(lastSelectedData);
-                disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
-            }
-        }
+        call_editSVGNodes(true);
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
     // Nodeに対する削除イベント
@@ -602,7 +662,12 @@
         }
     });
 
+    //
     //ページ移動前確認(外部コンポーネントload後にaddEventする)
+    //
+    //note
+    //firefoxではページのどこもクリック指定ない状態だと移動できる事がある(原因不明)
+    //
     var func_checkBeforePageMoving = function(e){
         e.returnValue = "Are you sure to leave this page?"; //仮のメッセージ
     }
@@ -2643,6 +2708,76 @@
         $propertyEditConsoleElement.slideUp(100); //edit consoleの終了
 
         nowEditng = false; //編集モードの終了
+    }
+
+    function exportNodes(selectedOnly){
+
+        var toExportObjArr = [];
+
+        //吐き出し用Obj生成ループ
+        $3nodes.each(function(d,i){
+            
+            //選択ノードチェック
+            if(selectedOnly &&
+               (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() != 'true')){ //選択していない場合
+                return; //吐き出し対象から除外
+            }
+
+            //吐き出し用Objを生成
+            var toExportObj = {};
+            toExportObj.type = d.type;
+            toExportObj[d.type] = {};
+            mergeObj(d[d.type], toExportObj[d.type], false); // contentコピー
+
+            toExportObjArr.push(toExportObj); //配列に追加
+        });
+
+        if(toExportObjArr.length == 0){ //吐き出すNodeが存在しない場合
+            console.warn("No Node to Export");
+        
+        }else{ //吐き出すNodeが存在する場合
+            var txtCntnt = JSON.stringify(toExportObjArr, null, '    ');
+            exportTextFile(txtCntnt, fileName_Export); 
+        }
+    }
+
+    function exportTextFile(content, fileName){
+        
+        var blobObj = new Blob([content], {type: "application/json"}); // バイナリデータを作る
+
+        if(window.navigator.msSaveBlob){ //ieの場合
+            window.navigator.msSaveBlob(blobObj, fileName); //独自関数でDL
+
+        }else{ //ieでない場合
+            //var a = document.createElement("a");
+            var dlAnchor = $3motherElement.append("a").node();
+            dlAnchor.href = URL.createObjectURL(blobObj);
+            dlAnchor.target = '_blank';
+            dlAnchor.download = fileName;
+            dlAnchor.click();
+            dlAnchor.remove();
+            URL.revokeObjectURL(); //開放
+        }
+    }
+
+    function call_editSVGNodes(checkContext){
+
+        if(checkContext){
+            $SVGDrawingAreaElement.contextMenu("hide"); //hide right click context menu
+        }
+
+        //External Componentが未loadの場合はハジく
+        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
+        
+        if(nowEditng){ // 編集中の場合
+            //nothing to do
+        
+        }else{ // 編集中でない場合
+            if(lastSelectedData !== null){ //選択対象Nodeが存在する場合
+                editSVGNodes();
+                propertyEditorsManager.focus(lastSelectedData);
+            }
+        }
     }
 
     //
