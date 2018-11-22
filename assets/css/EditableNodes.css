@@ -1,9 +1,10 @@
 /* <ユーザーが好みで変更する定義>------------------------------------------------------ */
-
-
-#editableNode .SVGForNodesMapping{
+#editableNode{
     width: 100%;
     height: 800px;
+}
+
+#editableNode .SVGForNodesMapping{
     /* border: 1px solid black; */
     background-color: rgb(44, 44, 44);
 }

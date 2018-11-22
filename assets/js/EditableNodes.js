@@ -430,6 +430,8 @@
 
     //DOM構築
     $3motherElement = d3.select("#" + idName_superElement) //全てのもと
+        .style("font-size", "0")
+        .style("overflow", "hidden")
         .style("position", "relative");
 
     $3propertyEditConsoleElement = $3motherElement.append("div") //Property Edit Console
@@ -472,6 +474,9 @@
 
     $3SVGDrawingAreaElement = $3motherElement.append("svg") //Node描画用SVGの作成
         .classed(className_SVGElementForNodesMapping, true)
+        .style("width", "100%")
+        .style("height", "100%")
+        .style("overflow", "hidden") // <- ieではこれを指定しないと範囲外の小要素がクリップされない
         .style("vertical-align", "bottom");
 
     $SVGDrawingAreaElement = $($3SVGDrawingAreaElement.node());
@@ -2423,6 +2428,7 @@
             .attr("data-history_index", pointingIndexOfHistory.toString());
 
         $3historyMessageElem.append("small")
+            .style("font-size", "small")
             .text(toSaveTransactionObj.message);
         
         $($3historyMessageElem.node()).slideDown(100); // <- 表示用アニメーション
@@ -2756,7 +2762,7 @@
             dlAnchor.download = fileName;
             dlAnchor.click();
             dlAnchor.remove();
-            URL.revokeObjectURL(); //開放
+            URL.revokeObjectURL(); //開放 ///todo <- firefoxでコケる
         }
     }
 
@@ -3121,7 +3127,9 @@
             //確定イベント
             Mousetrap(textareaElem).bind(keySettings.submitEditingTextTypeSVGNode, function(e){
                 comfirmBufTotalReport(); //Bufferの確定
-                exitEditors(); // <textarea> の終了
+
+                //todo 確定して次のNodeを追加する
+                
                 disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
             });
         }
