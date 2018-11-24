@@ -2921,6 +2921,10 @@
     //     (javascriptで Val(文字列) を更新すると、キャレットの位置がズレてしまうため)
     //
     function adjustTextarea(bindedData, $3textareaElem){
+
+        var computedStyleOf_MoterElement = window.getComputedStyle($3motherElement.node());
+        var motherHeight_beforeAdjust = parseFloat(computedStyleOf_MoterElement.getPropertyValue("height"));
+        var motherWidth_beforeAdjust = parseFloat(computedStyleOf_MoterElement.getPropertyValue("width"));
         
         //apply styles from <SVGTextElement>------------------------------------------------------------------------------------
         var $3SVGnodeElem_text = bindedData.$3bindedSVGElement.select("text");
@@ -2971,8 +2975,7 @@
 
         //<textarea>表示の為のtop位置を算出
         var halfLeading = (parseFloat(textareaStyle_fontSize) * (valOfLineHightInText - 1.0)) / 2;
-        var textareaStyle_top = parseFloat($3SVGnodeElem_text.attr("y")) - getPxDistanceOf_textBeforeEdge_baseline(textareaStyle_fontSize, textareaStyle_fontFamily, $3motherElement.node()) - halfLeading;
-        textareaStyle_top += "px";
+        var pxNumOfTop = parseFloat($3SVGnodeElem_text.attr("y")) - getPxDistanceOf_textBeforeEdge_baseline(textareaStyle_fontSize, textareaStyle_fontFamily, $3motherElement.node()) - halfLeading;
 
         //font-weightの取得
         var textareaStyle_fontWeight = computedStyleOf_SVGnodeElem_text.getPropertyValue("font-weight");
@@ -2987,7 +2990,7 @@
         var textareaStyle_color = computedStyleOf_SVGnodeElem_text.getPropertyValue("fill");
 
         $3textareaElem.style("text-align", textareaStyle_textAlign)
-            .style("top", textareaStyle_top)
+            .style("top", pxNumOfTop + "px")
             .style("font-family", textareaStyle_fontFamily)
             .style("font-size", textareaStyle_fontSize)
             .style("font-weight",textareaStyle_fontWeight)
@@ -3039,6 +3042,25 @@
             break; //nothing to do
         }
         $3textareaElem.style("left", pxNumOfLeft + "px");
+
+        var pxNumOfHeight = parseFloat($3textareaElem.style("height"));
+        var pxNumOfWidth = parseFloat($3textareaElem.style("width"));
+        
+        //heightがmotherElementからはみ出ていた場合
+        if((pxNumOfTop + pxNumOfHeight) > motherHeight_beforeAdjust){
+            var fixedHeight = pxNumOfHeight - ((pxNumOfTop + pxNumOfHeight) - motherHeight_beforeAdjust);
+            fixedHeight = ((fixedHeight < 0)? 0 : fixedHeight);
+            $3textareaElem.style("height", fixedHeight + "px");
+        }
+
+        //widthがmotherElementからはみ出ていた場合
+        if((pxNumOfLeft + pxNumOfWidth) > motherWidth_beforeAdjust){
+            var fixedWidth = pxNumOfWidth - ((pxNumOfLeft + pxNumOfWidth) - motherWidth_beforeAdjust);
+            fixedWidth = ((fixedWidth < 0)? 0 : fixedWidth);
+            $3textareaElem.style("width", fixedWidth + "px");
+        }
+        
+        
         //-----------------------------------------------------------------------------------/adjust size
 
     }
@@ -3079,6 +3101,8 @@
                 .style("resize", "none")
                 .style("overflow", "hidden")
                 .style("background-color", "rgba(105, 105, 105, 0)") // <- 透明度100%にする
+                .style("width", 0)
+                .style("height", 0)
                 .classed(getUniqueClassName(structureArr.join('_')), true)
                 .classed("mousetrap",true)
                 .property("value", textareaValue)
