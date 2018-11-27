@@ -626,6 +626,14 @@
         }
     });
 
+    // SVG領域の Zoom・Pan イベント
+    $3SVGDrawingAreaElement.call(d3.zoom().on("zoom", function(){
+        $3nodes.each(function(d, i){
+            d.$3bindedSVGElement.attr("transform", d3.event.transform);
+            d.$3bindedSelectionLayerSVGElement.attr("transform", d3.event.transform);
+        });
+    }));
+
     // right click context menu の mouse enter event
     $(document.body).on("contextmenu:focus", ".context-menu-item", 
         function(e){ 
