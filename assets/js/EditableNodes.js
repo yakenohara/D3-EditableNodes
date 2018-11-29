@@ -2739,7 +2739,7 @@
             console.error("Cannot roll back \`" + getDomPath(bindedData.$3bindedSVGElement.node()).join('/') + "\`");
         }
 
-        function call_deleteNodes(){
+        function call_deleteNodes(){ //todo 編集中nodeが該当する場合のハンドリング
             //削除対象key収集ループ
             var toDeleteKeyArr = [];
             for(var i = 0 ; i < transaction.reportsArr.length ; i++){
@@ -2749,7 +2749,7 @@
             rollbackRenderringReport = deleteNodes(toDeleteKeyArr); //Node(s)削除
         }
 
-        function call_appendNodes(){
+        function call_appendNodes(){ //todo 編集中nodeが該当する場合のハンドリング
             //追加NodeArray生成ループ
             var toAppendObjArr = [];
             for(var i = 0 ; i < transaction.reportsArr.length ; i++){
