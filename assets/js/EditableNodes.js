@@ -864,7 +864,7 @@
             
                     }else{ //非選択状態の場合
                         d.$3bindedSelectionLayerSVGElement.style("visibility",null) //表示状態にする
-                            .attr("data-selected", "true"); //選択解除
+                            .attr("data-selected", "true"); //選択
                         
                         lastSelectedData = d; //最終選択Nodeの記憶
                     }
@@ -902,6 +902,108 @@
                     propertyEditorsManager.focus(lastSelectedData);
             
                 });
+
+                //Dragイベント用Buffer
+                var bufTotalReport;
+                var beforeDragInfo_nodes;
+                var beforeDragInfo_mouse;
+
+                // Nodeに対する Drag イベント
+                d.$3bindedSVGElement.call(d3.drag()
+                    .on('start', function(d, i){
+                        
+                        bufTotalReport = {};
+                        bufTotalReport.type = 'change';
+                        bufTotalReport.allOK = false;
+                        bufTotalReport.allNG = true;
+                        bufTotalReport.reportsArr = [];
+
+                        beforeDragInfo_nodes = [];
+
+                        //DragStartされたNodeの選択状態取得
+                        var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
+                        if(isSelected){ //選択状態の場合
+
+                            //選択状態にあるNodeをすべてDrag対象として追加するloop
+                            $3nodes.each(function(dataInItr, idxInItr){
+                                var isSelectedInItr = (dataInItr.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
+                                if(isSelectedInItr){ //選択状態の場合
+                                    // transformを取得
+                                    var attrTransformStr = dataInItr.$3bindedSVGElement.attr("transform");
+                                    if(attrTransformStr === null) attrTransformStr = "";
+                                    var transformObj = getTransformObj(attrTransformStr);
+
+                                    // Drag対象Nodeとして追加
+                                    beforeDragInfo_nodes.push({toThisData:dataInItr,
+                                                               x:dataInItr.coordinate.x,
+                                                               y:dataInItr.coordinate.y,
+                                                               scale:transformObj.scale});
+                                }
+                            });
+
+                        }else{ //非選択状態の場合 -> 自分のNodeのみをDrag対象として追加
+
+                            // transformを取得
+                            var attrTransformStr = d.$3bindedSVGElement.attr("transform");
+                            if(attrTransformStr === null) attrTransformStr = "";
+                            var transformObj = getTransformObj(attrTransformStr);
+
+                            // Drag対象Nodeとして追加
+                            beforeDragInfo_nodes.push({toThisData:d,
+                                                       x:d.coordinate.x,
+                                                       y:d.coordinate.y,
+                                                       scale:transformObj.scale});
+                        }
+
+                        beforeDragInfo_mouse = {x:d3.event.x, y:d3.event.y};
+                    })
+                    .on('drag', function(d, i){
+                        
+                        //移動していない場合はハジく
+                        if(d3.event.dx == 0 && d3.event.dy == 0){return;}
+
+                        var draggingReports = {};
+                        draggingReports.type = 'change';
+                        draggingReports.allOK = true;
+                        draggingReports.allNG = true;
+                        draggingReports.reportsArr = [];
+
+                        for(var idx = 0 ; idx < beforeDragInfo_nodes.length ; idx++){
+
+                            //座標していObjの生成
+                            var renderByThisObj = {
+                                coordinate:{
+                                    x: beforeDragInfo_nodes[idx].x
+                                       + ((d3.event.x - beforeDragInfo_mouse.x) / beforeDragInfo_nodes[idx].scale),
+                                    y: beforeDragInfo_nodes[idx].y
+                                       + ((d3.event.y - beforeDragInfo_mouse.y) / beforeDragInfo_nodes[idx].scale)
+                                }
+                            }
+
+                            var renderReport = renderSVGNode(beforeDragInfo_nodes[idx].toThisData, renderByThisObj);
+                            if(!renderReport.allOK){ //失敗が発生した場合
+                                draggingReports.allOK = false;
+                            }
+                            if(!renderReport.allNG){ //成功が1つ以上ある場合
+                                draggingReports.allNG = false;
+                            }
+                            draggingReports.reportsArr.push(renderReport);
+
+                        }
+
+                        if(!draggingReports.allNG){ //1つ以上適用成功の場合
+                            draggingReports.message = draggingReports.reportsArr.length + " node(s) moved.";
+                            overWriteScceededTransaction(draggingReports, bufTotalReport);
+                        }
+
+                    })
+                    .on('end', function(d, i){
+                        
+                        if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
+                            appendHistory(bufTotalReport);
+                        }
+                    })
+                );
             });
 
         //増えた<g>要素に合わせて$node selectionを再調整
@@ -1298,55 +1400,75 @@
 
         //テキスト座標更新
         if(typeof (renderByThisObj.coordinate) != 'undefined'){
-            if(typeof (renderByThisObj.coordinate.x) != 'undefined'){ //x座標指定オブジェクトがあり
+            
+            applyCoordinate("x");
+            applyCoordinate("y");
+            applyDeltaCoordinate("x", "dx");
+            applyDeltaCoordinate("y", "dy");
 
-                //変更前状態を取得
-                var prevX = $3SVGnodeElem_text.attr("x");
-                
-                if(typeof (renderByThisObj.coordinate.x) != 'number'){ //型がnumberでない場合
-                    var wrn = "Wrong type specified in \`renderByThisObj.coordinate.x\`. " +
-                            "specified type:\`" + (typeof (renderByThisObj.coordinate.x)) + "\`, expected type:\`number\`.";
-                    console.warn(wrn);
-                    reportObj.FailuredMessages.coordinate.x = wrn;
-                
-                }else{ //型がnumber
-                    $3SVGnodeElem_text.attr("x", renderByThisObj.coordinate.x);
+            function applyCoordinate(axis){
 
-                    //<tspan>要素に対するx座標指定
-                    $3SVGnodeElem_text.selectAll("tspan")
-                        .attr("x", renderByThisObj.coordinate.x);
+                if(typeof (renderByThisObj.coordinate[axis]) != 'undefined'){ //座標指定あり
+
+                    //変更前状態を取得
+                    var prevAxisValStr = $3SVGnodeElem_text.attr(axis);
                     
-                    if(prevX !== null){
-                        prevX = parseFloat(prevX);
+                    if(typeof (renderByThisObj.coordinate[axis]) != 'number'){ //型がnumberでない場合
+                        var wrn = "Wrong type specified in \`renderByThisObj.coordinate." + axis + "\`. "
+                                  "specified type:\`" + (typeof (renderByThisObj.coordinate[axis])) + "\`, expected type:\`number\`.";
+                        console.warn(wrn);
+                        reportObj.FailuredMessages.coordinate[axis] = wrn;
+                    
+                    }else{ //型がnumber
+                        $3SVGnodeElem_text.attr(axis, renderByThisObj.coordinate[axis]);
+
+                        //<tspan>要素に対するx座標指定
+                        $3SVGnodeElem_text.selectAll("tspan")
+                            .attr(axis, renderByThisObj.coordinate[axis]);
+                        
+                        if(prevAxisValStr !== null){
+                            prevAxisValStr = parseFloat(prevAxisValStr);
+                        }
+                        reportObj.PrevObj.coordinate[axis] = prevAxisValStr;
+                        reportObj.RenderedObj.coordinate[axis] = renderByThisObj.coordinate[axis];
+                        bindedData.coordinate[axis] = renderByThisObj.coordinate[axis];
+                        haveToUpdateFrame = true;
                     }
-                    reportObj.PrevObj.coordinate.x = prevX;
-                    reportObj.RenderedObj.coordinate.x = renderByThisObj.coordinate.x;
-                    bindedData.coordinate.x = renderByThisObj.coordinate.x; //todo <- d3.js に任せられるかどうか
-                    haveToUpdateFrame = true;
                 }
             }
 
-            if(typeof (renderByThisObj.coordinate.y) != 'undefined'){ //y座標指定があり
+            function applyDeltaCoordinate(axis, delta){
 
-                //変更前状態を取得
-                var prevY = $3SVGnodeElem_text.attr("y");
+                if(typeof (renderByThisObj.coordinate[delta]) != 'undefined'){ //座標移動指定あり
 
-                if(typeof (renderByThisObj.coordinate.y) != 'number'){ //型がnumberでない場合
-                    var wrn = "Wrong type specified in \`renderByThisObj.coordinate.y\`. " +
-                            "specified type:\`" + (typeof (renderByThisObj.coordinate.y)) + "\`, expected type:\`number\`.";
-                    console.warn(wrn);
-                    reportObj.FailuredMessages.coordinate.y = wrn;
+                    if(typeof (renderByThisObj.coordinate[delta]) != 'number'){ //型がnumberでない場合
+                        var wrn = "Wrong type specified in \`renderByThisObj.coordinate." + delta + "\`. " +
+                                  "specified type:\`" + (typeof (renderByThisObj.coordinate[delta])) + "\`, expected type:\`number\`.";
+                        console.warn(wrn);
+                        reportObj.FailuredMessages.coordinate[delta] = wrn;
+                    
+                    }else{ //型がnumber
 
-                }else{ //型がnumber
-                    $3SVGnodeElem_text.attr("y", renderByThisObj.coordinate.y);
+                        //変更前状態を取得
+                        var prevAxisVal = bindedData.coordinate[axis];
 
-                    if(prevY !== null){
-                        prevY = parseFloat(prevY);
+                        var toApplyAxisVal = prevAxisVal + renderByThisObj.coordinate[delta];
+                        var toApplyAxisValStr = toApplyAxisVal.toString() + "px"
+                        $3SVGnodeElem_text.attr(axis, toApplyAxisValStr);
+    
+                        //<tspan>要素に対するx座標指定
+                        $3SVGnodeElem_text.selectAll("tspan")
+                            .attr(axis, toApplyAxisValStr);
+                        
+                        //applyCoordinateしていない場合のみ、PrevObjを更新
+                        if(typeof reportObj.PrevObj.coordinate[axis] == 'undefined'){
+                            reportObj.PrevObj.coordinate[axis] = prevAxisVal;
+                        }
+
+                        reportObj.RenderedObj.coordinate[axis] = toApplyAxisVal;
+                        bindedData.coordinate[axis] = toApplyAxisVal;
+                        haveToUpdateFrame = true;
                     }
-                    reportObj.PrevObj.coordinate.y = prevY;
-                    reportObj.RenderedObj.coordinate.y = renderByThisObj.coordinate.y;
-                    bindedData.coordinate.y = renderByThisObj.coordinate.y; //todo <- d3.js に任せられるかどうか
-                    haveToUpdateFrame = true;
                 }
             }
         }
