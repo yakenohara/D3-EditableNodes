@@ -68,9 +68,9 @@
 
     var maxKey = -1; //dataset[]の最大key
     var nowEditng = false;　      //Property Edit Console が起動中かどうか
+    var editingKeys = []; //Property Edit Console の 編集対象ノードのkey
     var lastSelectedData = null;　//最後に選択状態にしたNode    
     var pointingIndexOfHistory = -1;      //historyのどのindexが選択されているか
-    
     
     var $3motherElement; //全てのもと
     var $3propertyEditConsoleElement; //Property Edit Console (D3.js selection)
@@ -2595,7 +2595,7 @@
             replayHistory(pointingIndexOfHistory, specifiedIndex); //mouseenterしたhistoryをPreview
             
             if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
-                adjustPropertyEditConsole();//property editor内の値をロールバックしたNode状態に合わせる
+                checkAdjustPropertyEditConsole();//property editor内の値をロールバックしたNode状態に合わせる
             }
 
             previewedIndex = specifiedIndex;
@@ -2628,7 +2628,7 @@
                 replayHistory(previewedIndex, pointingIndexOfHistory); //history[]内の選択indexへもどす
                 
                 if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
-                    adjustPropertyEditConsole();//property editor内の値をロールバックしたNode状態に合わせる
+                    checkAdjustPropertyEditConsole();//property editor内の値をロールバックしたNode状態に合わせる
                 }
             }
             
@@ -2685,7 +2685,7 @@
         
         //引数チェック
         if(transaction.reportsArr.length == 0){ //トランザクションレポートが存在しない
-            console.warn("Specified trucsaction not contains SVG rendering report.");
+            console.warn("Specified trunsaction not contains SVG rendering report.");
             return;
         }
 
@@ -2739,7 +2739,7 @@
             console.error("Cannot roll back \`" + getDomPath(bindedData.$3bindedSVGElement.node()).join('/') + "\`");
         }
 
-        function call_deleteNodes(){ //todo 編集中nodeが該当する場合のハンドリング
+        function call_deleteNodes(){
             //削除対象key収集ループ
             var toDeleteKeyArr = [];
             for(var i = 0 ; i < transaction.reportsArr.length ; i++){
@@ -2749,7 +2749,7 @@
             rollbackRenderringReport = deleteNodes(toDeleteKeyArr); //Node(s)削除
         }
 
-        function call_appendNodes(){ //todo 編集中nodeが該当する場合のハンドリング
+        function call_appendNodes(){
             //追加NodeArray生成ループ
             var toAppendObjArr = [];
             for(var i = 0 ; i < transaction.reportsArr.length ; i++){
@@ -2925,21 +2925,18 @@
     //
     function editSVGNodes(){
 
-        var selectionFound = false; //1つ以上の選択Nodeが存在するかどうか
-
+        editingKeys = [];
         //選択状態のNodeに対するSelectionLayerを非表示にする
         $3nodes.each(function(d,i){
 
             if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択状態の場合
                 d.$3bindedSelectionLayerSVGElement.style("visibility","hidden"); //非表示にする
-                
+                editingKeys.push(d.key);
                 propertyEditorsManager.append(d);
-
-                selectionFound = true;
             }
         });
 
-        if(selectionFound){
+        if(editingKeys.length > 0){ //1つ以上のNodeを選択している場合
             //選択 Node(s) を元に PropertyEditConsole に反映
             adjustPropertyEditConsole();
             $propertyEditConsoleElement.slideDown(100); //PropertyEditorを表示
@@ -2953,6 +2950,33 @@
             return false;
         }else{ //load済みの場合
             return true;
+        }
+    }
+
+    //
+    // Node選択状態が変化していないことを確認してから、
+    // adjustPropertyEditConsole()をコールする
+    // Node選択状態が変化していたら、Property Edit Console を終了する
+    //
+    function checkAdjustPropertyEditConsole(){
+
+        propertyEditorsManager.exit(); // Node個別編集用 PropertyEditor を終了
+
+        var editingKeysForCheck = editingKeys.slice(0, editingKeys.length);
+
+        $3nodes.each(function(d,i){
+
+            if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択状態の場合
+                editingKeysForCheck.splice(editingKeysForCheck.indexOf(d.key), 1);
+            }
+        });
+
+        //選択中Nodeの数が減っていたら(= 選択中Nodeのいづれかが、historyのrollbackで削除されたら)
+        if(editingKeysForCheck.length > 0){
+            exitEditing(); //Property Edit Consoleを終了
+            
+        }else{
+            adjustPropertyEditConsole();
         }
     }
 
@@ -2982,7 +3006,7 @@
                     
                     if(sccedded){
                         computedStylesOfData.push({computedStyle:computedStyleObj,
-                                                explicitness:explicitnessObj});
+                                                   explicitness:explicitnessObj});
                         
                     }
                 }
