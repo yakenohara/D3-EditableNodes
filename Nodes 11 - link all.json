@@ -1,0 +1,136 @@
+{
+    "datas":[
+        {
+            "type": "text",
+            "text": {
+                "text_content": "untitled node",
+                "text_anchor": "start",
+                "text_font_family": "helvetica, arial, 'hiragino kaku gothic pro', meiryo, 'ms pgothic', sans-serif",
+                "text_font_size": 16,
+                "text_fill": "rgb(251, 255, 14)",
+                "frame_shape": "rect",
+                "frame_stroke": "rgb(0, 0, 0)",
+                "frame_stroke_width": 10,
+                "frame_stroke_dasharray": "10,3",
+                "frame_fill": "rgba(34, 172, 41, 0.74)"
+            }
+        },
+        {
+            "type": "text",
+            "text": {
+                "text_content": "default design"
+            }
+        },
+        {
+            "type": "text",
+            "text": {
+                "text_content": "no stroke",
+                "frame_stroke_width": 0,
+                "frame_fill": "rgb(22, 126, 19)"
+            }
+        },
+        {},
+        {
+            "type": "text",
+            "text": {
+                "text_content": "circle frame",
+                "frame_shape": "circle"
+            }
+        },
+        {
+            "type": "text",
+            "text": {
+                "text_content": "ellipse frame",
+                "frame_shape": "ellipse"
+            }
+        },
+        {
+            "type": "text",
+            "text": {
+                "text_content": "text-anchor\n`start`"
+            }
+        },
+        {
+            "type": "text",
+            "text": {
+                "text_content": "text-anchor\n`middle`",
+                "text_anchor": "middle"
+            }
+        },
+        {
+            "type": "text",
+            "text": {
+                "text_content": "text-anchor\n`end`",
+                "text_anchor": "end"
+            }
+        },
+        {
+            "type": "text",
+            "text": {
+                "text_content": "Bold",
+                "text_font_size": 15,
+                "text_font_weight": "bold"
+            }
+        },
+        {
+            "type": "text",
+            "text": {
+                "text_content": "italic",
+                "text_font_style": "italic"
+            }
+        },
+        {
+            "type": "text",
+            "text": {
+                "text_content": "line-through",
+                "text_text_decoration": "line-through"
+            }
+        }
+    ],
+    "links":[
+        {
+             "source": 0,
+             "target": 1
+        },
+        {
+             "source": 1,
+             "target": 2
+        },
+        {
+             "source": 2,
+             "target": 3
+        },
+        {
+             "source": 3,
+             "target": 4
+        },
+        {
+             "source": 4,
+             "target": 5
+        },
+        {
+             "source": 5,
+             "target": 6
+        },
+        {
+             "source": 6,
+             "target": 7
+        },
+        {
+             "source": 7,
+             "target": 8
+        },
+        {
+             "source": 8,
+             "target": 9
+        },
+        {
+             "source": 9,
+             "target": 10
+        },
+        {
+             "source": 10,
+             "target": 11
+        }
+    ]
+}

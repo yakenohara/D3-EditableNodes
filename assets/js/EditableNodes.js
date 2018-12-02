@@ -40,6 +40,9 @@
     //描画用SVG内で Node(s) が属する <g>要素 のclass名
     var className_SVGGroupForNodes = "nodes";
 
+    //描画用SVG内で Node(s) が属する <g>要素 のclass名
+    var className_SVGGroupForLinkes = "links";
+
     //描画用SVG内で Selection Layer(s) が属する <g>要素 のclass名
     var className_SVGGroupForSelectionLayers = "selectionLayers";
 
@@ -82,8 +85,10 @@
     var $transactionHistoryElement;   //Transaction History (jQuery selection)
     var $3SVGDrawingAreaElement;      //描画用SVG領域 (D3.js selection)
     var $SVGDrawingAreaElement;       //描画用SVG領域 (jQuery selection)
-    var $3nodesGroup;
-    var $3nodes;
+    var $3svgNodesGroup;
+    var $3svgNodes;
+    var $3svgLinksGroup;
+    var $3svgLinks;
     var $3selectionLayersGroup;
 
     //Node初期化用Objを作る
@@ -483,14 +488,20 @@
 
     $SVGDrawingAreaElement = $($3SVGDrawingAreaElement.node());
 
-    $3nodesGroup = $3SVGDrawingAreaElement.append("g") //ノードグループの作成
+    $3svgLinksGroup = $3SVGDrawingAreaElement.append("g") //linkグループの作成
+        .classed(className_SVGGroupForLinkes, true);
+
+    $3svgNodesGroup = $3SVGDrawingAreaElement.append("g") //ノードグループの作成
         .classed(className_SVGGroupForNodes, true);
 
     $3selectionLayersGroup = $3SVGDrawingAreaElement.append("g") //Selection Layer 用グループの作成
         .classed(className_SVGGroupForSelectionLayers, true);
 
-    $3nodes = $3nodesGroup.selectAll("g.node") // ノード追加
+    $3svgNodes = $3svgNodesGroup.selectAll("g.node") // ノード追加
         .data(dataset.datas, function(d){return d.key});
+
+    $3svgLinks = $3svgLinksGroup.selectAll("g.link") // link追加
+        .data(dataset.links);
 
     //ファイルのDragoverイベント
     $SVGDrawingAreaElement.get(0).addEventListener('dragover', function(e){
@@ -631,7 +642,7 @@
     // SVG領域の Zoom・Pan イベント
     $3SVGDrawingAreaElement.call(d3.zoom()
         .on("zoom", function(){
-            $3nodes.each(function(d, i){
+            $3svgNodes.each(function(d, i){
                 d.$3bindedSVGElement.attr("transform", d3.event.transform);
                 d.$3bindedSelectionLayerSVGElement.attr("transform", d3.event.transform);
             });
@@ -764,16 +775,14 @@
             }else{ //keyに明示的な指定がなかった場合
                 dataset.datas[appendedIdx].key = (++maxKey); //重複しないkeyを指定
             }
-            
         }
 
         //bind using D3.js
-        $3nodes = $3nodesGroup.selectAll("g.node")
+        $3svgNodes = $3svgNodesGroup.selectAll("g.node")
             .data(dataset.datas, function(d){return d.key});
             
-
         //描画 & リスナ登録
-        $3nodes.enter()
+        $3svgNodes.enter()
             .append("g")
             .classed("node", true)
             .each(function(d ,i){
@@ -930,7 +939,7 @@
                         if(isSelected){ //選択状態の場合
 
                             //選択状態にあるNodeをすべてDrag対象として追加するloop
-                            $3nodes.each(function(dataInItr, idxInItr){
+                            $3svgNodes.each(function(dataInItr, idxInItr){
                                 var isSelectedInItr = (dataInItr.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
                                 if(isSelectedInItr){ //選択状態の場合
                                     // transformを取得
@@ -1012,8 +1021,29 @@
                 );
             });
 
+        for(var i = 0 ; i < appendThisObjArr.links.length ; i++){
+
+            //dataset.links[]へ追加
+            var toAppendObj = {};
+            mergeObj(appendThisObjArr.links[i], toAppendObj, false);
+            dataset.links.push(toAppendObj);
+        }
+
+        $3svgLinks = $3svgLinksGroup.selectAll("g.link")
+            .data(dataset.links);
+            
+        $3svgLinks.enter()
+            .append("g")
+            .classed("link", true)
+            .append("line")
+            .attr("stroke-width", 2)
+            .attr("stroke", "rgb(238, 255, 0)");
+
         //増えた<g>要素に合わせて$node selectionを再調整
-        $3nodes = $3nodesGroup.selectAll("g.node");
+        $3svgNodes = $3svgNodesGroup.selectAll("g.node");
+        $3svgLinks = $3svgLinksGroup.selectAll("g.link");
+
+        startForce();
 
         appendingTotalReport.message = appendingTotalReport.reportsArr.datas.length.toString() + " node(s) appended.";
         return appendingTotalReport;
@@ -1070,10 +1100,10 @@
         }
 
         //rebind using D3.js
-        $3nodes = $3nodesGroup.selectAll("g.node")
+        $3svgNodes = $3svgNodesGroup.selectAll("g.node")
             .data(dataset.datas, function(d){return d.key});
 
-        $3nodes.exit()
+        $3svgNodes.exit()
             .each(function(d,i){
 
                 //SVG削除前のPropertyを保存する為、defaltObjで再度レンダリングする
@@ -1094,7 +1124,7 @@
             .remove();
 
         //減った<g>要素に合わせて$node selectionを再調整
-        $3nodes = $3nodesGroup.selectAll("g.node");
+        $3svgNodes = $3svgNodesGroup.selectAll("g.node");
 
         if(toDeleteKeyArr.datas.length > 0){ //削除指定Keyが見つからなかった場合
             console.warn("key(s) [" + toDeleteKeyArr.toString() + "] not found");
@@ -1102,6 +1132,48 @@
 
         deletingTotalReport.message = numOfDeleted.toString() + " node(s) deleted.";
         return deletingTotalReport;
+    }
+
+    sss = startForce;
+
+    function startForce(){
+        var simulation = d3.forceSimulation()
+            .force("link", d3.forceLink())
+            .force("change", d3.forceManyBody())
+            .force("center", d3.forceCenter(400, 400));
+
+        simulation.nodes(dataset.datas)
+            .on("tick", function(){
+                
+                $3svgNodes.each(function(d, i){
+                    var renderByThisObj = {
+                        coordinate:{
+                            x:d.x,
+                            y:d.y
+                        }
+                    }
+                    renderSVGNode(d, renderByThisObj);
+                });
+
+                $3svgLinks.each(function(d, i){
+                    var linkGroupElem = this;
+                    var $3linkSVGElem = d3.select(linkGroupElem.firstChild);
+
+                    $3linkSVGElem.attr("x1", d.source.x);
+                    $3linkSVGElem.attr("y1", d.source.y);
+                    $3linkSVGElem.attr("x2", d.target.x);
+                    $3linkSVGElem.attr("y2", d.target.y);
+                    
+
+                });
+            });
+
+        simulation.force("link")
+            .links(dataset.links)
+            .distance(function(){return 100;});
+
+        simulation.force("charge")
+            .strength(function(){return -60;});
     }
 
     function fireEvent_PropertyEditConsole_rerender(argObj){
@@ -1131,7 +1203,7 @@
         }
         
         //すべてのnode要素にイベントを発行する
-        var nodes = $3nodes.nodes();
+        var nodes = $3svgNodes.nodes();
         for(var i = 0 ; i < nodes.length ; i++){
             nodes[i].dispatchEvent(eventObj);
         }
@@ -2867,7 +2939,7 @@
         toExportObjArr.datas = [];
 
         //吐き出し用Obj生成ループ
-        $3nodes.each(function(d,i){
+        $3svgNodes.each(function(d,i){
             
             //選択ノードチェック
             if(selectedOnly &&
@@ -2939,7 +3011,7 @@
 
         editingKeys = [];
         //選択状態のNodeに対するSelectionLayerを非表示にする
-        $3nodes.each(function(d,i){
+        $3svgNodes.each(function(d,i){
 
             if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択状態の場合
                 d.$3bindedSelectionLayerSVGElement.style("visibility","hidden"); //非表示にする
@@ -2976,7 +3048,7 @@
 
         var editingKeysForCheck = editingKeys.slice(0, editingKeys.length);
 
-        $3nodes.each(function(d,i){
+        $3svgNodes.each(function(d,i){
 
             if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択状態の場合
                 editingKeysForCheck.splice(editingKeysForCheck.indexOf(d.key), 1);
