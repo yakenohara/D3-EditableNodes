@@ -1,0 +1,24 @@
+{
+    "datas": [
+        {
+            "type": "text",
+            "text": {
+                "text_content": "untitled node"
+            }
+        },
+        {
+            "type": "text",
+            "text": {
+                "text_content": "circle frame",
+                "frame_shape": "circle"
+            }
+        },
+        {
+            "type": "text",
+            "text": {
+                "text_content": "text-anchor\n`end`",
+                "text_anchor": "end"
+            }
+        }
+    ]
+}

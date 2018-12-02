@@ -63,10 +63,13 @@
     
     /* ---------------------------------------------------------------------------------------------</Hard cords> */
     
-    var dataset = [];             //Bind用Dataset
+    var dataset = { //Bind用Dataset
+        datas:[],
+        links:[]
+    };
     var transactionHistory = [];  //history
 
-    var maxKey = -1; //dataset[]の最大key
+    var maxKey = -1; //dataset.datas[]の最大key
     var nowEditng = false;　      //Property Edit Console が起動中かどうか
     var editingKeys = []; //Property Edit Console の 編集対象ノードのkey
     var lastSelectedData = null;　//最後に選択状態にしたNode    
@@ -487,7 +490,7 @@
         .classed(className_SVGGroupForSelectionLayers, true);
 
     $3nodes = $3nodesGroup.selectAll("g.node") // ノード追加
-        .data(dataset, function(d){return d.key});
+        .data(dataset.datas, function(d){return d.key});
 
     //ファイルのDragoverイベント
     $SVGDrawingAreaElement.get(0).addEventListener('dragover', function(e){
@@ -566,8 +569,8 @@
         }else{  // 編集中でない場合
             
             //Nodeすべてを選択解除する
-            for(var i = 0 ; i < dataset.length ; i++){
-                dataset[i].$3bindedSelectionLayerSVGElement.style("visibility", "hidden")
+            for(var i = 0 ; i < dataset.datas.length ; i++){
+                dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility", "hidden")
                     .attr("data-selected", "false"); //選択解除
             }
             lastSelectedData = null;
@@ -728,44 +731,45 @@
         appendingTotalReport.type = 'append';
         appendingTotalReport.allOK = true;
         appendingTotalReport.allNG = true;
-        appendingTotalReport.reportsArr = [];
+        appendingTotalReport.reportsArr = {};
+        appendingTotalReport.reportsArr.datas = [];
 
         //引数チェック
-        if(!Array.isArray(appendThisObjArr)){ //Arrayでない場合
+        if(!Array.isArray(appendThisObjArr.datas)){ //Arrayでない場合
             console.warn("specified argment is not array");
             return;
         }
 
-        for(var i = 0 ; i < appendThisObjArr.length ; i++){
+        for(var i = 0 ; i < appendThisObjArr.datas.length ; i++){
 
-            //dataset[]へ追加
+            //dataset.datas[]へ追加
             var toAppendObj = {};
-            mergeObj(appendThisObjArr[i], toAppendObj, false);
-            var appendedIdx = dataset.push(toAppendObj) - 1;
+            mergeObj(appendThisObjArr.datas[i], toAppendObj, false);
+            var appendedIdx = dataset.datas.push(toAppendObj) - 1;
 
-            if(typeof dataset[appendedIdx].key == 'number'){ //keyに明示的な指定があった場合
+            if(typeof dataset.datas[appendedIdx].key == 'number'){ //keyに明示的な指定があった場合
 
                 //key重複確認ループ
                 for(var j = appendedIdx-1 ; j >= 0 ; j--){
                     
-                    if(dataset[j].key == dataset[appendedIdx].key){ //重複があった場合
+                    if(dataset.datas[j].key == dataset.datas[appendedIdx].key){ //重複があった場合
                         maxKey++;
-                        console.warn("duplicate key \`" + dataset[appendedIdx].key.toString() + "\` specified. unique key \`" + maxKey.toString() + "\` will apply.");
-                        dataset[appendedIdx].key = maxKey; //重複しないkeyで上書き
+                        console.warn("duplicate key \`" + dataset.datas[appendedIdx].key.toString() + "\` specified. unique key \`" + maxKey.toString() + "\` will apply.");
+                        dataset.datas[appendedIdx].key = maxKey; //重複しないkeyで上書き
                         //note appendingTotalReport.AllOK は変更しない (NodeRenderingに失敗したわけではない為)
                         break;
                     }
                 }
 
             }else{ //keyに明示的な指定がなかった場合
-                dataset[appendedIdx].key = (++maxKey); //重複しないkeyを指定
+                dataset.datas[appendedIdx].key = (++maxKey); //重複しないkeyを指定
             }
             
         }
 
         //bind using D3.js
         $3nodes = $3nodesGroup.selectAll("g.node")
-            .data(dataset, function(d){return d.key});
+            .data(dataset.datas, function(d){return d.key});
             
 
         //描画 & リスナ登録
@@ -804,7 +808,7 @@
                     appendingTotalReport.allNG = false;
                 }
 
-                appendingTotalReport.reportsArr.push(renderReport);
+                appendingTotalReport.reportsArr.datas.push(renderReport);
 
                 //Property変更用EventListener
                 bindedSVGElement.addEventListener("propertyEditConsole_rerender",function(eventObj){
@@ -846,9 +850,9 @@
                     if(!(d3.event.ctrlKey)){ //ctrl key 押下でない場合
             
                         //別ノードすべてを選択解除する
-                        for(var i = 0 ; i < dataset.length ; i++){
-                            if(dataset[i].key != d.key){ //自分のノードでない場合
-                                dataset[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
+                        for(var i = 0 ; i < dataset.datas.length ; i++){
+                            if(dataset.datas[i].key != d.key){ //自分のノードでない場合
+                                dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
                                     .attr("data-selected", "false"); //選択解除
                             }
                         }
@@ -886,13 +890,13 @@
                     }
             
                     //別ノードすべてを選択解除して、自分のノードのみ選択状態にする
-                    for(var i = 0 ; i < dataset.length ; i++){
-                        if(dataset[i].key != d.key){ //自分のノードでない場合
-                            dataset[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden") //選択解除
+                    for(var i = 0 ; i < dataset.datas.length ; i++){
+                        if(dataset.datas[i].key != d.key){ //自分のノードでない場合
+                            dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden") //選択解除
                                 .attr("data-selected", "false"); //選択解除
                         
                         }else{ //自分のノードの場合
-                            dataset[i].$3bindedSelectionLayerSVGElement.style("visibility",null) //選択
+                            dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility",null) //選択
                                 .attr("data-selected", "true"); //選択解除
                         }
                     }
@@ -916,7 +920,8 @@
                         bufTotalReport.type = 'change';
                         bufTotalReport.allOK = false;
                         bufTotalReport.allNG = true;
-                        bufTotalReport.reportsArr = [];
+                        bufTotalReport.reportsArr = {};
+                        bufTotalReport.reportsArr.datas = [];
 
                         beforeDragInfo_nodes = [];
 
@@ -966,7 +971,8 @@
                         draggingReports.type = 'change';
                         draggingReports.allOK = true;
                         draggingReports.allNG = true;
-                        draggingReports.reportsArr = [];
+                        draggingReports.reportsArr = {};
+                        draggingReports.reportsArr.datas = [];
 
                         for(var idx = 0 ; idx < beforeDragInfo_nodes.length ; idx++){
 
@@ -987,12 +993,12 @@
                             if(!renderReport.allNG){ //成功が1つ以上ある場合
                                 draggingReports.allNG = false;
                             }
-                            draggingReports.reportsArr.push(renderReport);
+                            draggingReports.reportsArr.datas.push(renderReport);
 
                         }
 
                         if(!draggingReports.allNG){ //1つ以上適用成功の場合
-                            draggingReports.message = draggingReports.reportsArr.length + " node(s) moved.";
+                            draggingReports.message = draggingReports.reportsArr.datas.length + " node(s) moved.";
                             overWriteScceededTransaction(draggingReports, bufTotalReport);
                         }
 
@@ -1009,7 +1015,7 @@
         //増えた<g>要素に合わせて$node selectionを再調整
         $3nodes = $3nodesGroup.selectAll("g.node");
 
-        appendingTotalReport.message = appendingTotalReport.reportsArr.length.toString() + " node(s) appended.";
+        appendingTotalReport.message = appendingTotalReport.reportsArr.datas.length.toString() + " node(s) appended.";
         return appendingTotalReport;
     }
 
@@ -1018,16 +1024,17 @@
     //
     function deleteSVGNodes(){
 
-        var toDeleteKeyArr = []; //削除対象keyをまとめたArray
+        var toDeleteKeyArr = {}; //削除対象keyをまとめたArray
+        toDeleteKeyArr.datas = [];
 
-        //削除対象Nodeをdataset[]から検索 & 削除
-        for(var i = dataset.length-1 ; i >= 0 ; i--){
-            if(dataset[i].$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択状態の場合
-                toDeleteKeyArr.push(dataset[i].key); //削除対象keyArrayに追加
+        //削除対象Nodeをdataset.datas[]から検索 & 削除
+        for(var i = dataset.datas.length-1 ; i >= 0 ; i--){
+            if(dataset.datas[i].$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択状態の場合
+                toDeleteKeyArr.datas.push(dataset.datas[i].key); //削除対象keyArrayに追加
             }
         }
 
-        if(toDeleteKeyArr.length > 0){ //削除対象Nodeが存在する場合
+        if(toDeleteKeyArr.datas.length > 0){ //削除対象Nodeが存在する場合
             var deletingTotalReport = deleteNodes(toDeleteKeyArr);
             appendHistory(deletingTotalReport);
         }
@@ -1042,7 +1049,8 @@
         deletingTotalReport.type = 'delete';
         deletingTotalReport.allOK = true;
         deletingTotalReport.allNG = true;
-        deletingTotalReport.reportsArr = [];
+        deletingTotalReport.reportsArr = {};
+        deletingTotalReport.reportsArr.datas = [];
 
         var defaultObj = makeSetDafaultObj(true);
         defaultObj.coordinate = {};
@@ -1050,20 +1058,20 @@
         defaultObj.coordinate.y = 0;
         var numOfDeleted = 0;
 
-        //削除対象Nodeをdataset[]から検索 & 削除
-        for(var i = dataset.length-1 ; i >= 0 ; i--){
-            var foundIdx = toDeleteKeyArr.indexOf(dataset[i].key);
+        //削除対象Nodeをdataset.datas[]から検索 & 削除
+        for(var i = dataset.datas.length-1 ; i >= 0 ; i--){
+            var foundIdx = toDeleteKeyArr.datas.indexOf(dataset.datas[i].key);
 
             if(foundIdx >= 0){ //削除指定keyArray内に存在する場合
-                dataset.splice(i,1); //dataset[]から削除
-                toDeleteKeyArr.splice(foundIdx, 1); //削除指定KeyArrayからも削除
+                dataset.datas.splice(i,1); //dataset.datas[]から削除
+                toDeleteKeyArr.datas.splice(foundIdx, 1); //削除指定KeyArrayからも削除
                 numOfDeleted++;
             }
         }
 
         //rebind using D3.js
         $3nodes = $3nodesGroup.selectAll("g.node")
-            .data(dataset, function(d){return d.key});
+            .data(dataset.datas, function(d){return d.key});
 
         $3nodes.exit()
             .each(function(d,i){
@@ -1077,7 +1085,7 @@
                 if(!renderReport.allNG){ //成功が1つ以上ある場合
                     deletingTotalReport.allNG = false;
                 }
-                deletingTotalReport.reportsArr.push(renderReport);
+                deletingTotalReport.reportsArr.datas.push(renderReport);
                 
                 // ↓ .remove();で削除されない為ここで削除する ↓
                 //    (多分 selection.data() で紐づけたSVG要素でなない事が原因)
@@ -1088,7 +1096,7 @@
         //減った<g>要素に合わせて$node selectionを再調整
         $3nodes = $3nodesGroup.selectAll("g.node");
 
-        if(toDeleteKeyArr.length > 0){ //削除指定Keyが見つからなかった場合
+        if(toDeleteKeyArr.datas.length > 0){ //削除指定Keyが見つからなかった場合
             console.warn("key(s) [" + toDeleteKeyArr.toString() + "] not found");
         }
 
@@ -1100,7 +1108,8 @@
         var totalReport = {};
         totalReport.allOK = true;
         totalReport.allNG = true;
-        totalReport.reportsArr = [];
+        totalReport.reportsArr = {};
+        totalReport.reportsArr.datas = [];
 
         var eventObj = document.createEvent("Event");
         eventObj.initEvent("propertyEditConsole_rerender", false, false);
@@ -1118,7 +1127,7 @@
                 totalReport.allNG = false;
             }
 
-            totalReport.reportsArr.push(renderReport);
+            totalReport.reportsArr.datas.push(renderReport);
         }
         
         //すべてのnode要素にイベントを発行する
@@ -1128,7 +1137,7 @@
         }
 
         //コールバックがなかった(=登録リスナがなかった)場合は、totalReportも失敗とする
-        if(totalReport.reportsArr.length == 0){
+        if(totalReport.reportsArr.datas.length == 0){
             totalReport.allOK = false;
             totalReport.allNG = true;
         }
@@ -1139,14 +1148,14 @@
     function printRenderingFailuredSVGElements(totalReport){
 
         //引数チェック
-        if(totalReport.reportsArr.length == 0){ //コールバックがなかった(=登録リスナがなかった)場合
+        if(totalReport.reportsArr.datas.length == 0){ //コールバックがなかった(=登録リスナがなかった)場合
             console.warn("No SVG Node to Apply");
             return;
         }
 
         //失敗レポート検索ループ
-        for(var i = 0 ; i < totalReport.reportsArr.length ; i++){
-            var reportObj = totalReport.reportsArr[i];
+        for(var i = 0 ; i < totalReport.reportsArr.datas.length ; i++){
+            var reportObj = totalReport.reportsArr.datas[i];
             if(!reportObj.allOK){ //失敗していた場合
                 var bindedData = getBindedDataFromKey(reportObj.key);
                 if(typeof bindedData == 'undefined'){ //データが見つからない場合
@@ -2684,7 +2693,7 @@
         var rollbackRenderringReport;
         
         //引数チェック
-        if(transaction.reportsArr.length == 0){ //トランザクションレポートが存在しない
+        if(transaction.reportsArr.datas.length == 0){ //トランザクションレポートが存在しない
             console.warn("Specified trunsaction not contains SVG rendering report.");
             return;
         }
@@ -2714,8 +2723,8 @@
             case 'change':
             {
                 //レンダリングレポート網羅ループ
-                for(var i = 0 ; i < transaction.reportsArr.length ; i++){
-                    var reportObj = transaction.reportsArr[i];
+                for(var i = 0 ; i < transaction.reportsArr.datas.length ; i++){
+                    var reportObj = transaction.reportsArr.datas[i];
                     var bindedData = getBindedDataFromKey(reportObj.key);
 
                     if(typeof bindedData == 'undefined'){ //対象のノードデータが存在しない場合
@@ -2741,23 +2750,25 @@
 
         function call_deleteNodes(){
             //削除対象key収集ループ
-            var toDeleteKeyArr = [];
-            for(var i = 0 ; i < transaction.reportsArr.length ; i++){
-                var reportObj = transaction.reportsArr[i];
-                toDeleteKeyArr.push(reportObj.key); //削除指定keyArrayに追加
+            var toDeleteKeyArr = {};
+            toDeleteKeyArr.datas = [];
+            for(var i = 0 ; i < transaction.reportsArr.datas.length ; i++){
+                var reportObj = transaction.reportsArr.datas[i];
+                toDeleteKeyArr.datas.push(reportObj.key); //削除指定keyArrayに追加
             }
             rollbackRenderringReport = deleteNodes(toDeleteKeyArr); //Node(s)削除
         }
 
         function call_appendNodes(){
             //追加NodeArray生成ループ
-            var toAppendObjArr = [];
-            for(var i = 0 ; i < transaction.reportsArr.length ; i++){
-                var reportObj = transaction.reportsArr[i];
+            var toAppendObjArr = {};
+            toAppendObjArr.datas = [];
+            for(var i = 0 ; i < transaction.reportsArr.datas.length ; i++){
+                var reportObj = transaction.reportsArr.datas[i];
                 var toAppendObj = {};
                 mergeObj(reportObj[toApplyObjName], toAppendObj, false); //オブジェクトコピー
                 toAppendObj.key = reportObj.key; //キー番号をhistoryから復活させる
-                toAppendObjArr.push(toAppendObj);
+                toAppendObjArr.datas.push(toAppendObj);
             }
             rollbackRenderringReport = appendNodes(toAppendObjArr); //Nodes(s)復活
         }
@@ -2836,9 +2847,9 @@
         propertyEditorsManager.exit(); // Node個別編集用 PropertyEditor を終了
         
         //Node選択状態の表示化ループ
-        for(var i = 0 ; i < dataset.length ; i++){
+        for(var i = 0 ; i < dataset.datas.length ; i++){
 
-            var bindedData = dataset[i];
+            var bindedData = dataset.datas[i];
 
             if(bindedData.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == "true"){ // 選択対象Nodeの場合
                 bindedData.$3bindedSelectionLayerSVGElement.style("visibility",null); //選択状態にする
@@ -2852,7 +2863,8 @@
 
     function exportNodes(selectedOnly){
 
-        var toExportObjArr = [];
+        var toExportObjArr = {};
+        toExportObjArr.datas = [];
 
         //吐き出し用Obj生成ループ
         $3nodes.each(function(d,i){
@@ -2869,10 +2881,10 @@
             toExportObj[d.type] = {};
             mergeObj(d[d.type], toExportObj[d.type], false); // contentコピー
 
-            toExportObjArr.push(toExportObj); //配列に追加
+            toExportObjArr.datas.push(toExportObj); //配列に追加
         });
 
-        if(toExportObjArr.length == 0){ //吐き出すNodeが存在しない場合
+        if(toExportObjArr.datas.length == 0){ //吐き出すNodeが存在しない場合
             console.warn("No Node to Export");
         
         }else{ //吐き出すNodeが存在する場合
@@ -2994,9 +3006,9 @@
             var computedStylesOfData = [];
 
             //Node選択状態の非表示化ループ
-            for(var i = 0 ; i < dataset.length ; i++){
+            for(var i = 0 ; i < dataset.datas.length ; i++){
 
-                var bindedData = dataset[i];
+                var bindedData = dataset.datas[i];
 
                 if(bindedData.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ // 選択対象Nodeの場合
                     
@@ -3422,7 +3434,8 @@
             bufTotalReport.allOK = false; 
             bufTotalReport.allNG = true; // <- falseとなった場合は、
                                          // historyに残すべきTransactionが少なくとも1件以上存在する事を表す
-            bufTotalReport.reportsArr = [];
+            bufTotalReport.reportsArr = {};
+            bufTotalReport.reportsArr.datas = [];
         }
     }
 
@@ -3540,7 +3553,8 @@
             bufTotalReport.allOK = false; 
             bufTotalReport.allNG = true; // <- falseとなった場合は、
                                          //    historyに残すべきTransactionが少なくとも1件以上存在する事を表す
-            bufTotalReport.reportsArr = [];
+            bufTotalReport.reportsArr = {};
+            bufTotalReport.reportsArr.datas = [];
         }
 
         //バッファに積んだ Rendering Report を 確定させる
@@ -3680,7 +3694,8 @@
             bufTotalReport.allOK = false; 
             bufTotalReport.allNG = true; // <- falseとなった場合は、
                                          //    historyに残すべきTransactionが少なくとも1件以上存在する事を表す
-            bufTotalReport.reportsArr = [];
+            bufTotalReport.reportsArr = {};
+            bufTotalReport.reportsArr.datas = [];
         }
 
         //バッファに積んだ Rendering Report を 確定させる
@@ -4048,7 +4063,8 @@
             bufTotalReport.allOK = false; 
             bufTotalReport.allNG = true; // <- falseとなった場合は、
                                          //    historyに残すべきTransactionが少なくとも1件以上存在する事を表す
-            bufTotalReport.reportsArr = [];
+            bufTotalReport.reportsArr = {};
+            bufTotalReport.reportsArr.datas = [];
         }
 
         //Buffer初期化 & 表示を元に戻す
@@ -4188,56 +4204,56 @@
         }
         
         //レンダリングレポート網羅ループ
-        for(var i_f = 0 ; i_f < fromThisTransaction.reportsArr.length ; i_f++){
+        for(var i_f = 0 ; i_f < fromThisTransaction.reportsArr.datas.length ; i_f++){
 
-            if(!fromThisTransaction.reportsArr[i_f].allNG){ //property全て失敗でなければ
+            if(!fromThisTransaction.reportsArr.datas[i_f].allNG){ //property全て失敗でなければ
                 
                 //マージ対象ノード検索ループ
                 var i_t = 0;
                 
-                for( ; i_t < toThisTransaction.reportsArr.length ; i_t++){
+                for( ; i_t < toThisTransaction.reportsArr.datas.length ; i_t++){
 
                     //マージ対象のノードkeyが見つかった場合
-                    if(toThisTransaction.reportsArr[i_t].key == fromThisTransaction.reportsArr[i_f].key){
+                    if(toThisTransaction.reportsArr.datas[i_t].key == fromThisTransaction.reportsArr.datas[i_f].key){
                         break;
                     }
                 }
 
-                if(i_t == toThisTransaction.reportsArr.length){ //マージ対象のノードkeyが見つからなかった場合
-                    toThisTransaction.reportsArr.push({}); //空のオブジェクトを追加する
-                    toThisTransaction.reportsArr[i_t].key = fromThisTransaction.reportsArr[i_f].key;
+                if(i_t == toThisTransaction.reportsArr.datas.length){ //マージ対象のノードkeyが見つからなかった場合
+                    toThisTransaction.reportsArr.datas.push({}); //空のオブジェクトを追加する
+                    toThisTransaction.reportsArr.datas[i_t].key = fromThisTransaction.reportsArr.datas[i_f].key;
 
                     //allOK
-                    toThisTransaction.reportsArr[i_t].allOK = fromThisTransaction.reportsArr[i_f].allOK;
+                    toThisTransaction.reportsArr.datas[i_t].allOK = fromThisTransaction.reportsArr.datas[i_f].allOK;
                     //allNG
-                    toThisTransaction.reportsArr[i_t].allNG = false;
+                    toThisTransaction.reportsArr.datas[i_t].allNG = false;
                     //PrevObj
-                    toThisTransaction.reportsArr[i_t].PrevObj = {};
-                    mergeObj(fromThisTransaction.reportsArr[i_f].PrevObj, toThisTransaction.reportsArr[i_t].PrevObj,false);
+                    toThisTransaction.reportsArr.datas[i_t].PrevObj = {};
+                    mergeObj(fromThisTransaction.reportsArr.datas[i_f].PrevObj, toThisTransaction.reportsArr.datas[i_t].PrevObj,false);
                     //RenderedObj
-                    toThisTransaction.reportsArr[i_t].RenderedObj = {};
+                    toThisTransaction.reportsArr.datas[i_t].RenderedObj = {};
                     //FailuredMessages
-                    toThisTransaction.reportsArr[i_t].FailuredMessages = {};
+                    toThisTransaction.reportsArr.datas[i_t].FailuredMessages = {};
 
                 }else{ //マージ対象のノードkeyが見つかった場合
 
                     //allOK
-                    if(!fromThisTransaction.reportsArr[i_f].allOK){ //一部失敗がある場合
-                        toThisTransaction.reportsArr[i_t].allOK = false;
+                    if(!fromThisTransaction.reportsArr.datas[i_f].allOK){ //一部失敗がある場合
+                        toThisTransaction.reportsArr.datas[i_t].allOK = false;
                     }
                     
                     //allNGは不要
                     
                     //PrevObj
-                    mergeObj(fromThisTransaction.reportsArr[i_f].PrevObj, toThisTransaction.reportsArr[i_t].PrevObj,true); //toThisTransactionに存在しない時だけmerge
+                    mergeObj(fromThisTransaction.reportsArr.datas[i_f].PrevObj, toThisTransaction.reportsArr.datas[i_t].PrevObj,true); //toThisTransactionに存在しない時だけmerge
                     
                 }
                 
                 //RenderedObj
-                mergeObj(fromThisTransaction.reportsArr[i_f].RenderedObj, toThisTransaction.reportsArr[i_t].RenderedObj,false);
+                mergeObj(fromThisTransaction.reportsArr.datas[i_f].RenderedObj, toThisTransaction.reportsArr.datas[i_t].RenderedObj,false);
                 
                 //FailuredMessages
-                mergeObj(fromThisTransaction.reportsArr[i_f].FailuredMessages, toThisTransaction.reportsArr[i_t].FailuredMessages,false);
+                mergeObj(fromThisTransaction.reportsArr.datas[i_f].FailuredMessages, toThisTransaction.reportsArr.datas[i_t].FailuredMessages,false);
             }
         }
     }
@@ -4529,7 +4545,7 @@
     }
 
     //
-    //dataset[]から特定キー番号のオブジェクトを返す
+    //dataset.datas[]から特定キー番号のオブジェクトを返す
     //存在しない場合は、'undefined'を返す
     //
     function getBindedDataFromKey(findByThisKey){
@@ -4543,9 +4559,9 @@
         var bindedData;
 
         //検索ループ
-        for(var i = 0 ; i <  dataset.length ; i++){
-            if(dataset[i].key == findByThisKey){
-                bindedData = dataset[i];
+        for(var i = 0 ; i <  dataset.datas.length ; i++){
+            if(dataset.datas[i].key == findByThisKey){
+                bindedData = dataset.datas[i];
                 break;
             }
         }
