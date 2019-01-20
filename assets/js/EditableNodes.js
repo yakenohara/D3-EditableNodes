@@ -1139,7 +1139,7 @@
     function startForce(){
         var simulation = d3.forceSimulation()
             .force("link", d3.forceLink())
-            .force("change", d3.forceManyBody())
+            .force("charge", d3.forceManyBody())
             .force("center", d3.forceCenter(400, 400));
 
         simulation.nodes(dataset.datas)
