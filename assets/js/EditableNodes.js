@@ -488,6 +488,20 @@
 
     $SVGDrawingAreaElement = $($3SVGDrawingAreaElement.node());
 
+    $3SVGDrawingAreaElement.append("defs")
+        .append("marker")
+        .attr("id", "x1")
+        .attr("refX", 40)
+        .attr("refY", 1)
+        .attr("viewBox", "0 -10 20 20")
+        .attr("markerWidth", "20")
+        .attr("markerHeight", "20")
+        .attr("markerUnits", "userSpaceOnUse")
+        .attr("orient", "auto")
+        .append("path")
+        .attr("d", "M0,-10 L20,0 0,10 Z")
+        .attr("fill", "#eab942");
+        
     $3svgLinksGroup = $3SVGDrawingAreaElement.append("g") //linkグループの作成
         .classed(className_SVGGroupForLinkes, true);
 
@@ -1037,7 +1051,8 @@
             .classed("link", true)
             .append("line")
             .attr("stroke-width", 2)
-            .attr("stroke", "rgb(238, 255, 0)");
+            .attr("stroke", "rgb(238, 255, 0)")
+            .attr("marker-end", "url(#x1)");
 
         //増えた<g>要素に合わせて$node selectionを再調整
         $3svgNodes = $3svgNodesGroup.selectAll("g.node");
