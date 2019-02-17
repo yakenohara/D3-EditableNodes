@@ -716,7 +716,7 @@
     //ページ移動前確認(外部コンポーネントload後にaddEventする)
     //
     //note
-    //firefoxではページのどこもクリック指定ない状態だと移動できる事がある(原因不明)
+    //firefoxではページのどこもクリックしていない状態だと移動できる事がある(原因不明)
     //
     var func_checkBeforePageMoving = function(e){
         e.returnValue = "Are you sure to leave this page?"; //仮のメッセージ
@@ -763,6 +763,8 @@
         appendingTotalReport.allNG = true;
         appendingTotalReport.reportsArr = {};
         appendingTotalReport.reportsArr.datas = [];
+
+        //todo appendThisObjArr.datas が存在しない可能性チェック
 
         //引数チェック
         if(!Array.isArray(appendThisObjArr.datas)){ //Arrayでない場合
@@ -836,7 +838,7 @@
                     appendingTotalReport.allNG = false;
                 }
 
-                appendingTotalReport.reportsArr.datas.push(renderReport);
+                appendingTotalReport.reportsArr.datas.push(renderReport); //todo link の追加と共通化
 
                 //Property変更用EventListener
                 bindedSVGElement.addEventListener("propertyEditConsole_rerender",function(eventObj){
@@ -910,8 +912,8 @@
                     if(!(checkSucceededLoadOf_ExternalComponent())){return;}
                     
                     if(nowEditng){ // 編集中の場合
-                                // -> 発生し得ないルート
-                                //    (直前に呼ばれる単一選択イベントによって、編集中が解除される為)
+                                   // -> 発生し得ないルート
+                                   //    (直前に呼ばれる単一選択イベントによって、編集中が解除される為)
             
                         exitEditing(); //編集モードの終了
                     
@@ -1051,6 +1053,8 @@
                 );
             });
 
+        //todo appendThisObjArr.link が存在しない可能性チェック
+
         for(var i = 0 ; i < appendThisObjArr.links.length ; i++){
 
             //dataset.links[]へ追加
@@ -1074,10 +1078,9 @@
                     .attr("marker-end", "url(#x1)") //todo ie11 では、画面をクリックしないと<line>, <marker>が描画されない
                     .attr("stroke", "rgb(238, 255, 0)");
 
-                
-            })
+                //todo linkのrender関数化?
+            });
             
-
         //増えた<g>要素に合わせて$node selectionを再調整
         $3svgNodes = $3svgNodesGroup.selectAll("g.node");
         $3svgLinks = $3svgLinksGroup.selectAll("g.link");
@@ -1174,7 +1177,6 @@
     }
 
     var simulation;
-
     function startForce(){
         simulation = d3.forceSimulation()
             .force("link", d3.forceLink())
@@ -2698,7 +2700,7 @@
         var $historyMessageElem  = $($3historyMessageElem.node());
 
         //transactionに対するMouseEnterイベント
-        $historyMessageElem.mouseenter(function(){
+        $historyMessageElem.mouseenter(function(){ //todo forcesimulation
             
             var thisElem = this;
             var specifiedIndex = parseInt($(thisElem).attr("data-history_index"));
