@@ -660,6 +660,11 @@
                 d.$3bindedSVGElement.attr("transform", d3.event.transform);
                 d.$3bindedSelectionLayerSVGElement.attr("transform", d3.event.transform);
             });
+
+            $3svgLinks.each(function(d, i){
+                d.$3bindedSVGLinkElement.attr("transform", d3.event.transform);
+            });
+
             if(nowEditng){
                 adjustPropertyEditConsole(true); //Node個別編集機能のみadjustする(heavyすぎる為)
             }
@@ -1049,10 +1054,18 @@
         $3svgLinks.enter()
             .append("g")
             .classed("link", true)
-            .append("line")
-            .attr("stroke-width", 2)
-            .attr("marker-end", "url(#x1)") //todo ie11 では、画面をクリックしないと<line>, <marker>が描画されない
-            .attr("stroke", "rgb(238, 255, 0)");
+            .each(function(d, i){
+                var bindedSVGLinkElement = this;
+                d.$3bindedSVGLinkElement = d3.select(bindedSVGLinkElement);
+
+                d.$3bindedSVGLinkElement.append("line")
+                    .attr("stroke-width", 2)
+                    .attr("marker-end", "url(#x1)") //todo ie11 では、画面をクリックしないと<line>, <marker>が描画されない
+                    .attr("stroke", "rgb(238, 255, 0)");
+
+                
+            })
+            
 
         //増えた<g>要素に合わせて$node selectionを再調整
         $3svgNodes = $3svgNodesGroup.selectAll("g.node");
