@@ -943,6 +943,8 @@
                 // Nodeに対する Drag イベント
                 d.$3bindedSVGElement.call(d3.drag()
                     .on('start', function(d, i){
+
+                        if(!d3.event.active) simulation.alphaTarget(0.3).restart();
                         
                         bufTotalReport = {};
                         bufTotalReport.type = 'change';
@@ -1023,6 +1025,9 @@
                             }
                             draggingReports.reportsArr.datas.push(renderReport);
 
+                            beforeDragInfo_nodes[idx].toThisData.fx = renderByThisObj.coordinate.x;
+                            beforeDragInfo_nodes[idx].toThisData.fy = renderByThisObj.coordinate.y;
+
                         }
 
                         if(!draggingReports.allNG){ //1つ以上適用成功の場合
@@ -1032,7 +1037,13 @@
 
                     })
                     .on('end', function(d, i){
+                        if(!d3.event.active) simulation.alphaTarget(0);
                         
+                        for(var idx = 0 ; idx < beforeDragInfo_nodes.length ; idx++){
+                            beforeDragInfo_nodes[idx].toThisData.fx = null;
+                            beforeDragInfo_nodes[idx].toThisData.fy = null;
+                        }
+
                         if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
                             appendHistory(bufTotalReport);
                         }
@@ -1162,10 +1173,10 @@
         return deletingTotalReport;
     }
 
-    sss = startForce;
+    var simulation;
 
     function startForce(){
-        var simulation = d3.forceSimulation()
+        simulation = d3.forceSimulation()
             .force("link", d3.forceLink())
             .force("charge", d3.forceManyBody())
             .force("center", d3.forceCenter(400, 400));
