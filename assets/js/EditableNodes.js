@@ -1051,8 +1051,8 @@
             .classed("link", true)
             .append("line")
             .attr("stroke-width", 2)
-            .attr("stroke", "rgb(238, 255, 0)")
-            .attr("marker-end", "url(#x1)");
+            .attr("marker-end", "url(#x1)") //todo ie11 では、画面をクリックしないと<line>, <marker>が描画されない
+            .attr("stroke", "rgb(238, 255, 0)");
 
         //増えた<g>要素に合わせて$node selectionを再調整
         $3svgNodes = $3svgNodesGroup.selectAll("g.node");
