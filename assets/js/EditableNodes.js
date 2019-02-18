@@ -764,327 +764,366 @@
         appendingTotalReport.reportsArr = {};
         appendingTotalReport.reportsArr.datas = [];
 
-        //todo appendThisObjArr.datas が存在しない可能性チェック
+        var treatThisObjects = [];
+        var untreatedPropertyNames = Object.keys(appendThisObjArr); //未処理プロパティリスト
+        var formatIsOK = true;
+        isThisArray("datas");
+        isThisArray("links");
 
-        //引数チェック
-        if(!Array.isArray(appendThisObjArr.datas)){ //Arrayでない場合
-            console.warn("specified argment is not array");
-            return;
-        }
-
-        for(var i = 0 ; i < appendThisObjArr.datas.length ; i++){
-
-            //dataset.datas[]へ追加
-            var toAppendObj = {};
-            mergeObj(appendThisObjArr.datas[i], toAppendObj, false);
-            var appendedIdx = dataset.datas.push(toAppendObj) - 1;
-
-            if(typeof dataset.datas[appendedIdx].key == 'number'){ //keyに明示的な指定があった場合
-
-                //key重複確認ループ
-                for(var j = appendedIdx-1 ; j >= 0 ; j--){
-                    
-                    if(dataset.datas[j].key == dataset.datas[appendedIdx].key){ //重複があった場合
-                        maxKey++;
-                        console.warn("duplicate key \`" + dataset.datas[appendedIdx].key.toString() + "\` specified. unique key \`" + maxKey.toString() + "\` will apply.");
-                        dataset.datas[appendedIdx].key = maxKey; //重複しないkeyで上書き
-                        //note appendingTotalReport.AllOK は変更しない (NodeRenderingに失敗したわけではない為)
-                        break;
-                    }
+        function isThisArray(objName){
+            if(typeof appendThisObjArr[objName] != 'undefined'){ //定義がある場合
+                if(!Array.isArray(appendThisObjArr[objName])){ //Arrayでない場合
+                    console.warn("Obj \`" + objName + "\` is not Array");
+                    formatIsOK = false;
+                }else{                    
+                    treatThisObjects.push(objName);
                 }
-
-            }else{ //keyに明示的な指定がなかった場合
-                dataset.datas[appendedIdx].key = (++maxKey); //重複しないkeyを指定
+                untreatedPropertyNames.splice(untreatedPropertyNames.indexOf(objName), 1) //未処理プロパティリストから削除
             }
         }
 
-        //bind using D3.js
-        $3svgNodes = $3svgNodesGroup.selectAll("g.node")
-            .data(dataset.datas, function(d){return d.key});
-            
-        //描画 & リスナ登録
-        $3svgNodes.enter()
-            .append("g")
-            .classed("node", true)
-            .each(function(d ,i){
+        //不明なObject定義が存在する場合
+        untreatedPropertyNames.forEach(function(objName,idx){
+            var wrn = "Unkdown Object \`" + objName + "\` defined.";
+            console.warn(wrn);
+        });
 
-                var bindedSVGElement = this;
-                d.$3bindedSVGElement = d3.select(this);
-
-                d.$3bindedSelectionLayerSVGElement = $3selectionLayersGroup.append("g")
-                    .classed("selectionLayer",true)
-                    .style("pointer-events", "none")
-                    .style("visibility", "hidden")
-                    .attr("data-selected", "false");
-
-                checkToBindData(d); //data書式のチェック
-                
-                //座標追加
-                if(typeof d.coordinate == 'undefined'){
-                    d.coordinate = {
-                        x: ($3motherElement.node().offsetWidth / 2), //<-仮の処理
-                        y: (60*(i+1)) //<-仮の処理
-                    };
-                }
-                
-                var renderReport = renderSVGNode(d,d); //SVGレンダリング
-                backToDefaulIfWarn(renderReport, d);
-                
-                if(!renderReport.allOK){ //失敗が発生した場合
-                    appendingTotalReport.allOK = false;
-                }
-
-                if(!renderReport.allNG){ //成功が1つ以上ある場合
-                    appendingTotalReport.allNG = false;
-                }
-
-                appendingTotalReport.reportsArr.datas.push(renderReport); //todo link の追加と共通化
-
-                //Property変更用EventListener
-                bindedSVGElement.addEventListener("propertyEditConsole_rerender",function(eventObj){
-
-                    if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //自分のNodeが選択中の場合
-                
-                        //引数チェック
-                        if(typeof eventObj.argObj == 'undefined'){ //引数なし
-                            console.warn("propertyEditConsole_rerender was not specified \`argObj\`.");
-                            return;
-                        }
-                        if(typeof eventObj.argObj.renderByThisObj != 'object'){ //nodeレンダリング用objが存在しない
-                            console.warn("propertyEditConsole_rerender was not specified \`argObj.renderByThisObj\`.");
-                            return;
-                        }
-                
-                        var renderReport = renderTextTypeSVGNode(d, eventObj.argObj.renderByThisObj);
-                
-                        if(typeof eventObj.argObj.clbkFunc == 'function'){ //コールバック関数が存在する
-                            eventObj.argObj.clbkFunc(renderReport);
-                        }
-                    }
-                    
-                });
-
-                //
-                // SVGノードの単一選択イベント 
-                //
-                // note doubleclick時に2回呼ばれて不要がTogglingが発生するが、
-                //      .on('dblclick', function()~ によって強制的に選択状態にされる
-                //
-                d.$3bindedSVGElement.on('click', function(d){
-
-                    //External Componentが未loadの場合はハジく
-                    if(!(checkSucceededLoadOf_ExternalComponent())){return;}
-                    
-                    exitEditing(); //編集モードの終了
-            
-                    if(!(d3.event.ctrlKey)){ //ctrl key 押下でない場合
-            
-                        //別ノードすべてを選択解除する
-                        for(var i = 0 ; i < dataset.datas.length ; i++){
-                            if(dataset.datas[i].key != d.key){ //自分のノードでない場合
-                                dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
-                                    .attr("data-selected", "false"); //選択解除
-                            }
-                        }
-                    }
-            
-                    var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
-            
-                    //選択状態を切り替える
-                    if(isSelected){ //選択状態の場合
-                        d.$3bindedSelectionLayerSVGElement.style("visibility","hidden") //非表示にする
-                            .attr("data-selected", "false"); //選択解除
-                        lastSelectedData = null; //最終選択Nodeをnullにする(すべてのNodeが非選択になる為)
-            
-                    }else{ //非選択状態の場合
-                        d.$3bindedSelectionLayerSVGElement.style("visibility",null) //表示状態にする
-                            .attr("data-selected", "true"); //選択
-                        
-                        lastSelectedData = d; //最終選択Nodeの記憶
-                    }
-            
-                });
-
-                // Nodeに対する単一編集イベント
-                d.$3bindedSVGElement.on('dblclick', function(d){
-
-                    //External Componentが未loadの場合はハジく
-                    if(!(checkSucceededLoadOf_ExternalComponent())){return;}
-                    
-                    if(nowEditng){ // 編集中の場合
-                                   // -> 発生し得ないルート
-                                   //    (直前に呼ばれる単一選択イベントによって、編集中が解除される為)
-            
-                        exitEditing(); //編集モードの終了
-                    
-                    }
-            
-                    //別ノードすべてを選択解除して、自分のノードのみ選択状態にする
-                    for(var i = 0 ; i < dataset.datas.length ; i++){
-                        if(dataset.datas[i].key != d.key){ //自分のノードでない場合
-                            dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden") //選択解除
-                                .attr("data-selected", "false"); //選択解除
-                        
-                        }else{ //自分のノードの場合
-                            dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility",null) //選択
-                                .attr("data-selected", "true"); //選択解除
-                        }
-                    }
-                    
-                    editSVGNodes();
-                    lastSelectedData = d; //最終選択Nodeの記憶
-                    propertyEditorsManager.focus(lastSelectedData);
-            
-                });
-
-                //Dragイベント用Buffer
-                var bufTotalReport;
-                var beforeDragInfo_nodes;
-                var beforeDragInfo_mouse;
-
-                // Nodeに対する Drag イベント
-                d.$3bindedSVGElement.call(d3.drag()
-                    .on('start', function(d, i){
-
-                        if(!d3.event.active) simulation.alphaTarget(0.3).restart();
-                        
-                        bufTotalReport = {};
-                        bufTotalReport.type = 'change';
-                        bufTotalReport.allOK = false;
-                        bufTotalReport.allNG = true;
-                        bufTotalReport.reportsArr = {};
-                        bufTotalReport.reportsArr.datas = [];
-
-                        beforeDragInfo_nodes = [];
-
-                        //DragStartされたNodeの選択状態取得
-                        var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
-                        if(isSelected){ //選択状態の場合
-
-                            //選択状態にあるNodeをすべてDrag対象として追加するloop
-                            $3svgNodes.each(function(dataInItr, idxInItr){
-                                var isSelectedInItr = (dataInItr.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
-                                if(isSelectedInItr){ //選択状態の場合
-                                    // transformを取得
-                                    var attrTransformStr = dataInItr.$3bindedSVGElement.attr("transform");
-                                    if(attrTransformStr === null) attrTransformStr = "";
-                                    var transformObj = getTransformObj(attrTransformStr);
-
-                                    // Drag対象Nodeとして追加
-                                    beforeDragInfo_nodes.push({toThisData:dataInItr,
-                                                               x:dataInItr.coordinate.x,
-                                                               y:dataInItr.coordinate.y,
-                                                               scale:transformObj.scale});
-                                }
-                            });
-
-                        }else{ //非選択状態の場合 -> 自分のNodeのみをDrag対象として追加
-
-                            // transformを取得
-                            var attrTransformStr = d.$3bindedSVGElement.attr("transform");
-                            if(attrTransformStr === null) attrTransformStr = "";
-                            var transformObj = getTransformObj(attrTransformStr);
-
-                            // Drag対象Nodeとして追加
-                            beforeDragInfo_nodes.push({toThisData:d,
-                                                       x:d.coordinate.x,
-                                                       y:d.coordinate.y,
-                                                       scale:transformObj.scale});
-                        }
-
-                        beforeDragInfo_mouse = {x:d3.event.x, y:d3.event.y};
-                    })
-                    .on('drag', function(d, i){
-                        
-                        //移動していない場合はハジく
-                        if(d3.event.dx == 0 && d3.event.dy == 0){return;}
-
-                        var draggingReports = {};
-                        draggingReports.type = 'change';
-                        draggingReports.allOK = true;
-                        draggingReports.allNG = true;
-                        draggingReports.reportsArr = {};
-                        draggingReports.reportsArr.datas = [];
-
-                        for(var idx = 0 ; idx < beforeDragInfo_nodes.length ; idx++){
-
-                            //座標していObjの生成
-                            var renderByThisObj = {
-                                coordinate:{
-                                    x: beforeDragInfo_nodes[idx].x
-                                       + ((d3.event.x - beforeDragInfo_mouse.x) / beforeDragInfo_nodes[idx].scale),
-                                    y: beforeDragInfo_nodes[idx].y
-                                       + ((d3.event.y - beforeDragInfo_mouse.y) / beforeDragInfo_nodes[idx].scale)
-                                }
-                            }
-
-                            var renderReport = renderSVGNode(beforeDragInfo_nodes[idx].toThisData, renderByThisObj);
-                            if(!renderReport.allOK){ //失敗が発生した場合
-                                draggingReports.allOK = false;
-                            }
-                            if(!renderReport.allNG){ //成功が1つ以上ある場合
-                                draggingReports.allNG = false;
-                            }
-                            draggingReports.reportsArr.datas.push(renderReport);
-
-                            beforeDragInfo_nodes[idx].toThisData.fx = renderByThisObj.coordinate.x;
-                            beforeDragInfo_nodes[idx].toThisData.fy = renderByThisObj.coordinate.y;
-
-                        }
-
-                        if(!draggingReports.allNG){ //1つ以上適用成功の場合
-                            draggingReports.message = draggingReports.reportsArr.datas.length + " node(s) moved.";
-                            overWriteScceededTransaction(draggingReports, bufTotalReport);
-                        }
-
-                    })
-                    .on('end', function(d, i){
-                        if(!d3.event.active) simulation.alphaTarget(0);
-                        
-                        for(var idx = 0 ; idx < beforeDragInfo_nodes.length ; idx++){
-                            beforeDragInfo_nodes[idx].toThisData.fx = null;
-                            beforeDragInfo_nodes[idx].toThisData.fy = null;
-                        }
-
-                        if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
-                            appendHistory(bufTotalReport);
-                        }
-                    })
-                );
-            });
-
-        //todo appendThisObjArr.link が存在しない可能性チェック
-
-        for(var i = 0 ; i < appendThisObjArr.links.length ; i++){
-
-            //dataset.links[]へ追加
-            var toAppendObj = {};
-            mergeObj(appendThisObjArr.links[i], toAppendObj, false);
-            dataset.links.push(toAppendObj);
+        if(!formatIsOK){ //NGフォーマットが存在する場合
+            return;
         }
 
-        $3svgLinks = $3svgLinksGroup.selectAll("g.link")
-            .data(dataset.links);
+        if(treatThisObjects.length == 0){ //有効なObjectが存在しない
+            var wrn = "Valid Object is not defined.";
+            console.warn(wrn);
+            return;
+        }
+
+
+        //Nodesの追加
+        if(treatThisObjects.indexOf("datas") >= 0){ //"datas"定義が存在する場合
+
+            //dataset.datas[]へ追加ループ
+            for(var i = 0 ; i < appendThisObjArr.datas.length ; i++){
+
+                var toAppendObj = {};
+                mergeObj(appendThisObjArr.datas[i], toAppendObj, false);
+                var appendedIdx = dataset.datas.push(toAppendObj) - 1;
+
+                if(typeof dataset.datas[appendedIdx].key == 'number'){ //keyに明示的な指定があった場合
+
+                    //key重複確認ループ
+                    for(var j = appendedIdx-1 ; j >= 0 ; j--){
+                        
+                        if(dataset.datas[j].key == dataset.datas[appendedIdx].key){ //重複があった場合
+                            maxKey++;
+                            console.warn("duplicate key \`" + dataset.datas[appendedIdx].key.toString() + "\` specified. unique key \`" + maxKey.toString() + "\` will apply.");
+                            dataset.datas[appendedIdx].key = maxKey; //重複しないkeyで上書き
+                            //note appendingTotalReport.AllOK は変更しない (NodeRenderingに失敗したわけではない為)
+                            break;
+                        }
+                    }
+
+                }else{ //keyに明示的な指定がなかった場合
+                    dataset.datas[appendedIdx].key = (++maxKey); //重複しないkeyを指定
+                }
+            }
+
+            //bind using D3.js
+            $3svgNodes = $3svgNodesGroup.selectAll("g.node")
+                .data(dataset.datas, function(d){return d.key});
+                
+            //描画 & リスナ登録
+            $3svgNodes.enter()
+                .append("g")
+                .classed("node", true)
+                .each(function(d ,i){
+
+                    var bindedSVGElement = this;
+                    d.$3bindedSVGElement = d3.select(this);
+
+                    d.$3bindedSelectionLayerSVGElement = $3selectionLayersGroup.append("g")
+                        .classed("selectionLayer",true)
+                        .style("pointer-events", "none")
+                        .style("visibility", "hidden")
+                        .attr("data-selected", "false");
+
+                    checkToBindData(d); //data書式のチェック
+                    
+                    //座標追加
+                    if(typeof d.coordinate == 'undefined'){
+                        d.coordinate = {
+                            x: ($3motherElement.node().offsetWidth / 2), //<-仮の処理
+                            y: (60*(i+1)) //<-仮の処理
+                        };
+                    }
+                    
+                    var renderReport = renderSVGNode(d,d); //SVGレンダリング
+                    backToDefaulIfWarn(renderReport, d);
+                    
+                    if(!renderReport.allOK){ //失敗が発生した場合
+                        appendingTotalReport.allOK = false;
+                    }
+
+                    if(!renderReport.allNG){ //成功が1つ以上ある場合
+                        appendingTotalReport.allNG = false;
+                    }
+
+                    appendingTotalReport.reportsArr.datas.push(renderReport); //todo link の追加と共通化
+
+                    //Property変更用EventListener
+                    bindedSVGElement.addEventListener("propertyEditConsole_rerender",function(eventObj){
+
+                        if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //自分のNodeが選択中の場合
+                    
+                            //引数チェック
+                            if(typeof eventObj.argObj == 'undefined'){ //引数なし
+                                console.warn("propertyEditConsole_rerender was not specified \`argObj\`.");
+                                return;
+                            }
+                            if(typeof eventObj.argObj.renderByThisObj != 'object'){ //nodeレンダリング用objが存在しない
+                                console.warn("propertyEditConsole_rerender was not specified \`argObj.renderByThisObj\`.");
+                                return;
+                            }
+                    
+                            var renderReport = renderTextTypeSVGNode(d, eventObj.argObj.renderByThisObj);
+                    
+                            if(typeof eventObj.argObj.clbkFunc == 'function'){ //コールバック関数が存在する
+                                eventObj.argObj.clbkFunc(renderReport);
+                            }
+                        }
+                        
+                    });
+
+                    //
+                    // SVGノードの単一選択イベント 
+                    //
+                    // note doubleclick時に2回呼ばれて不要がTogglingが発生するが、
+                    //      .on('dblclick', function()~ によって強制的に選択状態にされる
+                    //
+                    d.$3bindedSVGElement.on('click', function(d){
+
+                        //External Componentが未loadの場合はハジく
+                        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
+                        
+                        exitEditing(); //編集モードの終了
+                
+                        if(!(d3.event.ctrlKey)){ //ctrl key 押下でない場合
+                
+                            //別ノードすべてを選択解除する
+                            for(var i = 0 ; i < dataset.datas.length ; i++){
+                                if(dataset.datas[i].key != d.key){ //自分のノードでない場合
+                                    dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
+                                        .attr("data-selected", "false"); //選択解除
+                                }
+                            }
+                        }
+                
+                        var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
+                
+                        //選択状態を切り替える
+                        if(isSelected){ //選択状態の場合
+                            d.$3bindedSelectionLayerSVGElement.style("visibility","hidden") //非表示にする
+                                .attr("data-selected", "false"); //選択解除
+                            lastSelectedData = null; //最終選択Nodeをnullにする(すべてのNodeが非選択になる為)
+                
+                        }else{ //非選択状態の場合
+                            d.$3bindedSelectionLayerSVGElement.style("visibility",null) //表示状態にする
+                                .attr("data-selected", "true"); //選択
+                            
+                            lastSelectedData = d; //最終選択Nodeの記憶
+                        }
+                
+                    });
+
+                    // Nodeに対する単一編集イベント
+                    d.$3bindedSVGElement.on('dblclick', function(d){
+
+                        //External Componentが未loadの場合はハジく
+                        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
+                        
+                        if(nowEditng){ // 編集中の場合
+                                    // -> 発生し得ないルート
+                                    //    (直前に呼ばれる単一選択イベントによって、編集中が解除される為)
+                
+                            exitEditing(); //編集モードの終了
+                        
+                        }
+                
+                        //別ノードすべてを選択解除して、自分のノードのみ選択状態にする
+                        for(var i = 0 ; i < dataset.datas.length ; i++){
+                            if(dataset.datas[i].key != d.key){ //自分のノードでない場合
+                                dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden") //選択解除
+                                    .attr("data-selected", "false"); //選択解除
+                            
+                            }else{ //自分のノードの場合
+                                dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility",null) //選択
+                                    .attr("data-selected", "true"); //選択解除
+                            }
+                        }
+                        
+                        editSVGNodes();
+                        lastSelectedData = d; //最終選択Nodeの記憶
+                        propertyEditorsManager.focus(lastSelectedData);
+                
+                    });
+
+                    //Dragイベント用Buffer
+                    var bufTotalReport;
+                    var beforeDragInfo_nodes;
+                    var beforeDragInfo_mouse;
+
+                    // Nodeに対する Drag イベント
+                    d.$3bindedSVGElement.call(d3.drag()
+                        .on('start', function(d, i){
+
+                            if(!d3.event.active) simulation.alphaTarget(0.3).restart();
+                            
+                            bufTotalReport = {};
+                            bufTotalReport.type = 'change';
+                            bufTotalReport.allOK = false;
+                            bufTotalReport.allNG = true;
+                            bufTotalReport.reportsArr = {};
+                            bufTotalReport.reportsArr.datas = [];
+
+                            beforeDragInfo_nodes = [];
+
+                            //DragStartされたNodeの選択状態取得
+                            var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
+                            if(isSelected){ //選択状態の場合
+
+                                //選択状態にあるNodeをすべてDrag対象として追加するloop
+                                $3svgNodes.each(function(dataInItr, idxInItr){
+                                    var isSelectedInItr = (dataInItr.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
+                                    if(isSelectedInItr){ //選択状態の場合
+                                        // transformを取得
+                                        var attrTransformStr = dataInItr.$3bindedSVGElement.attr("transform");
+                                        if(attrTransformStr === null) attrTransformStr = "";
+                                        var transformObj = getTransformObj(attrTransformStr);
+
+                                        // Drag対象Nodeとして追加
+                                        beforeDragInfo_nodes.push({toThisData:dataInItr,
+                                                                x:dataInItr.coordinate.x,
+                                                                y:dataInItr.coordinate.y,
+                                                                scale:transformObj.scale});
+                                    }
+                                });
+
+                            }else{ //非選択状態の場合 -> 自分のNodeのみをDrag対象として追加
+
+                                // transformを取得
+                                var attrTransformStr = d.$3bindedSVGElement.attr("transform");
+                                if(attrTransformStr === null) attrTransformStr = "";
+                                var transformObj = getTransformObj(attrTransformStr);
+
+                                // Drag対象Nodeとして追加
+                                beforeDragInfo_nodes.push({toThisData:d,
+                                                        x:d.coordinate.x,
+                                                        y:d.coordinate.y,
+                                                        scale:transformObj.scale});
+                            }
+
+                            beforeDragInfo_mouse = {x:d3.event.x, y:d3.event.y};
+                        })
+                        .on('drag', function(d, i){
+                            
+                            //移動していない場合はハジく
+                            if(d3.event.dx == 0 && d3.event.dy == 0){return;}
+
+                            var draggingReports = {};
+                            draggingReports.type = 'change';
+                            draggingReports.allOK = true;
+                            draggingReports.allNG = true;
+                            draggingReports.reportsArr = {};
+                            draggingReports.reportsArr.datas = [];
+
+                            for(var idx = 0 ; idx < beforeDragInfo_nodes.length ; idx++){
+
+                                //座標していObjの生成
+                                var renderByThisObj = {
+                                    coordinate:{
+                                        x: beforeDragInfo_nodes[idx].x
+                                        + ((d3.event.x - beforeDragInfo_mouse.x) / beforeDragInfo_nodes[idx].scale),
+                                        y: beforeDragInfo_nodes[idx].y
+                                        + ((d3.event.y - beforeDragInfo_mouse.y) / beforeDragInfo_nodes[idx].scale)
+                                    }
+                                }
+
+                                var renderReport = renderSVGNode(beforeDragInfo_nodes[idx].toThisData, renderByThisObj);
+                                if(!renderReport.allOK){ //失敗が発生した場合
+                                    draggingReports.allOK = false;
+                                }
+                                if(!renderReport.allNG){ //成功が1つ以上ある場合
+                                    draggingReports.allNG = false;
+                                }
+                                draggingReports.reportsArr.datas.push(renderReport);
+
+                                beforeDragInfo_nodes[idx].toThisData.fx = renderByThisObj.coordinate.x;
+                                beforeDragInfo_nodes[idx].toThisData.fy = renderByThisObj.coordinate.y;
+
+                            }
+
+                            if(!draggingReports.allNG){ //1つ以上適用成功の場合
+                                draggingReports.message = draggingReports.reportsArr.datas.length + " node(s) moved.";
+                                overWriteScceededTransaction(draggingReports, bufTotalReport);
+                            }
+
+                        })
+                        .on('end', function(d, i){
+                            if(!d3.event.active) simulation.alphaTarget(0);
+                            
+                            for(var idx = 0 ; idx < beforeDragInfo_nodes.length ; idx++){
+                                beforeDragInfo_nodes[idx].toThisData.fx = null;
+                                beforeDragInfo_nodes[idx].toThisData.fy = null;
+                            }
+
+                            if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
+                                appendHistory(bufTotalReport);
+                            }
+                        })
+                    );
+                });
+
+            //増えた<g>要素に合わせて$node selectionを再調整
+            $3svgNodes = $3svgNodesGroup.selectAll("g.node");
+        }
+
+        //Linksの追加
+        if(treatThisObjects.indexOf("links") >= 0){ //"links"定義が存在する場合
             
-        $3svgLinks.enter()
-            .append("g")
-            .classed("link", true)
-            .each(function(d, i){
-                var bindedSVGLinkElement = this;
-                d.$3bindedSVGLinkElement = d3.select(bindedSVGLinkElement);
+        //dataset.links[]へ追加ループ
+            for(var i = 0 ; i < appendThisObjArr.links.length ; i++){
 
-                d.$3bindedSVGLinkElement.append("line")
-                    .attr("stroke-width", 2)
-                    .attr("marker-end", "url(#x1)") //todo ie11 では、画面をクリックしないと<line>, <marker>が描画されない
-                    .attr("stroke", "rgb(238, 255, 0)");
+                var toAppendObj = {};
+                mergeObj(appendThisObjArr.links[i], toAppendObj, false);
+                dataset.links.push(toAppendObj);
 
-                //todo linkのrender関数化?
-            });
-            
-        //増えた<g>要素に合わせて$node selectionを再調整
-        $3svgNodes = $3svgNodesGroup.selectAll("g.node");
-        $3svgLinks = $3svgLinksGroup.selectAll("g.link");
+                //todo
+                //nodeのkey重複確認ループで引っかかっ為にkey を変えていたら、
+                //ここでも変える
+            }
 
+            $3svgLinks = $3svgLinksGroup.selectAll("g.link")
+                .data(dataset.links);
+                
+            $3svgLinks.enter()
+                .append("g")
+                .classed("link", true)
+                .each(function(d, i){
+                    var bindedSVGLinkElement = this;
+                    d.$3bindedSVGLinkElement = d3.select(bindedSVGLinkElement);
+
+                    d.$3bindedSVGLinkElement.append("line")
+                        .attr("stroke-width", 2)
+                        .attr("marker-end", "url(#x1)") //todo ie11(ノロいPC) では、画面をクリックしないと<line>, <marker>が描画されない
+                        .attr("stroke", "rgb(238, 255, 0)");
+
+                    //todo linkのrender関数化?
+                });
+
+            //増えた<g>要素に合わせて$node selectionを再調整
+            $3svgLinks = $3svgLinksGroup.selectAll("g.link");
+        }
+        
         startForce();
 
         appendingTotalReport.message = appendingTotalReport.reportsArr.datas.length.toString() + " node(s) appended.";
