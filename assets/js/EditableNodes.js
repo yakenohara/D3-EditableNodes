@@ -2796,91 +2796,207 @@
             }
         }
 
-        //stroke-width
+        if(typeof renderByThisObj.line.stroke != 'undefined'){ //stroke指定有り
+
+            applyStyleSafely_StringToString(bindedData.line,
+                                            $3SVGLinkElement_line,
+                                            inlineStyleOf_SVGlinkElem_line,
+                                            computedStyleOf_SVGlinkElem_line,
+                                            "stroke",
+                                            "stroke",
+                                            renderByThisObj.line,
+                                            reportObj.PrevObj.line,
+                                            reportObj.RenderedObj.line,
+                                            reportObj.FailuredMessages.line
+            );
+
+            untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("stroke"), 1); //未処理プロパティリストから削除
+        }
+        
         if(typeof renderByThisObj.line.stroke_width != 'undefined'){ //stroke-width指定有り
-            
-            //変更前状態を取得
-            var prevStrokeWidth = inlineStyleOf_SVGlinkElem_line.getPropertyValue("stroke-width");
-            if(prevStrokeWidth == ""){
-                prevStrokeWidth = null;
-            }
 
-            if(renderByThisObj.line.stroke_width === null){ //削除指定の場合
-                $3SVGLinkElement_line.style("stroke-width", null);
+            applyStyleSafely_NumberToPixel(bindedData.line,
+                                           $3SVGLinkElement_line,
+                                           inlineStyleOf_SVGlinkElem_line,
+                                           computedStyleOf_SVGlinkElem_line,
+                                           "stroke_width",
+                                           "stroke-width",
+                                           renderByThisObj.line,
+                                           reportObj.PrevObj.line,
+                                           reportObj.RenderedObj.line,
+                                           reportObj.FailuredMessages.line
+            );
 
-                if(prevStrokeWidth !== null){
-                    prevStrokeWidth = parseFloat(prevStrokeWidth);
-                }
-                reportObj.PrevObj.line.stroke_width = prevStrokeWidth;
-                reportObj.RenderedObj.line.stroke_width = null;
-                delete bindedData.line.stroke_width;
-            
-            }else if(typeof renderByThisObj.line.stroke_width != 'number'){ //型がnumberでない場合
-                var wrn = "Wrong type specified in \`renderByThisObj.line.stroke_width\`. " +
-                        "specified type:\`" + (typeof (renderByThisObj.line.stroke_width)) + "\`, expected type:\`number\`.";
-                console.warn(wrn);
-                reportObj.FailuredMessages.line.stroke_width = wrn;
-            
-            }else{ //型がnumber
-                var pixcelNumberRegex = new RegExp(/^[-]?[0-9]+(\.[0-9]+)?px$/);
-                var applyThisStrokeWidth = renderByThisObj.line.stroke_width + "px";
-
-                if(!(pixcelNumberRegex.test(applyThisStrokeWidth))){ //指定数値が `0.0px`形式にならない場合(ex: NaNを指定)
-                    var wrn = "Invalid Number \`" + renderByThisObj.line.stroke_width.toString() + "\` specified.";
-                    console.warn(wrn);
-                    reportObj.FailuredMessages.line.stroke_width = wrn;
-
-                }else{
-                    $3SVGLinkElement_line.style("stroke-width", applyThisStrokeWidth);
-
-                    //適用可否チェック
-                    var appliedStrokeWidth = computedStyleOf_SVGlinkElem_line.getPropertyValue("stroke-width");
-
-                    if(!(pixcelNumberRegex.test(appliedStrokeWidth))){ // `0.0px`形式に設定できていない場合
-                                                                       // 指数表記になるような極端な数値も、このルートに入る
-    
-                        var wrn = "Specified style in \`renderByThisObj.line.stroke_width\` did not applied. " +
-                                  "specified style:\`" + applyThisStrokeWidth + "\`, browser applied style:\`" + appliedStrokeWidth + "\`.";
-                        console.warn(wrn);
-                        reportObj.FailuredMessages.line.stroke_width = wrn;
-    
-                        $3SVGLinkElement_line.style("stroke-width", prevStrokeWidth); //変更前の状態に戻す
-
-                    }else{
-                        if( Math.abs(parseFloat(appliedStrokeWidth) - renderByThisObj.line.stroke_width) >= 0.1){ //適用されたstrke-widthと指定したstrke-widthの差分が大きすぎる
-                            var wrn = "Specified style in \`renderByThisObj.line.stroke_width\` did not applied. " +
-                                      "specified style:\`" + applyThisStrokeWidth + "\`, browser applied style:\`" + appliedStrokeWidth + "\`.";
-                            console.warn(wrn);
-                            reportObj.FailuredMessages.line.stroke_width = wrn;
-    
-                            $3SVGLinkElement_line.style("stroke-width", prevStrokeWidth); //変更前の状態に戻す
-                        
-                        }else{ //適用された場合
-                            if(prevStrokeWidth !== null){
-                                prevStrokeWidth = parseFloat(prevStrokeWidth);
-                            }
-                            reportObj.PrevObj.line.stroke_width = prevStrokeWidth;
-                            reportObj.RenderedObj.line.stroke_width = renderByThisObj.line.stroke_width;
-                            bindedData.line.stroke_width = renderByThisObj.line.stroke_width;
-                        }
-                    }
-                }
-            }
             untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("stroke_width"), 1); //未処理プロパティリストから削除
         }
 
+        //仮の処理
         $3SVGLinkElement_line
-            .attr("marker-end", "url(#arrow1)") //note ie11(ノロいPC) では、
+            .attr("marker-end", "url(#arrow1)");//note ie11(ノロいPC) では、
                                                 //stroke-width等との組み合わせによりおかしな事が起こりやすい
                                                 // e.g.
-                                                //  ・strke-widthが、<marker>に対してのみ適用される)(<line>自体に適用されない)
-                                                //  ・<line>の描画が停止する
-            .attr("stroke", "rgb(238, 255, 0)");
+                                                //  * strke-widthが、<marker>に対してのみ適用される)(<line>自体に適用されない)
+                                                //  * <line>の描画が停止する
 
-        reportObj.allNG = false;
-        
+        //Unkdown Propertyに対する警告
+        untreatedPropertyNames.forEach(function(propertyName,idx){
+            var wrn = "Unkdown Property \`line." + propertyName + "\` specified.";
+            console.warn(wrn);
+            reportObj.FailuredMessages.line[propertyName] = wrn;
+        });
+
+        //変更レポート用警告チェック
+        if(Object.keys(reportObj.FailuredMessages.line).length > 0 ||
+           Object.keys(reportObj.FailuredMessages.coordinate).length > 0){ //警告が1つ以上ある場合
+            reportObj.allOK = false;
+        }
+        if(Object.keys(reportObj.RenderedObj.line).length > 0 ||
+           Object.keys(reportObj.RenderedObj.coordinate).length > 0){ //成功が1つ以上ある場合
+            reportObj.allNG = false;
+        }
+
+        //変更レポートを返却
         return reportObj;
     }
+
+    //<Utilities for style>----------------------------------------------------------------------------
+
+    // "abcdef"(string) -> "abcdef"(string)
+    function applyStyleSafely_StringToString(bindedObj,
+                                             $3element,
+                                             inlineStyleOfElement,
+                                             computedtyleOfElement,
+                                             propertyName,
+                                             attributeName,
+                                             renderByThisObj,
+                                             prevReportObj,
+                                             renderedReportObj,
+                                             FailuredMessagesObj){
+
+        var previousAttribute = inlineStyleOfElement.getPropertyValue(attributeName);
+        if(previousAttribute == ""){ //未設定の場合
+            previousAttribute = null;
+        }
+
+        if(renderByThisObj[propertyName] === null){ //削除指定の場合
+            $3element.style(attributeName, null);
+
+            prevReportObj[propertyName] = previousAttribute;
+            renderedReportObj[propertyName] = null;
+            delete bindedObj[propertyName];
+
+        }else if(typeof renderByThisObj[propertyName] != 'string'){ //型がstringでない場合
+            var wrn = "Wrong type specified in \`" + propertyName + "\`. " +
+                      "specified type:\`" + (typeof (renderByThisObj[propertyName])) + "\`, expected type:\`string\`.";
+            console.warn(wrn);
+            FailuredMessagesObj[propertyName] = wrn;
+        
+        }else{ //型はstring
+            $3element.style(attributeName, renderByThisObj[propertyName]);
+
+            //適用可否チェック
+            var appliedAttribute = computedtyleOfElement.getPropertyValue(attributeName);
+
+            if(renderByThisObj[propertyName] != appliedAttribute){ //computed styleに適用されなかった場合
+                var wrn  = "Specified style in \`" + propertyName + "\` did not applied. " +
+                           "specified style:\`" + renderByThisObj[propertyName] + "\`, browser applied style:\`" + appliedAttribute + "\`.";
+                console.warn(wrn);
+                FailuredMessagesObj[propertyName] = wrn;
+
+                $$3element.style(attributeName, previousAttribute); //変更前の状態に戻す
+            
+            }else{ //適用された場合
+                prevReportObj[propertyName] = previousAttribute;
+                renderedReportObj[propertyName] = renderByThisObj[propertyName];
+                bindedObj[propertyName]= renderByThisObj[propertyName];
+            }
+        }
+    }
+
+    // 0.0(number) -> "0.0px"(string)
+    function applyStyleSafely_NumberToPixel(bindedObj,
+                                            $3element,
+                                            inlineStyleOfElement,
+                                            computedtyleOfElement,
+                                            propertyName,
+                                            attributeName,
+                                            renderByThisObj,
+                                            prevReportObj,
+                                            renderedReportObj,
+                                            FailuredMessagesObj){
+            
+        //変更前状態を取得
+        var previousAttribute = inlineStyleOfElement.getPropertyValue(attributeName);
+        if(previousAttribute == ""){
+            previousAttribute = null;
+        }
+
+        if(renderByThisObj[propertyName] === null){ //削除指定の場合
+            $3element.style(attributeName, null); //削除
+
+            if(previousAttribute !== null){
+                previousAttribute = parseFloat(previousAttribute); // "0.0px"(string) -> 0.0(number) 形式に変換
+            }
+            prevReportObj[propertyName] = previousAttribute;
+            renderedReportObj[propertyName] = null;
+            delete bindedObj[propertyName];
+        
+        }else if(typeof renderByThisObj[propertyName] != 'number'){ //型がnumberでない場合
+            var wrn = "Wrong type specified in \`" + propertyName + "\`. " +
+                      "specified type:\`" + (typeof (renderByThisObj[propertyName])) + "\`, expected type:\`number\`.";
+            console.warn(wrn);
+            FailuredMessagesObj[propertyName] = wrn;
+        
+        }else{ //型がnumber
+            var pixcelNumberRegex = new RegExp(/^[-]?[0-9]+(\.[0-9]+)?px$/);
+            var applyThisAttribute = renderByThisObj[propertyName] + "px";
+
+            if(!(pixcelNumberRegex.test(applyThisAttribute))){ //指定数値が `0.0px`形式にならない場合(ex: NaNを指定)
+                var wrn = "Invalid Number \`" + renderByThisObj[propertyName].toString() + "\` specified.";
+                console.warn(wrn);
+                FailuredMessagesObj[propertyName] = wrn;
+
+            }else{
+                $3element.style(attributeName, applyThisAttribute);
+
+                //適用可否チェック
+                var appliedAttribute = computedtyleOfElement.getPropertyValue(attributeName);
+
+                if(!(pixcelNumberRegex.test(appliedAttribute))){ // `0.0px`形式に設定できていない場合
+                                                                 // 指数表記になるような極端な数値も、このルートに入る
+
+                    var wrn = "Specified style in \`" + propertyName + "\` did not applied. " +
+                              "specified style:\`" + applyThisAttribute + "\`, browser applied style:\`" + appliedAttribute + "\`.";
+                    console.warn(wrn);
+                    FailuredMessagesObj[propertyName] = wrn;
+
+                    $3element.style(attributeName, previousAttribute); //変更前の状態に戻す
+
+                }else{
+
+                    //適用されたstrke-widthと指定したstrke-widthの差分チェック
+                    if( Math.abs(parseFloat(appliedAttribute) - renderByThisObj[propertyName]) >= 0.1){
+                        var wrn = "Specified style in \`" + propertyName + "\` did not applied. " +
+                                  "specified style:\`" + applyThisAttribute + "\`, browser applied style:\`" + appliedAttribute + "\`.";
+                        console.warn(wrn);
+                        FailuredMessagesObj[propertyName] = wrn;
+
+                        $3element.style(attributeName, previousAttribute); //変更前の状態に戻す
+                    
+                    }else{ //適用された場合
+                        if(previousAttribute !== null){
+                            previousAttribute = parseFloat(previousAttribute); // "0.0px"(string) -> 0.0(number) 形式に変換
+                        }
+                        prevReportObj[propertyName] = previousAttribute;
+                        renderedReportObj[propertyName] = renderByThisObj[propertyName];
+                        bindedObj[propertyName] = renderByThisObj[propertyName];
+                    }
+                }
+            }
+        }   
+    }
+
+    //---------------------------------------------------------------------------</Utilities for style>
 
     //
     //オブジェクトをマージする

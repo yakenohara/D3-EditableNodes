@@ -38,7 +38,8 @@
              "target": 1,
              "type":"line",
              "line":{
-                 "stroke_width":1
+                 "stroke_width":1,
+                 "stroke":"rgb(43, 255, 0)"
              }
         },
         {
@@ -46,7 +47,8 @@
              "target": 2,
              "type":"line",
              "line":{
-                 "stroke_width":3
+                 "stroke_width":3,
+                 "stroke":"rgb(0, 47, 255)"
              }
         },
         {
@@ -54,7 +56,8 @@
              "target": 3,
              "type":"line",
              "line":{
-                 "stroke_width":5
+                 "stroke_width":5,
+                 "stroke":"rgb(255, 0, 221)"
              }
         }
     ]
