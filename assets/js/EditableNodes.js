@@ -557,8 +557,13 @@
                     try{
                         var parsedObj = JSON.parse(file_reader.result); //SyntaxErrorをthrowする可能性がある
                         var appendingTotalReport = appendNodes(parsedObj);
-                        appendHistory(appendingTotalReport);
-                    
+                        
+                        if(appendingTotalReport.allNG){ //有効なobjectが存在しなかった場合
+                            console.warn("\`" + nm + "\` has no available object.");
+                        }else{
+                            appendHistory(appendingTotalReport);
+                        }
+
                     }catch(e){ //SyntaxErrorの場合
                         console.warn(e);
                     }
@@ -784,20 +789,17 @@
 
         //不明なObject定義が存在する場合
         untreatedPropertyNames.forEach(function(objName,idx){
-            var wrn = "Unkdown Object \`" + objName + "\` defined.";
+            var wrn = "Unkdown Object \`" + objName + "\` defined. This Object will ignored.";
             console.warn(wrn);
         });
 
         if(!formatIsOK){ //NGフォーマットが存在する場合
-            return;
+            return appendingTotalReport; //allNGで返す
         }
 
         if(treatThisObjects.length == 0){ //有効なObjectが存在しない
-            var wrn = "Valid Object is not defined.";
-            console.warn(wrn);
-            return;
+            return appendingTotalReport; //allNGで返す
         }
-
 
         //Nodesの追加
         if(treatThisObjects.indexOf("datas") >= 0){ //"datas"定義が存在する場合
@@ -1126,6 +1128,7 @@
         
         startForce();
 
+        //todo message 調整
         appendingTotalReport.message = appendingTotalReport.reportsArr.datas.length.toString() + " node(s) appended.";
         return appendingTotalReport;
     }
