@@ -2749,14 +2749,17 @@
         var untreatedPropertyNames = Object.keys(renderByThisObj.line); //未処理プロパティリスト
 
         //line存在チェック
-        var $3SVGLinkElement_DOTline;
+        var $3SVGLinkElement_line;
         var fc = bindedData.$3bindedSVGLinkElement.node().firstChild;
         if(!(fc)){ //lineの描画要素が存在しない場合(= 1回目の描画の場合)
-            $3SVGLinkElement_DOTline = bindedData.$3bindedSVGLinkElement.append("line");
+            $3SVGLinkElement_line = bindedData.$3bindedSVGLinkElement.append("line");
         
         }else{
-            $3SVGLinkElement_DOTline = d3.select(fc);
+            $3SVGLinkElement_line = d3.select(fc);
         }
+
+        var inlineStyleOf_SVGlinkElem_line = $3SVGLinkElement_line.node().style;
+        var computedStyleOf_SVGlinkElem_line = window.getComputedStyle($3SVGLinkElement_line.node());
 
         //座標更新
         if(typeof (renderByThisObj.coordinate) != 'undefined'){
@@ -2771,7 +2774,7 @@
                 if(typeof (renderByThisObj.coordinate[axis]) != 'undefined'){ //座標指定あり
 
                     //変更前状態を取得
-                    var prevAxisValStr = $3SVGLinkElement_DOTline.attr(axis);
+                    var prevAxisValStr = $3SVGLinkElement_line.attr(axis);
                     
                     if(typeof (renderByThisObj.coordinate[axis]) != 'number'){ //型がnumberでない場合
                         var wrn = "Wrong type specified in \`renderByThisObj.coordinate." + axis + "\`. "
@@ -2780,7 +2783,7 @@
                         reportObj.FailuredMessages.coordinate[axis] = wrn;
                     
                     }else{ //型がnumber
-                        $3SVGLinkElement_DOTline.attr(axis, renderByThisObj.coordinate[axis]);
+                        $3SVGLinkElement_line.attr(axis, renderByThisObj.coordinate[axis]);
 
                         if(prevAxisValStr !== null){
                             prevAxisValStr = parseFloat(prevAxisValStr);
@@ -2793,9 +2796,85 @@
             }
         }
 
-        $3SVGLinkElement_DOTline
-            .attr("stroke-width", 2)
-            .attr("marker-end", "url(#arrow1)") //note ie11(ノロいPC) では、画面をクリックしないと<line>, <marker>が描画されない
+        //stroke-width
+        if(typeof renderByThisObj.line.stroke_width != 'undefined'){ //stroke-width指定有り
+            
+            //変更前状態を取得
+            var prevStrokeWidth = inlineStyleOf_SVGlinkElem_line.getPropertyValue("stroke-width");
+            if(prevStrokeWidth == ""){
+                prevStrokeWidth = null;
+            }
+
+            if(renderByThisObj.line.stroke_width === null){ //削除指定の場合
+                $3SVGLinkElement_line.style("stroke-width", null);
+
+                if(prevStrokeWidth !== null){
+                    prevStrokeWidth = parseFloat(prevStrokeWidth);
+                }
+                reportObj.PrevObj.line.stroke_width = prevStrokeWidth;
+                reportObj.RenderedObj.line.stroke_width = null;
+                delete bindedData.line.stroke_width;
+            
+            }else if(typeof renderByThisObj.line.stroke_width != 'number'){ //型がnumberでない場合
+                var wrn = "Wrong type specified in \`renderByThisObj.line.stroke_width\`. " +
+                        "specified type:\`" + (typeof (renderByThisObj.line.stroke_width)) + "\`, expected type:\`number\`.";
+                console.warn(wrn);
+                reportObj.FailuredMessages.line.stroke_width = wrn;
+            
+            }else{ //型がnumber
+                var pixcelNumberRegex = new RegExp(/^[-]?[0-9]+(\.[0-9]+)?px$/);
+                var applyThisStrokeWidth = renderByThisObj.line.stroke_width + "px";
+
+                if(!(pixcelNumberRegex.test(applyThisStrokeWidth))){ //指定数値が `0.0px`形式にならない場合(ex: NaNを指定)
+                    var wrn = "Invalid Number \`" + renderByThisObj.line.stroke_width.toString() + "\` specified.";
+                    console.warn(wrn);
+                    reportObj.FailuredMessages.line.stroke_width = wrn;
+
+                }else{
+                    $3SVGLinkElement_line.style("stroke-width", applyThisStrokeWidth);
+
+                    //適用可否チェック
+                    var appliedStrokeWidth = computedStyleOf_SVGlinkElem_line.getPropertyValue("stroke-width");
+
+                    if(!(pixcelNumberRegex.test(appliedStrokeWidth))){ // `0.0px`形式に設定できていない場合
+                                                                       // 指数表記になるような極端な数値も、このルートに入る
+    
+                        var wrn = "Specified style in \`renderByThisObj.line.stroke_width\` did not applied. " +
+                                  "specified style:\`" + applyThisStrokeWidth + "\`, browser applied style:\`" + appliedStrokeWidth + "\`.";
+                        console.warn(wrn);
+                        reportObj.FailuredMessages.line.stroke_width = wrn;
+    
+                        $3SVGLinkElement_line.style("stroke-width", prevStrokeWidth); //変更前の状態に戻す
+
+                    }else{
+                        if( Math.abs(parseFloat(appliedStrokeWidth) - renderByThisObj.line.stroke_width) >= 0.1){ //適用されたstrke-widthと指定したstrke-widthの差分が大きすぎる
+                            var wrn = "Specified style in \`renderByThisObj.line.stroke_width\` did not applied. " +
+                                      "specified style:\`" + applyThisStrokeWidth + "\`, browser applied style:\`" + appliedStrokeWidth + "\`.";
+                            console.warn(wrn);
+                            reportObj.FailuredMessages.line.stroke_width = wrn;
+    
+                            $3SVGLinkElement_line.style("stroke-width", prevStrokeWidth); //変更前の状態に戻す
+                        
+                        }else{ //適用された場合
+                            if(prevStrokeWidth !== null){
+                                prevStrokeWidth = parseFloat(prevStrokeWidth);
+                            }
+                            reportObj.PrevObj.line.stroke_width = prevStrokeWidth;
+                            reportObj.RenderedObj.line.stroke_width = renderByThisObj.line.stroke_width;
+                            bindedData.line.stroke_width = renderByThisObj.line.stroke_width;
+                        }
+                    }
+                }
+            }
+            untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("stroke_width"), 1); //未処理プロパティリストから削除
+        }
+
+        $3SVGLinkElement_line
+            .attr("marker-end", "url(#arrow1)") //note ie11(ノロいPC) では、
+                                                //stroke-width等との組み合わせによりおかしな事が起こりやすい
+                                                // e.g.
+                                                //  ・strke-widthが、<marker>に対してのみ適用される)(<line>自体に適用されない)
+                                                //  ・<line>の描画が停止する
             .attr("stroke", "rgb(238, 255, 0)");
 
         reportObj.allNG = false;

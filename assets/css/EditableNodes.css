@@ -22,6 +22,11 @@
 
 }
 
+#editableNode .links .link line{
+    stroke-width: 2px;
+
+}
+
 #editableNode .selectionLayers .selectionLayer{
     fill: rgba(40, 207, 96, 0.644);
 }
