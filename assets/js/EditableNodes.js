@@ -66,11 +66,12 @@
     
     /* ---------------------------------------------------------------------------------------------</Hard cords> */
     
-    var dataset = { //Bind用Dataset
+    //todo localize
+    dataset = { //Bind用Dataset
         datas:[],
         links:[]
     };
-    transactionHistory = [];  //history //todo localize
+    transactionHistory = [];  //history
 
     var maxKey = -1; //dataset.datas[]の最大key
     var nowEditng = false;　      //Property Edit Console が起動中かどうか
@@ -1122,7 +1123,7 @@
                     }
 
                     var renderReport_link = renderSVGLink(d,d); //SVGレンダリング
-                    //todo backToDefaulIfWarn_link(renderReport, d);
+                    backToDefaulIfWarnForLink(renderReport_link, d);
                     
                     if(!renderReport_link.allOK){ //失敗が発生した場合
                         appendingTotalReport.allOK = false;
@@ -3174,6 +3175,33 @@
         //Property削除ループ
         propertyNames.forEach(function(propertyName, idx){
             delete bindedData.text[propertyName];
+        });
+        
+    }
+
+    function backToDefaulIfWarnForLink(reportObj, bindedData){
+
+        if(typeof reportObj.RenderedObj.type != 'undefined'){
+            switch(reportObj.RenderedObj.type){
+                case "line":
+                {
+                    backToDefaulIfWarnForLink_LineType(reportObj, bindedData);
+                }
+                break;
+
+                default:
+                break;
+            }
+        }
+    }
+
+    function backToDefaulIfWarnForLink_LineType(reportObj, bindedData){
+
+        var propertyNames = Object.keys(reportObj.FailuredMessages.line); //Property Names Array to delete
+
+        //Property削除ループ
+        propertyNames.forEach(function(propertyName, idx){
+            delete bindedData.line[propertyName];
         });
         
     }
