@@ -70,7 +70,7 @@
         datas:[],
         links:[]
     };
-    var transactionHistory = [];  //history
+    transactionHistory = [];  //history //todo localize
 
     var maxKey = -1; //dataset.datas[]の最大key
     var nowEditng = false;　      //Property Edit Console が起動中かどうか
@@ -490,7 +490,7 @@
 
     $3SVGDrawingAreaElement.append("defs")
         .append("marker")
-        .attr("id", "x1")
+        .attr("id", "arrow1")
         .attr("refX", 40)
         .attr("refY", 1)
         .attr("viewBox", "0 -10 20 20")
@@ -759,7 +759,7 @@
     // }
 
     // -------------------------------------------------------------------------------</TBD 複数Nodeのブラシ選択>
-
+    
     function appendNodes(appendThisObjArr){
 
         var appendingTotalReport = {};
@@ -768,6 +768,7 @@
         appendingTotalReport.allNG = true;
         appendingTotalReport.reportsArr = {};
         appendingTotalReport.reportsArr.datas = [];
+        appendingTotalReport.reportsArr.links = [];
 
         var treatThisObjects = [];
         var untreatedPropertyNames = Object.keys(appendThisObjArr); //未処理プロパティリスト
@@ -870,7 +871,7 @@
                         appendingTotalReport.allNG = false;
                     }
 
-                    appendingTotalReport.reportsArr.datas.push(renderReport); //todo link の追加と共通化
+                    appendingTotalReport.reportsArr.datas.push(renderReport);
 
                     //Property変更用EventListener
                     bindedSVGElement.addEventListener("propertyEditConsole_rerender",function(eventObj){
@@ -1114,12 +1115,34 @@
                     var bindedSVGLinkElement = this;
                     d.$3bindedSVGLinkElement = d3.select(bindedSVGLinkElement);
 
-                    d.$3bindedSVGLinkElement.append("line")
-                        .attr("stroke-width", 2)
-                        .attr("marker-end", "url(#x1)") //todo ie11(ノロいPC) では、画面をクリックしないと<line>, <marker>が描画されない
-                        .attr("stroke", "rgb(238, 255, 0)");
+                    if(typeof d.coordinate == 'undefined'){ //座標定義追加
+                        d.coordinate = {};
+                    }
 
-                    //todo linkのrender関数化?
+                    var renderReport_link = renderLineTypeSVGLink(d,d); //SVGレンダリング
+                    //todo backToDefaulIfWarn_link(renderReport, d);
+                    
+                    if(!renderReport_link.allOK){ //失敗が発生した場合
+                        appendingTotalReport.allOK = false;
+                    }
+
+                    if(!renderReport_link.allNG){ //成功が1つ以上ある場合
+                        appendingTotalReport.allNG = false;
+                    }
+                    
+                    appendingTotalReport.reportsArr.links.push(renderReport_link);
+
+                    d.$3bindedSVGLinkElement.on('click', function(d){
+
+                        //todo selection control
+                        console.log("clicked.");
+                    });
+
+                    d.$3bindedSVGLinkElement.on('dblclick', function(d){
+
+                        //todo selection control and launch editor
+                        console.log("dbl clicked.");
+                    });
                 });
 
             //増えた<g>要素に合わせて$node selectionを再調整
@@ -1242,10 +1265,21 @@
                     var linkGroupElem = this;
                     var $3linkSVGElem = d3.select(linkGroupElem.firstChild);
 
-                    $3linkSVGElem.attr("x1", d.source.x);
-                    $3linkSVGElem.attr("y1", d.source.y);
-                    $3linkSVGElem.attr("x2", d.target.x);
-                    $3linkSVGElem.attr("y2", d.target.y);
+                    // $3linkSVGElem.attr("x1", d.source.x);
+                    // $3linkSVGElem.attr("y1", d.source.y);
+                    // $3linkSVGElem.attr("x2", d.target.x);
+                    // $3linkSVGElem.attr("y2", d.target.y);
+
+                    var renderByThisObj = {
+                        coordinate:{
+                            x1:d.source.x,
+                            y1:d.source.y,
+                            x2:d.target.x,
+                            y2:d.target.y
+                        }
+                    }
+
+                    renderLineTypeSVGLink(d, renderByThisObj);
                     
 
                 });
@@ -2572,6 +2606,84 @@
         }
 
         //変更レポートを返却
+        return reportObj;
+    }
+
+    function renderLineTypeSVGLink(bindedData, renderByThisObj){
+
+        //変更レポート
+        var reportObj = {
+            // key:bindedData.key,
+            allOK:true,
+            allNG:true,
+            PrevObj:{
+                line: {},
+                coordinate: {}
+            },
+            RenderedObj:{
+                line: {},
+                coordinate: {}
+            },
+            FailuredMessages:{
+                line: {},
+                coordinate: {}
+            }
+        };
+
+        // var untreatedPropertyNames = Object.keys(renderByThisObj.line); //未処理プロパティリスト
+
+        //line存在チェック
+        var $3SVGLinkElement_DOTline;
+        var fc = bindedData.$3bindedSVGLinkElement.node().firstChild;
+        if(!(fc)){ //lineの描画要素が存在しない場合(= 1回目の描画の場合)
+            $3SVGLinkElement_DOTline = bindedData.$3bindedSVGLinkElement.append("line");
+        
+        }else{
+            $3SVGLinkElement_DOTline = d3.select(fc);
+        }
+
+        //座標更新
+        if(typeof (renderByThisObj.coordinate) != 'undefined'){
+            
+            applyCoordinate("x1");
+            applyCoordinate("y1");
+            applyCoordinate("x2");
+            applyCoordinate("y2");
+
+            function applyCoordinate(axis){
+
+                if(typeof (renderByThisObj.coordinate[axis]) != 'undefined'){ //座標指定あり
+
+                    //変更前状態を取得
+                    var prevAxisValStr = $3SVGLinkElement_DOTline.attr(axis);
+                    
+                    if(typeof (renderByThisObj.coordinate[axis]) != 'number'){ //型がnumberでない場合
+                        var wrn = "Wrong type specified in \`renderByThisObj.coordinate." + axis + "\`. "
+                                  "specified type:\`" + (typeof (renderByThisObj.coordinate[axis])) + "\`, expected type:\`number\`.";
+                        console.warn(wrn);
+                        reportObj.FailuredMessages.coordinate[axis] = wrn;
+                    
+                    }else{ //型がnumber
+                        $3SVGLinkElement_DOTline.attr(axis, renderByThisObj.coordinate[axis]);
+
+                        if(prevAxisValStr !== null){
+                            prevAxisValStr = parseFloat(prevAxisValStr);
+                        }
+                        reportObj.PrevObj.coordinate[axis] = prevAxisValStr;
+                        reportObj.RenderedObj.coordinate[axis] = renderByThisObj.coordinate[axis];
+                        bindedData.coordinate[axis] = renderByThisObj.coordinate[axis];
+                    }
+                }
+            }
+        }
+
+        $3SVGLinkElement_DOTline
+            .attr("stroke-width", 2)
+            .attr("marker-end", "url(#arrow1)") //note ie11(ノロいPC) では、画面をクリックしないと<line>, <marker>が描画されない
+            .attr("stroke", "rgb(238, 255, 0)");
+
+        reportObj.allNG = false;
+        
         return reportObj;
     }
 
