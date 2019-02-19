@@ -1115,11 +1115,13 @@
                     var bindedSVGLinkElement = this;
                     d.$3bindedSVGLinkElement = d3.select(bindedSVGLinkElement);
 
+                    checkToBindLink(d); //link書式のチェック
+
                     if(typeof d.coordinate == 'undefined'){ //座標定義追加
                         d.coordinate = {};
                     }
 
-                    var renderReport_link = renderLineTypeSVGLink(d,d); //SVGレンダリング
+                    var renderReport_link = renderSVGLink(d,d); //SVGレンダリング
                     //todo backToDefaulIfWarn_link(renderReport, d);
                     
                     if(!renderReport_link.allOK){ //失敗が発生した場合
@@ -1262,14 +1264,6 @@
                 });
 
                 $3svgLinks.each(function(d, i){
-                    var linkGroupElem = this;
-                    var $3linkSVGElem = d3.select(linkGroupElem.firstChild);
-
-                    // $3linkSVGElem.attr("x1", d.source.x);
-                    // $3linkSVGElem.attr("y1", d.source.y);
-                    // $3linkSVGElem.attr("x2", d.target.x);
-                    // $3linkSVGElem.attr("y2", d.target.y);
-
                     var renderByThisObj = {
                         coordinate:{
                             x1:d.source.x,
@@ -1278,10 +1272,7 @@
                             y2:d.target.y
                         }
                     }
-
-                    renderLineTypeSVGLink(d, renderByThisObj);
-                    
-
+                    renderSVGLink(d, renderByThisObj);
                 });
             });
 
@@ -1440,6 +1431,7 @@
 
                         //変更レポートの追加
                         reportObj.PrevObj.type = bindedData.type;
+                        bindedData.type = "text";
                         reportObj.RenderedObj.type = "text";
                     }
                     break;
@@ -2609,7 +2601,131 @@
         return reportObj;
     }
 
+    function checkToBindLink(checkThisLink){
+
+        if(typeof checkThisLink.type == 'undefined'){ //type指定がない場合
+            console.warn("Type not specified. This data will be handled as \`line\` type.");
+            checkThisLink.type = "line";
+        }
+
+        if(typeof checkThisLink.type != 'string'){ //typeの型がstringでない場合
+            console.warn("Wrong type specified in \`checkThisLink.type\`. " +
+                        "specified type:\`" + (typeof (checkThisLink.type)) + "\`, expected type:\`string\`.\n" +
+                        "This data will be handled as \`line\` type.");
+            checkThisLink.type = "line";
+        }
+
+        var forceAsLink = false;
+
+        //不足オブジェクトのチェック&追加
+        switch(checkThisLink.type){
+            
+            case "line":
+            {
+                forceAsLink = true;
+            }
+            break;
+
+            default:
+            {
+                console.warn("unknown data type \`" + checkThisLink.type + "\` specified. This data will be handled as \`line\` type.");
+                checkThisLink.type = "line";
+                forceAsLink = true;
+            }
+            break;
+        }
+
+        if(forceAsLink){
+            //"line" type 固有の不足オブジェクトのチェック&追加
+            if(typeof (checkThisLink.line) == 'undefined'){
+                checkThisLink.line = {}; //空のオブジェクトを作る
+            }
+        }
+    }
+
+    function renderSVGLink(bindedData, renderByThisObj){
+
+        var $3SVGlinkElem = bindedData.$3bindedSVGLinkElement;
+        var reportObj;
+        var rerender = false;
+        var toAppendTypeRenderFail = "";
+        
+        //type指定チェック
+        if(typeof (renderByThisObj.type) != 'undefined'){ //type指定がある場合
+            if(typeof (renderByThisObj.type) != 'string'){ //型がstringでない
+                
+                toAppendTypeRenderFail = "Wrong type specified in \`renderByThisObj.type\`. " +
+                            "specified type:\`" + (typeof (renderByThisObj.type)) + "\`, expected type:\`string\`.";
+                console.warn(toAppendTypeRenderFail);            
+                //failure レポート はリレンダリング後に行う
+
+                rerender = true;
+            
+            }else{ //型がstring
+                switch(renderByThisObj.type){
+                    case "line":
+                    {
+                        //定義済みSVGElement構造の全削除
+                        while($3SVGlinkElem.node().firstChild){
+                            $3SVGlinkElem.node().removeChild($3SVGlinkElem.node().firstChild);
+                        }
+
+                        $3SVGlinkElem.append("line");
+                        
+                        //レンダリング
+                        reportObj = renderLineTypeSVGLink(bindedData, renderByThisObj);
+
+                        //変更レポートの追加
+                        reportObj.PrevObj.type = bindedData.type;
+                        bindedData.type = "line";
+                        reportObj.RenderedObj.type = "line";
+                    }
+                    break;
+            
+                    default:
+                    {
+                        toAppendTypeRenderFail = "Unknown type \`" + renderByThisObj.type + "\` specified in \`renderByThisObj.type\`. ";
+                        console.warn(toAppendTypeRenderFail);
+                        //failure レポート はリレンダリング後に行う
+
+                        rerender = true;
+                    }
+                    break;
+                }
+            }
+        
+        }else{ //type指定が存在しない場合
+            rerender = true;
+        }
+
+        if(rerender){
+            //前回のtypeでリレンダリングする
+            switch(bindedData.type){
+                case "line":
+                {
+                    reportObj = renderLineTypeSVGLink(bindedData, renderByThisObj);
+                }
+                break;
+
+                default:
+                break; //nothing to do
+            }
+
+            //type指定エラーがあった場合
+            if(toAppendTypeRenderFail != ""){
+                reportObj.FailuredMessages.type = toAppendTypeRenderFail;
+            }
+        }
+
+        return reportObj;
+    }
+
     function renderLineTypeSVGLink(bindedData, renderByThisObj){
+
+        //line property存在チェック
+        if(typeof (renderByThisObj.line) == 'undefined'){
+            renderByThisObj.line = {};
+        }
 
         //変更レポート
         var reportObj = {
@@ -2630,7 +2746,7 @@
             }
         };
 
-        // var untreatedPropertyNames = Object.keys(renderByThisObj.line); //未処理プロパティリスト
+        var untreatedPropertyNames = Object.keys(renderByThisObj.line); //未処理プロパティリスト
 
         //line存在チェック
         var $3SVGLinkElement_DOTline;
