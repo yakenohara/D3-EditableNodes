@@ -773,6 +773,8 @@
 
         var treatThisObjects = [];
         var untreatedPropertyNames = Object.keys(appendThisObjArr); //未処理プロパティリスト
+        var convToAvoidDupliKeyDifi = {};
+
         var formatIsOK = true;
         isThisArray("datas");
         isThisArray("links");
@@ -803,32 +805,220 @@
             return appendingTotalReport; //allNGで返す
         }
 
+        //<key定義チェック>------------------------------------------------------------------
+        if(treatThisObjects.indexOf("datas") >= 0){ //"datas"定義が存在する場合
+            
+            for(var i = 0 ; i < appendThisObjArr.datas.length ; i++){
+                
+                var xxxx = (typeof appendThisObjArr.datas[i].key);
+
+                switch(xxxx){
+                    case 'undefined':
+                    {
+                        appendThisObjArr.datas[i].key = i.toString();
+                    }
+                    break;
+
+                    case 'string':
+                    break; //nothing to do
+
+                    case 'number':
+                    {
+                        appendThisObjArr.datas[i].key = appendThisObjArr.datas[i].key.toString(); //文字列型に変換
+                    }
+                    break;
+
+                    default: //unknown な型の場合
+                    {
+                        console.warn("key \`" + appendThisObjArr.datas[i].key.toString() + "\` is defined as \`" + xxxx + "\` type. " +
+                                     "key \`" + i.toString() + "\` will apply.");
+                        appendThisObjArr.datas[i].key = i.toString();
+                    }
+                    break;
+                }
+            }
+
+            //appendThisObjArr内でkey重複チェック
+            var duplicateKeysInJson = false;
+            for(var i = 0 ; i < appendThisObjArr.datas.length ; i++){
+                for(var j = i+1 ; j < appendThisObjArr.datas.length ; j++ ){
+                    var eye = appendThisObjArr.datas[i].key;
+                    var jay = appendThisObjArr.datas[j].key;
+                    if(eye == jay){ //key重複がある場合
+                        console.error("Duplicate definition found in datas[" + i + "].key:\`" + eye + "\` and datas[" + j + "].key:\`" + jay + "\`");
+                        duplicateKeysInJson = true;
+                    }
+                }
+            }
+            if(duplicateKeysInJson){ //key重複が1件以上見つかった場合
+                return appendingTotalReport; //allNGで返す
+            }
+        }
+
+        if(treatThisObjects.indexOf("links") >= 0){ //"links"定義が存在する場合
+
+            //note 要素を削除する可能性があるので、デクリメントで網羅する
+            for(var i = (appendThisObjArr.links.length-1) ; i >= 0  ; i--){
+
+                var aaaa = isDefinedKeyInDatas("source");
+                var bbbb = isDefinedKeyInDatas("target");
+
+                //todo
+                //sourceとtargetが同じの場合
+
+                function isDefinedKeyInDatas(propertyName){
+
+                    var isDefined = true;
+                    var yyyy = (typeof appendThisObjArr.links[i][propertyName]);
+
+                    switch(yyyy){
+
+                        case 'undefined':
+                        {
+                            console.warn("links[" + i.toString() + "] does not have \`" + propertyName + "\` property. This link will be ignored.");
+                            isDefined = false;
+                        }
+                        break;
+                        
+                        case 'string':
+                        case 'number':
+                        {
+                            if(yyyy == 'number'){
+                                appendThisObjArr.links[i][propertyName] = appendThisObjArr.links[i][propertyName].toString(); //文字列型に変換
+                            }
+
+                            //指定キー存在チェック
+                            
+                            //<todo1> ここではチェックするだけにして、-----------
+                            //要素を削除する必要があるかどうかはlink挿入時に行う
+                            var j;
+                            for(var j = 0 ; j < appendThisObjArr.datas.length ; j++){
+                                if(appendThisObjArr.datas[j].key == appendThisObjArr.links[i][propertyName]){ //キーが存在する場合
+                                    break;
+                                }
+                            }
+                            if(j == appendThisObjArr.datas.length){ //keyが存在しない場合
+                                console.warn("links[" + i.toString() + "]." + propertyName + ":\`" + appendThisObjArr.links[i][propertyName] +
+                                             "\` is not defined in any datas[].key . This link will be ignored.");
+                                isDefined = false;
+                            }
+                            //----------------------------------------</todo>
+                        }
+                        break;
+
+                        default: //unknown な型の場合
+                        {
+                            console.warn("links[" + i.toString() + "]." + propertyName + " is defined as \`" + yyyy + "\` type. " +
+                                         "This link will be ignored.");
+                            isDefined = false;
+                        }
+                        break;
+                    }
+
+                    return isDefined;
+                }
+
+                if(appendThisObjArr.links[i].source == appendThisObjArr.links[i].target){ //source と target が同じ場合
+                    console.warn("links[" + i.toString() + "] defines same \`source\`,/\`target\`:" + appendThisObjArr.links[i].source +
+                                 "This link will be ignored.");
+
+                    aaaa = false;
+                }
+
+                if((!aaaa) || (!bbbb)){ //source or target の key 定義に誤りがあった場合
+                    appendThisObjArr.links.splice(i ,1); //削除
+                
+                }
+            }
+
+            if(appendThisObjArr.links.length == 0){ // key定義誤りがない状態の link が存在しない場合
+                treatThisObjects.splice(treatThisObjects.indexOf("links"), 1); //append処理対象から除外
+            }
+        }
+        //-----------------------------------------------------------------</key定義チェック>
+
         //Nodesの追加
         if(treatThisObjects.indexOf("datas") >= 0){ //"datas"定義が存在する場合
 
             //dataset.datas[]へ追加ループ
             for(var i = 0 ; i < appendThisObjArr.datas.length ; i++){
 
+                //オブジェクトコピー
                 var toAppendObj = {};
                 mergeObj(appendThisObjArr.datas[i], toAppendObj, false);
-                var appendedIdx = dataset.datas.push(toAppendObj) - 1;
 
-                if(typeof dataset.datas[appendedIdx].key == 'number'){ //keyに明示的な指定があった場合
+                if(toAppendObj.key == ""){ //空文字回避
+                    convToAvoidDupliKeyDifi[toAppendObj.key] = "EmptyString";
+                    toAppendObj.key = "EmptyString";
+                }
 
-                    //key重複確認ループ
-                    for(var j = appendedIdx-1 ; j >= 0 ; j--){
+                //key重複チェック
+                var duplicatedData;
+                duplicatedData = getBindedDataFromKey(toAppendObj.key);
+                if(typeof duplicatedData != 'undefined'){ //重複があった場合
+                    
+                    var testVal;
+
+                    var stringInFront;
+                    //ieee754 の 倍精度浮動小数点数 で正確に表せる整数値(より1桁少なく)まで取り出す
+                    var integerInLast = toAppendObj.key.match(/(\d){1,15}$/);
+
+                    if(integerInLast === null){ //数値部分が存在しない場合
+                        stringInFront = toAppendObj.key + "_";
+                        integerInLast = 2;
+                    
+                    }else{ //数値部分が存在する場合
+                        stringInFront = toAppendObj.key.substr(0, toAppendObj.key.length - integerInLast[0].length); //マッチした部分以外を抽出
+                        testVal = parseInt(integerInLast) + 1;
+                        if(testVal.toString().length > 15){
+                            stringInFront = toAppendObj.key + "_";
+                            integerInLast = 2;
+                        }else{
+                            integerInLast = testVal;
+                        }
                         
-                        if(dataset.datas[j].key == dataset.datas[appendedIdx].key){ //重複があった場合
-                            maxKey++;
-                            console.warn("duplicate key \`" + dataset.datas[appendedIdx].key.toString() + "\` specified. unique key \`" + maxKey.toString() + "\` will apply.");
-                            dataset.datas[appendedIdx].key = maxKey; //重複しないkeyで上書き
+                    }
+
+                    // Unique Key 生成
+                    while(true){
+                        var testKey = stringInFront + integerInLast.toString();
+                        
+                        duplicatedData = getBindedDataFromKey(testKey);
+                        if(typeof duplicatedData == 'undefined'){ //重複がなかった場合
+                            console.warn("datas[" + i + "\].key:\`" + appendThisObjArr.datas[i].key  + "\` is already used. " +
+                                         "Unique key:\`" + testKey + "\` will apply.");
+                            convToAvoidDupliKeyDifi[toAppendObj.key] = testKey; //key名変更を記録
+                            toAppendObj.key = testKey; //重複しないkeyで上書き
                             //note appendingTotalReport.AllOK は変更しない (NodeRenderingに失敗したわけではない為)
                             break;
                         }
-                    }
 
-                }else{ //keyに明示的な指定がなかった場合
-                    dataset.datas[appendedIdx].key = (++maxKey); //重複しないkeyを指定
+                        testVal = integerInLast + 1;
+                        if(testVal.toString().length > 15){
+                            stringInFront = stringInFront + integerInLast.toString() + "_";
+                            integerInLast = 2;
+                        }else{
+                            integerInLast = testVal;
+                        }
+                    }
+                }
+
+                var appendedIdx = dataset.datas.push(toAppendObj) - 1;
+
+                //既存のdatas[]内でのkey重複チェック
+                for(var j = appendedIdx-1 ; j >= 0 ; j--){
+                            
+                    if(dataset.datas[j].key == dataset.datas[appendedIdx].key){ //重複があった場合
+
+                        //todo generateした文字列が重複する可能性回避
+                        var applyThisKey = beforeStrOfkey + (++maxKey).toString();
+                        console.warn("duplicate key \`" + dataset.datas[appendedIdx].key + "\` specified. unique key \`" + applyThisKey + "\` will apply.");
+
+                        convToAvoidDupliKeyDifi[dataset.datas[appendedIdx].key] = applyThisKey;
+                        dataset.datas[appendedIdx].key = applyThisKey; //重複しないkeyで上書き
+                        //note appendingTotalReport.AllOK は変更しない (NodeRenderingに失敗したわけではない為)
+                        break;
+                    }
                 }
             }
 
@@ -1094,16 +1284,41 @@
         //Linksの追加
         if(treatThisObjects.indexOf("links") >= 0){ //"links"定義が存在する場合
             
-        //dataset.links[]へ追加ループ
+            //dataset.links[]へ追加ループ
             for(var i = 0 ; i < appendThisObjArr.links.length ; i++){
-
                 var toAppendObj = {};
-                mergeObj(appendThisObjArr.links[i], toAppendObj, false);
-                dataset.links.push(toAppendObj);
+                mergeObj(appendThisObjArr.links[i], toAppendObj, false); //objectコピー
 
-                //todo
-                //nodeのkey重複確認ループで引っかかっ為にkey を変えていたら、
-                //ここでも変える
+                //<todo2>
+                if(){ //<todo1>のチェック結果が、存在アリの場合
+
+                    //key変換チェック
+                    if(typeof convToAvoidDupliKeyDifi[toAppendObj.source] != 'undefined'){ //source の key 名に変換があった場合
+                        toAppendObj.source = convToAvoidDupliKeyDifi[toAppendObj.source];
+                    }
+
+                }else{ //<todo1>のチェック結果が、存在ナシの場合
+
+                    //todo key存在チェックして、
+                    //存在しなければ無視する
+                }
+
+                //<todo2>
+                if(){ //<todo1>のチェック結果が、存在アリの場合
+
+                    //key変換チェック
+                    if(typeof convToAvoidDupliKeyDifi[toAppendObj.target] != 'undefined'){ //target の key 名に変換があった場合
+                        toAppendObj.target = convToAvoidDupliKeyDifi[toAppendObj.target];
+                    }
+                    
+                }else{ //<todo1>のチェック結果が、存在ナシの場合
+
+                    //todo key存在チェックして、
+                    //存在しなければ無視する
+
+                }
+                
+                dataset.links.push(toAppendObj); //dataset.links[]に追加
             }
 
             $3svgLinks = $3svgLinksGroup.selectAll("g.link")
@@ -1249,7 +1464,7 @@
     var simulation;
     function startForce(){
         simulation = d3.forceSimulation()
-            .force("link", d3.forceLink())
+            .force("link", d3.forceLink().id(function(d) { return d.key; }))
             .force("charge", d3.forceManyBody())
             .force("center", d3.forceCenter(400, 400));
 
@@ -2732,7 +2947,6 @@
 
         //変更レポート
         var reportObj = {
-            // key:bindedData.key,
             allOK:true,
             allNG:true,
             PrevObj:{
@@ -3938,7 +4152,7 @@
             for(var i = 0 ; i < editingDataArr.length ; i++){
                 var specifiedKey = editingDataArr[i].bindedData.key;
                 if( specifiedKey == bindedData.key){ //すでに登録済みの場合
-                    console.warn("specified data is already registered a <textarea> element. key:\`" + specifiedKey.toString() + "\`.");
+                    console.warn("specified data is already registered a <textarea> element. key:\`" + specifiedKey + "\`.");
                     return;
                 }
             }
@@ -5219,8 +5433,8 @@
     function getBindedDataFromKey(findByThisKey){
 
         //引数チェック
-        if(typeof findByThisKey != 'number'){
-            console.warn("specified argument \`findByThisKey\` type is not \`number\`");
+        if(typeof findByThisKey != 'string'){
+            console.warn("specified argument \`findByThisKey\` type is not \`string\`");
             return;
         }
 

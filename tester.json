@@ -1,0 +1,22 @@
+{
+    "datas":[
+        {
+            "key":"sonorous999999999999998",
+            "type": "text"
+        },
+        {
+            "key":"sonorous999999999999999",
+            "type": "text"
+        },
+        {
+            "key":"hel",
+            "type": "text"
+        }
+    ],
+    "links":[
+        {
+             "source": 0,
+             "target": 0
+        }
+    ]
+}
