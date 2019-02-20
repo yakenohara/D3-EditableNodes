@@ -1154,8 +1154,10 @@
         
         startForce();
 
-        //todo message 調整
-        appendingTotalReport.message = appendingTotalReport.reportsArr.datas.length.toString() + " node(s) appended.";
+        //message
+        appendingTotalReport.message = appendingTotalReport.reportsArr.datas.length.toString() + " node(s), " + 
+                                       appendingTotalReport.reportsArr.links.length.toString() + " link(s) appended.";
+
         return appendingTotalReport;
     }
 
