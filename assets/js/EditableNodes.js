@@ -1369,7 +1369,6 @@
 
         if(treatThisObjects.length > 0){ //datasetに対する要素追加があった場合
 
-            //todo simulation 実行中に叩くと d3.js でエラーになる
             startForce(); //sorcesimulation
 
             var appendedOne = false;
@@ -1485,6 +1484,16 @@
 
     var simulation;
     function startForce(){
+
+        if(typeof simulation != 'undefined'){
+
+            //note
+            //simulation実行中の場合は、
+            //`stop()`をcallしないとd3.jsが以下の警告を出す
+            //`(x/y/x1/y1/x2/y2) 属性のパース中に予期せぬ値 NaN が見つかりました。`
+            simulation.stop(); 
+        }
+
         simulation = d3.forceSimulation()
             .force("link", d3.forceLink().id(function(d) { return d.key; }))
             .force("charge", d3.forceManyBody())
