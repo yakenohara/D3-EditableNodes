@@ -1,0 +1,18 @@
+{
+    "datas":[
+        {
+            "key":"b",
+            "type":"text"
+        }
+    ],
+    "links":[
+        {
+            "source":"b",
+            "target":"c"
+        },
+        {
+            "source":"b",
+            "target":"a"
+        }
+    ]
+}

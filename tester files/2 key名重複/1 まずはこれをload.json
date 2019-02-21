@@ -1,0 +1,16 @@
+{
+    "datas":[
+        {
+            "key":"a",
+            "type": "text"
+        },
+        {
+            "key":"b",
+            "type": "text"
+        },
+        {
+            "key":"c",
+            "type": "text"
+        }
+    ]
+}

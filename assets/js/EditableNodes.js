@@ -1368,6 +1368,8 @@
         }
 
         if(treatThisObjects.length > 0){ //datasetに対する要素追加があった場合
+
+            //todo simulation 実行中に叩くと d3.js でエラーになる
             startForce(); //sorcesimulation
 
             var appendedOne = false;
