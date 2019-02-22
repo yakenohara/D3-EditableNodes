@@ -1329,7 +1329,6 @@
                         checkToBindLink(d); //link書式のチェック
 
                         if(typeof d.coordinate == 'undefined'){ //座標定義追加
-                            //todo 初期座標
                             d.coordinate = {x1:0}; //<-仮の処理
                         }
 
@@ -1418,6 +1417,7 @@
         }
     }
 
+    // todo linkを消せるようにする
     //
     //SVGノード(複数)を削除する
     //
@@ -3558,7 +3558,7 @@
             .eq(0)
             .removeClass(className_nodeIsSelected);
 
-        //
+        //オブジェクトコピー
         var toSaveTransactionObj = {};
         mergeObj(transactionObj, toSaveTransactionObj, true);
 
@@ -3732,9 +3732,13 @@
                         console.error("\`key:" + reportObj.key + "\` not found in D3.js binded data array.");
 
                     }else{ //対象のノードデータが存在する場合
+                        
+                        //todo トータルレポートを作ってそこにマージする
                         rollbackRenderringReport = renderSVGNode(bindedData, reportObj[toApplyObjName]);
                     }
                 }
+
+                //todo transaction.reportsArr.links[]の網羅ループ
             }
             break;
 
@@ -3757,6 +3761,9 @@
                 var reportObj = transaction.reportsArr.datas[i];
                 toDeleteKeyArr.datas.push(reportObj.key); //削除指定keyArrayに追加
             }
+
+            //todo transaction.reportsArr.links[]の網羅ループ
+
             rollbackRenderringReport = deleteNodes(toDeleteKeyArr); //Node(s)削除
         }
 
@@ -3771,6 +3778,9 @@
                 toAppendObj.key = reportObj.key; //キー番号をhistoryから復活させる
                 toAppendObjArr.datas.push(toAppendObj);
             }
+
+            //todo transaction.reportsArr.links[]の網羅ループ
+
             rollbackRenderringReport = appendNodes(toAppendObjArr); //Nodes(s)復活
         }
     }
