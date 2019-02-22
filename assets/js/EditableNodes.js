@@ -3152,7 +3152,52 @@
                                             }
             );
 
-            untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("stroke"), 1); //未処理プロパティリストから削除
+            untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("marker_end"), 1); //未処理プロパティリストから削除
+        }
+
+        if(typeof renderByThisObj.line.stroke_dasharray != 'undefined'){ //stroke指定有り
+
+            applyStyleSafely_StringToString(bindedData.line,
+                                            $3SVGLinkElement_line,
+                                            inlineStyleOf_SVGlinkElem_line,
+                                            computedStyleOf_SVGlinkElem_line,
+                                            "stroke_dasharray",
+                                            "stroke-dasharray",
+                                            renderByThisObj.line,
+                                            reportObj.PrevObj.line,
+                                            reportObj.RenderedObj.line,
+                                            reportObj.FailuredMessages.line,
+                                            function(writtenInJson, convertedResultObj){
+
+                                                //"px"とスペースは無視する
+                                                writtenInJson = writtenInJson.replace(/px/g, "");
+                                                writtenInJson = writtenInJson.replace(/ /g, "");
+
+                                                return writtenInJson;
+                                            },
+                                            function(triedAttribute, appliedAttribute){
+
+                                                var convertedResultObj = {
+                                                    succeeded:true
+                                                };
+
+                                                //"px"とスペースは無視する
+                                                appliedAttribute = appliedAttribute.replace(/px/g, "");
+                                                appliedAttribute = appliedAttribute.replace(/ /g, "");
+
+                                                if(triedAttribute != appliedAttribute){
+                                                    convertedResultObj.succeeded = false;
+                                                    var wrn  = "Specified style stroke_dasharray:\`" + triedAttribute + "\` did not applied. " +
+                                                               "Browser applied \`" + appliedAttribute + "\`.";
+                                                    console.warn(wrn);
+                                                    convertedResultObj.warningMessage = wrn;
+                                                }
+
+                                                return convertedResultObj;
+                                            }
+            );
+
+            untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("stroke_dasharray"), 1); //未処理プロパティリストから削除
         }
 
         //Unkdown Propertyに対する警告
@@ -3195,6 +3240,7 @@
                                              callbackWhenVerify){         //D3selection.style()で適用した後の適用可否チェック処理を、
                                                                           //OverRideする
 
+        //変更前状態を取得
         var previousAttribute = inlineStyleOfElement.getPropertyValue(attributeName);
         if(previousAttribute == ""){ //未設定の場合
             previousAttribute = null;
@@ -3219,9 +3265,9 @@
                 succeeded:true
             };
             var applyThisAttribute;
-            if(typeof callbackWhenJustBeforeApply == 'function'){
+            if(typeof callbackWhenJustBeforeApply == 'function'){ //コールバック関数による変換指定アリの場合
                 applyThisAttribute = callbackWhenJustBeforeApply(renderByThisObj[propertyName], convertedResultObj); //指定したCallback関数に変換させる
-            }else{
+            }else{ //コールバック関数による変換指定ナシの場合
                 applyThisAttribute = renderByThisObj[propertyName]; //指定文字列をそのまま使用する
             }
 
@@ -3233,19 +3279,25 @@
 
                 //適用可否チェック
                 var appliedAttribute = computedtyleOfElement.getPropertyValue(attributeName);
-                var wasApplied;
-                if(typeof callbackWhenVerify == 'function'){
-                    wasApplied = callbackWhenVerify(applyThisAttribute, appliedAttribute); //一致確認用CallBakk関数に比較させる
-                }else{
-                    wasApplied = (applyThisAttribute == appliedAttribute); //文字列が一致するかどうか
+                if(typeof callbackWhenVerify == 'function'){ //コールバック関数によるチェック指定アリの場合
+                    convertedResultObj = callbackWhenVerify(applyThisAttribute, appliedAttribute); //一致確認用CallBakk関数に比較させる
+                
+                }else{ //コールバック関数によるチェック指定ナシの場合
+                    convertedResultObj = {
+                        succeeded:true
+                    };
+                    if(applyThisAttribute != appliedAttribute){ //文字列が一致しない場合
+                        convertedResultObj.succeeded = false;
+                        var wrn  = "Specified style in \`" + propertyName + "\` did not applied. " +
+                                   "specified style:\`" + applyThisAttribute + "\`, browser applied style:\`" + appliedAttribute + "\`.";
+                        console.warn(wrn);
+                        convertedResultObj.warningMessage = wrn;
+                    }
                 }
 
-                if(!wasApplied){ //computed styleに適用されなかった場合
-                    var wrn  = "Specified style in \`" + propertyName + "\` did not applied. " +
-                            "specified style:\`" + applyThisAttribute + "\`, browser applied style:\`" + appliedAttribute + "\`.";
-                    console.warn(wrn);
-                    FailuredMessagesObj[propertyName] = wrn;
-
+                if(!(convertedResultObj.succeeded)){ //computed styleに適用されなかった場合
+                    
+                    FailuredMessagesObj[propertyName] = convertedResultObj.warningMessage;
                     $3element.style(attributeName, previousAttribute); //変更前の状態に戻す
                 
                 }else{ //適用された場合

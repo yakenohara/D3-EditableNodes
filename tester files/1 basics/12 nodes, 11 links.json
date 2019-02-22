@@ -90,11 +90,22 @@
     "links":[
         {
              "source": 0,
-             "target": 1
+             "target": 1,
+             "type":"line",
+             "line":{
+                 "stroke_width":5,
+                 "stroke":"rgb(43, 255, 0)",
+                 "marker_end":"arrow1"
+             }
         },
         {
              "source": 1,
-             "target": 2
+             "target": 2,
+             "type":"line",
+             "line":{
+                 "stroke_width":3,
+                 "stroke":"rgb(0, 47, 255)"
+             }
         },
         {
              "source": 2,

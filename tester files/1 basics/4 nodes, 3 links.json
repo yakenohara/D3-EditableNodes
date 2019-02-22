@@ -39,8 +39,7 @@
              "type":"line",
              "line":{
                  "stroke_width":5,
-                 "stroke":"rgb(43, 255, 0)",
-                 "marker_end":"arrow1"
+                 "stroke":"rgb(43, 255, 0)"
              }
         },
         {
@@ -54,7 +53,11 @@
         },
         {
              "source": 2,
-             "target": 3
+             "target": 3,
+             "type":"line",
+             "line":{
+                 "stroke_dasharray":"20,5"
+             }
         }
     ]
 }
