@@ -1494,6 +1494,12 @@
             simulation.stop(); 
         }
 
+        //現在の座標を simulation 開始時の初期座標に設定
+        $3svgNodes.each(function(d, i){
+            d.x = d.coordinate.x;
+            d.y = d.coordinate.y;
+        });
+
         simulation = d3.forceSimulation()
             .force("link", d3.forceLink().id(function(d) { return d.key; }))
             .force("charge", d3.forceManyBody())
@@ -1526,11 +1532,41 @@
             });
 
         simulation.force("link")
-            .links(dataset.links)
-            .distance(function(){return 100;});
+            .links(dataset.links);
+
+        //<Coefficient settings for force simulation>---------------------------------------
+
+        // Documentation
+        // https://github.com/d3/d3-force
+
+        simulation.force("link")
+
+            //link.distance([distance])
+            //リンク間距離(default:30)
+            .distance(100)
+
+            ;
 
         simulation.force("charge")
-            .strength(function(){return -60;});
+
+            //manyBody.strength([strength])
+            //正値の場合はお互いに引きつけあう
+            //負値の場合はお互いに離しあう (defalt:-30)
+            .strength(-60)
+            
+            ;
+
+        simulation
+            
+            //simulation.velocityDecay([decay])
+            //摩擦係数. 有効範囲は 0 - 1 (default:0.4)
+            // .velocityDecay(0.4)
+
+            ;
+        
+
+
+        //--------------------------------------</Coefficient settings for force simulation>
     }
 
     function fireEvent_PropertyEditConsole_rerender(argObj){
