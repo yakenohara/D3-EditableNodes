@@ -122,6 +122,21 @@
         return toRetObj;
     }
 
+    //Node初期化用Objを作る
+    function makeSetDafaultObj_forLink(){
+
+        var toRetObj;
+
+        toRetObj = {};
+        toRetObj.line = {};
+        toRetObj.line.stroke = null;
+        toRetObj.line.stroke_width = null;
+        toRetObj.line.stroke_dasharray = null;
+        toRetObj.line.marker_end = null;
+
+        return toRetObj;
+    }
+
 
     //<Element Selections and Settings of PropertyEditor>-----------------------------------------------------------
     //CSSと共用のキーワードが含まれる処理も、ここに記述する
@@ -1384,7 +1399,8 @@
                     });
 
                 //増えた<g>要素に合わせて$node selectionを再調整
-                $3svgLinks = $3svgLinksGroup.selectAll("g.link");
+                $3svgLinks = $3svgLinksGroup.selectAll("g.link")
+                    .data(dataset.links);
             
             }else{
                 treatThisObjects.splice(treatThisObjects.indexOf("links"), 1); //append処理対象から除外
@@ -1393,7 +1409,7 @@
 
         if(treatThisObjects.length > 0){ //datasetに対する要素追加があった場合
 
-            startForce(); //sorcesimulation
+            startForce(); //force simulation
 
             var appendedOne = false;
             var msgStr = "";
@@ -1428,6 +1444,7 @@
 
         var toDeleteKeyArr = {}; //削除対象keyをまとめたArray
         toDeleteKeyArr.datas = [];
+        toDeleteKeyArr.links = [];
 
         //削除対象Nodeをdataset.datas[]から検索 & 削除
         for(var i = dataset.datas.length-1 ; i >= 0 ; i--){
@@ -1436,9 +1453,14 @@
             }
         }
 
-        //todo linkに対するkeyarray追加
+        //削除対象Linkをdataset.link[]から検索 & 削除
+        for(var i = dataset.links.length-1 ; i >= 0 ; i--){
+            if(dataset.links[i].$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択状態の場合
+                toDeleteKeyArr.links.push(dataset.links[i].key); //削除対象keyArrayに追加
+            }
+        }
 
-        if(toDeleteKeyArr.datas.length > 0){ //削除対象Nodeが存在する場合 //todo linkがある場合考慮
+        if((toDeleteKeyArr.datas.length > 0) || (toDeleteKeyArr.links.length > 0)){ //削除対象Nodeが存在する場合
             var deletingTotalReport = deleteNodes(toDeleteKeyArr);
             appendHistory(deletingTotalReport);
         }
@@ -1448,7 +1470,7 @@
     //
     //SVGノード(複数)を削除する
     //
-    function deleteNodes(toDeleteKeyArr){
+    xxx = function deleteNodes(toDeleteKeyArr){ //todo localize
 
         var deletingTotalReport = {};
         deletingTotalReport.type = 'delete';
@@ -1456,12 +1478,10 @@
         deletingTotalReport.allNG = true;
         deletingTotalReport.reportsArr = {};
         deletingTotalReport.reportsArr.datas = [];
+        deletingTotalReport.reportsArr.links = [];
 
-        var defaultObj = makeSetDafaultObj(true);
-        defaultObj.coordinate = {};
-        defaultObj.coordinate.x = 0;
-        defaultObj.coordinate.y = 0;
-        var numOfDeleted = 0;
+        var numOfDeletedNodes = 0;
+        var numOfDeletedLinks = 0;
 
         //削除対象Nodeをdataset.datas[]から検索 & 削除
         for(var i = dataset.datas.length-1 ; i >= 0 ; i--){
@@ -1470,42 +1490,125 @@
             if(foundIdx >= 0){ //削除指定keyArray内に存在する場合
                 dataset.datas.splice(i,1); //dataset.datas[]から削除
                 toDeleteKeyArr.datas.splice(foundIdx, 1); //削除指定KeyArrayからも削除
-                numOfDeleted++;
+                numOfDeletedNodes++;
             }
         }
 
-        //rebind using D3.js
-        $3svgNodes = $3svgNodesGroup.selectAll("g.node")
-            .data(dataset.datas, function(d){return d.key});
+        //削除対象Nodeをdataset.links[]から検索 & 削除
+        for(var i = dataset.links.length-1 ; i >= 0 ; i--){
+            var foundIdx = toDeleteKeyArr.links.indexOf(dataset.links[i].key);
 
-        $3svgNodes.exit()
-            .each(function(d,i){
-
-                //SVG削除前のPropertyを保存する為、defaltObjで再度レンダリングする
-                var renderReport = renderSVGNode(d, defaultObj); //SVGレンダリング
-                renderReport.PrevObj.type = d.type; //削除前のtypeをPrevObjに保存
-                if(!renderReport.allOK){ //失敗が発生した場合
-                    deletingTotalReport.allOK = false;
-                }
-                if(!renderReport.allNG){ //成功が1つ以上ある場合
-                    deletingTotalReport.allNG = false;
-                }
-                deletingTotalReport.reportsArr.datas.push(renderReport);
-                
-                // ↓ .remove();で削除されない為ここで削除する ↓
-                //    (多分 selection.data() で紐づけたSVG要素でなない事が原因)
-                d.$3bindedSelectionLayerSVGElement.remove();                                              
-            })
-            .remove();
-
-        //減った<g>要素に合わせて$node selectionを再調整
-        $3svgNodes = $3svgNodesGroup.selectAll("g.node");
-
-        if(toDeleteKeyArr.datas.length > 0){ //削除指定Keyが見つからなかった場合
-            console.warn("key(s) [" + toDeleteKeyArr.toString() + "] not found");
+            if(foundIdx >= 0){ //削除指定keyArray内に存在する場合
+                dataset.links.splice(i,1); //dataset.links[]から削除
+                toDeleteKeyArr.links.splice(foundIdx, 1); //削除指定KeyArrayからも削除
+                numOfDeletedLinks++;
+            }
         }
 
-        deletingTotalReport.message = numOfDeleted.toString() + " node(s) deleted.";
+        if((toDeleteKeyArr.datas.length > 0) || (toDeleteKeyArr.links.length > 0)){
+            if(toDeleteKeyArr.datas.length > 0){ //削除指定Keyが見つからなかった場合
+                console.warn("Data key(s) [" + toDeleteKeyArr.datas.toString() + "] not found");
+            }
+            if(toDeleteKeyArr.links.length > 0){ //削除指定Keyが見つからなかった場合
+                console.warn("Link key(s) [" + toDeleteKeyArr.links.toString() + "] not found");
+            }
+        }
+
+        //削除指定keyが1つも見つからなかった場合
+        if((numOfDeletedNodes == 0) && (numOfDeletedLinks == 0)){
+            return deletingTotalReport; //allNGで返す
+        }
+
+        if(numOfDeletedNodes > 0){
+            //rebind using D3.js
+            $3svgNodes = $3svgNodesGroup.selectAll("g.node")
+                .data(dataset.datas, function(d){return d.key});
+
+            $3svgNodes.exit()
+                .each(function(d,i){
+
+                    var defaultObj = makeSetDafaultObj(true);
+                    defaultObj.coordinate = {};
+                    defaultObj.coordinate.x = 0;
+                    defaultObj.coordinate.y = 0;
+
+                    //SVG削除前のPropertyを保存する為、defaltObjで再度レンダリングする
+                    var renderReport = renderSVGNode(d, defaultObj); //SVGレンダリング
+                    renderReport.PrevObj.type = d.type; //削除前のtypeをPrevObjに保存
+                    if(!renderReport.allOK){ //失敗が発生した場合
+                        deletingTotalReport.allOK = false;
+                    }
+                    if(!renderReport.allNG){ //成功が1つ以上ある場合
+                        deletingTotalReport.allNG = false;
+                    }
+                    deletingTotalReport.reportsArr.datas.push(renderReport);
+                    
+                    // ↓ .remove();で削除されない為ここで削除する ↓
+                    //    (多分 selection.data() で紐づけたSVG要素でなない事が原因)
+                    d.$3bindedSelectionLayerSVGElement.remove();                                              
+                })
+                .remove();
+
+            //減った<g>要素に合わせて$node selectionを再調整
+            $3svgNodes = $3svgNodesGroup.selectAll("g.node");
+        }
+
+        if(numOfDeletedLinks > 0){
+
+            //todo linkがおかしくなる
+
+            //rebind using D3.js
+            $3svgLinks = $3svgLinksGroup.selectAll("g.link")
+                    .data(dataset.links);
+
+            $3svgLinks.exit()
+                .each(function(d,i){
+
+                    var defaultObj = makeSetDafaultObj_forLink();
+                    defaultObj.coordinate = {};
+                    defaultObj.coordinate.x1 = 0;
+                    defaultObj.coordinate.y1 = 0;
+                    defaultObj.coordinate.x2 = 0;
+                    defaultObj.coordinate.y2 = 0;
+
+                    //SVG削除前のPropertyを保存する為、defaltObjで再度レンダリングする
+                    var renderReport = renderSVGLink(d, defaultObj); //SVGレンダリング
+                    renderReport.PrevObj.type = d.type; //削除前のtypeをPrevObjに保存
+                    if(!renderReport.allOK){ //失敗が発生した場合
+                        deletingTotalReport.allOK = false;
+                    }
+                    if(!renderReport.allNG){ //成功が1つ以上ある場合
+                        deletingTotalReport.allNG = false;
+                    }
+                    deletingTotalReport.reportsArr.links.push(renderReport);
+                    
+                    // ↓ .remove();で削除されない為ここで削除する ↓
+                    //    (多分 selection.data() で紐づけたSVG要素でなない事が原因)
+                    d.$3bindedSelectionLayerSVGElement.remove();                                              
+                })
+                .remove();
+
+            //減った<g>要素に合わせて$link selectionを再調整
+            $3svgLinks = $3svgLinksGroup.selectAll("g.link")
+                .data(dataset.links);
+        }
+
+        startForce(); //force simulation
+
+        //message生成
+        var msg = "";
+        if(numOfDeletedNodes > 0){
+            msg = msg + numOfDeletedNodes.toString() + " node(s)";
+        }
+        if(numOfDeletedLinks > 0){
+            if(numOfDeletedNodes > 0){
+                msg = msg + ", ";
+            }
+            msg = msg + numOfDeletedLinks.toString() + " links(s)";
+        }
+        msg = msg + " deleted.";
+        deletingTotalReport.message = msg;
+        
         return deletingTotalReport;
     }
 
