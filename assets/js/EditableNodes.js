@@ -603,6 +603,9 @@
                 dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility", "hidden")
                     .attr("data-selected", "false"); //選択解除
             }
+
+            //todo linkすべてを選択解除する
+
             lastSelectedData = null;
         }
     });
@@ -668,6 +671,7 @@
 
             $3svgLinks.each(function(d, i){
                 d.$3bindedSVGLinkElement.attr("transform", d3.event.transform);
+                //todo slection layer control
             });
 
             if(nowEditng){
@@ -1090,6 +1094,8 @@
                                         .attr("data-selected", "false"); //選択解除
                                 }
                             }
+
+                            //todo linkに対する 選択解除
                         }
                 
                         var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
@@ -1134,6 +1140,8 @@
                                     .attr("data-selected", "true"); //選択解除
                             }
                         }
+
+                        //todo linkに対する 選択解除
                         
                         editSVGNodes();
                         lastSelectedData = d; //最終選択Nodeの記憶
@@ -1411,7 +1419,9 @@
             }
         }
 
-        if(toDeleteKeyArr.datas.length > 0){ //削除対象Nodeが存在する場合
+        //todo linkに対するkeyarray追加
+
+        if(toDeleteKeyArr.datas.length > 0){ //削除対象Nodeが存在する場合 //todo linkがある場合考慮
             var deletingTotalReport = deleteNodes(toDeleteKeyArr);
             appendHistory(deletingTotalReport);
         }
@@ -3888,6 +3898,8 @@
             }
         }
 
+        //todo link選択状態の表示化ループ
+
         $propertyEditConsoleElement.slideUp(100); //edit consoleの終了
 
         nowEditng = false; //編集モードの終了
@@ -3916,7 +3928,9 @@
             toExportObjArr.datas.push(toExportObj); //配列に追加
         });
 
-        if(toExportObjArr.datas.length == 0){ //吐き出すNodeが存在しない場合
+        //todo link の吐き出し用Obj生成ループ
+
+        if(toExportObjArr.datas.length == 0){ //吐き出すNodeが存在しない場合 //todo linkの存在を考慮
             console.warn("No Node to Export");
         
         }else{ //吐き出すNodeが存在する場合
@@ -3980,6 +3994,8 @@
             }
         });
 
+        //todo linkに対する同様処理
+
         if(editingKeys.length > 0){ //1つ以上のNodeを選択している場合
             //選択 Node(s) を元に PropertyEditConsole に反映
             adjustPropertyEditConsole();
@@ -4015,6 +4031,8 @@
             }
         });
 
+        //todo linkに対する同様処理
+
         //選択中Nodeの数が減っていたら(= 選択中Nodeのいづれかが、historyのrollbackで削除されたら)
         if(editingKeysForCheck.length > 0){
             exitEditing(); //Property Edit Consoleを終了
@@ -4037,7 +4055,7 @@
 
             var computedStylesOfData = [];
 
-            //Node選択状態の非表示化ループ
+            //選択状態になっているNodeから適用済みStyleを抽出するループ
             for(var i = 0 ; i < dataset.datas.length ; i++){
 
                 var bindedData = dataset.datas[i];
@@ -4055,6 +4073,8 @@
                     }
                 }
             }
+
+            //todo link に対する同様の処理
 
             if(computedStylesOfData.length > 0){ //編集対象Nodeが存在する場合
 
