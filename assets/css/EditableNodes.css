@@ -29,6 +29,7 @@
 
 #editableNode .selectionLayers .selectionLayer{
     fill: rgba(40, 207, 96, 0.644);
+    stroke: rgba(40, 207, 96, 0.644);
 }
 
 #editableNode .propertyEditConsole{

@@ -18,6 +18,9 @@
 
     // frameType 未指定時に設定する Default Shape
     var defaultTextFrameShape = "rect";
+
+    // linkType 未指定時に設定する Default Shape
+    var defaultLinkhape = "line";
     
     //frameとtext間のpadding
     var valOfpadding_frame_text = 5;
@@ -73,6 +76,7 @@
     };
     transactionHistory = [];  //history
 
+    var linkKey = -1; //linkの内部処理用id値
     var nowEditng = false;　      //Property Edit Console が起動中かどうか
     var editingKeys = []; //Property Edit Console の 編集対象ノードのkey
     var lastSelectedData = null;　//最後に選択状態にしたNode    
@@ -879,6 +883,11 @@
             //定義型チェックループ
             for(var i = 0 ; i < appendThisObjArr.links.length  ; i++){
 
+                if(typeof appendThisObjArr.links[i].key != 'undefined'){ //links[]内にkeyプロパティが存在する場合
+                    console.warn("links[" + i.toString() + "] has rserved property \`key\`:\`" + appendThisObjArr.links[i].key + "\`. This specified property will be ignored.");
+                    delete appendThisObjArr.links[i].key;
+                }
+
                 var sourceKeyNameIsDefinedInArgDatas = keyIsDefinedInArgDatas("source");
                 var targetKeyNameIsDefinedInArgDatas = keyIsDefinedInArgDatas("target");
 
@@ -1283,6 +1292,8 @@
                     var toAppendObj = {};
                     mergeObj(appendThisObjArr.links[i], toAppendObj, false); //objectコピー
 
+                    toAppendObj.key = (++linkKey).toString();
+
                     var sourceKeyIsExist = isExistKey("source");
                     var targetKeyIsExist = isExistKey("target");
 
@@ -1333,6 +1344,12 @@
                     .each(function(d, i){
                         var bindedSVGLinkElement = this;
                         d.$3bindedSVGLinkElement = d3.select(bindedSVGLinkElement);
+
+                        d.$3bindedSelectionLayerSVGElement = $3selectionLayersGroup.append("g")
+                            .classed("selectionLayer",true)
+                            .style("pointer-events", "none")
+                            // .style("visibility", "hidden")
+                            .attr("data-selected", "false");
 
                         checkToBindLink(d); //link書式のチェック
 
@@ -2899,15 +2916,15 @@
     function checkToBindLink(checkThisLink){
 
         if(typeof checkThisLink.type == 'undefined'){ //type指定がない場合
-            console.warn("Type not specified. This data will be handled as \`line\` type.");
-            checkThisLink.type = "line";
+            console.warn("Type not specified. This data will be handled as \`" + defaultLinkhape + "\` type.");
+            checkThisLink.type = defaultLinkhape;
         }
 
         if(typeof checkThisLink.type != 'string'){ //typeの型がstringでない場合
             console.warn("Wrong type specified in \`checkThisLink.type\`. " +
                         "specified type:\`" + (typeof (checkThisLink.type)) + "\`, expected type:\`string\`.\n" +
-                        "This data will be handled as \`line\` type.");
-            checkThisLink.type = "line";
+                        "This data will be handled as \`" + defaultLinkhape + "\` type.");
+            checkThisLink.type = defaultLinkhape;
         }
 
         var forceAsLink = false;
@@ -2941,10 +2958,11 @@
     function renderSVGLink(bindedData, renderByThisObj){
 
         var $3SVGlinkElem = bindedData.$3bindedSVGLinkElement;
+        var $3SVGlinkElem_forSelection = bindedData.$3bindedSelectionLayerSVGElement;
         var reportObj;
         var rerender = false;
         var toAppendTypeRenderFail = "";
-        
+
         //type指定チェック
         if(typeof (renderByThisObj.type) != 'undefined'){ //type指定がある場合
             if(typeof (renderByThisObj.type) != 'string'){ //型がstringでない
@@ -2964,8 +2982,12 @@
                         while($3SVGlinkElem.node().firstChild){
                             $3SVGlinkElem.node().removeChild($3SVGlinkElem.node().firstChild);
                         }
-
+                        while($3SVGlinkElem_forSelection.node().firstChild){ //for selectionlayer
+                            $3SVGlinkElem_forSelection.node().removeChild($3SVGlinkElem_forSelection.node().firstChild);
+                        }
+                        
                         $3SVGlinkElem.append("line");
+                        $3SVGlinkElem_forSelection.append("line");
                         
                         //レンダリング
                         reportObj = renderLineTypeSVGLink(bindedData, renderByThisObj);
@@ -3024,6 +3046,7 @@
 
         //変更レポート
         var reportObj = {
+            key:bindedData.key,
             allOK:true,
             allNG:true,
             PrevObj:{
@@ -3050,6 +3073,16 @@
         
         }else{
             $3SVGLinkElement_line = d3.select(fc);
+        }
+
+        //Selection Layer 存在チェック
+        var $3SVGLinkElement_line_forSelection;
+        fc = bindedData.$3bindedSelectionLayerSVGElement.node().firstChild
+        if(!(fc)){ //line用の selection layer 描画要素が存在しない場合(= 1回目の描画の場合)
+            $3SVGLinkElement_line_forSelection = bindedData.$3bindedSelectionLayerSVGElement.append("line");
+        
+        }else{
+            $3SVGLinkElement_line_forSelection = d3.select(fc);
         }
 
         var inlineStyleOf_SVGlinkElem_line = $3SVGLinkElement_line.node().style;
