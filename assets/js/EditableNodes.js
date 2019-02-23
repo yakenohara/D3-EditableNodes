@@ -3723,22 +3723,7 @@
 
             case 'change':
             {
-                //レンダリングレポート網羅ループ
-                for(var i = 0 ; i < transaction.reportsArr.datas.length ; i++){
-                    var reportObj = transaction.reportsArr.datas[i];
-                    var bindedData = getBindedDataFromKey(reportObj.key);
-
-                    if(typeof bindedData == 'undefined'){ //対象のノードデータが存在しない場合
-                        console.error("\`key:" + reportObj.key + "\` not found in D3.js binded data array.");
-
-                    }else{ //対象のノードデータが存在する場合
-                        
-                        //todo トータルレポートを作ってそこにマージする
-                        rollbackRenderringReport = renderSVGNode(bindedData, reportObj[toApplyObjName]);
-                    }
-                }
-
-                //todo transaction.reportsArr.links[]の網羅ループ
+                call_changeNodes();
             }
             break;
 
@@ -3782,6 +3767,42 @@
             //todo transaction.reportsArr.links[]の網羅ループ
 
             rollbackRenderringReport = appendNodes(toAppendObjArr); //Nodes(s)復活
+        }
+
+        function call_changeNodes(){
+            rollbackRenderringReport = {};
+            rollbackRenderringReport.type = 'change';
+            rollbackRenderringReport.allOK = true;
+            rollbackRenderringReport.allNG = true;
+            rollbackRenderringReport.reportsArr = {};
+            rollbackRenderringReport.reportsArr.datas = [];
+            rollbackRenderringReport.reportsArr.links = [];
+
+            //レンダリングレポート網羅ループ
+            for(var i = 0 ; i < transaction.reportsArr.datas.length ; i++){
+                var reportObj = transaction.reportsArr.datas[i];
+                var bindedData = getBindedDataFromKey(reportObj.key);
+
+                if(typeof bindedData == 'undefined'){ //対象のノードデータが存在しない場合
+                    console.error("\`key:" + reportObj.key + "\` not found in D3.js binded data array.");
+
+                }else{ //対象のノードデータが存在する場合
+                    
+                    var singleReport = renderSVGNode(bindedData, reportObj[toApplyObjName]);
+
+                    if(!singleReport.allOK){ //失敗が発生した場合
+                        rollbackRenderringReport.allOK = false;
+                    }
+
+                    if(!singleReport.allNG){ //成功が1つ以上ある場合
+                        rollbackRenderringReport.allNG = false;
+                    }
+
+                    rollbackRenderringReport.reportsArr.datas.push(singleReport);
+                }
+            }
+
+            //todo transaction.reportsArr.links[]の網羅ループ
         }
     }
 
