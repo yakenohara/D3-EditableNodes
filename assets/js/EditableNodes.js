@@ -1348,7 +1348,7 @@
                         d.$3bindedSelectionLayerSVGElement = $3selectionLayersGroup.append("g")
                             .classed("selectionLayer",true)
                             .style("pointer-events", "none")
-                            // .style("visibility", "hidden")
+                            .style("visibility", "hidden")
                             .attr("data-selected", "false");
 
                         checkToBindLink(d); //link書式のチェック
@@ -3111,6 +3111,7 @@
                     
                     }else{ //型がnumber
                         $3SVGLinkElement_line.attr(axis, renderByThisObj.coordinate[axis]);
+                        $3SVGLinkElement_line_forSelection.attr(axis, renderByThisObj.coordinate[axis]);
 
                         if(prevAxisValStr !== null){
                             prevAxisValStr = parseFloat(prevAxisValStr);
@@ -3125,120 +3126,127 @@
 
         if(typeof renderByThisObj.line.stroke != 'undefined'){ //stroke指定有り
 
-            applyStyleSafely_StringToString(bindedData.line,
-                                            $3SVGLinkElement_line,
-                                            inlineStyleOf_SVGlinkElem_line,
-                                            computedStyleOf_SVGlinkElem_line,
-                                            "stroke",
-                                            "stroke",
-                                            renderByThisObj.line,
-                                            reportObj.PrevObj.line,
-                                            reportObj.RenderedObj.line,
-                                            reportObj.FailuredMessages.line
-            );
+            applyStyleSafely_StringToString({
+                bindedObj:bindedData.line,
+                $3element:$3SVGLinkElement_line,
+                inlineStyleOfElement:inlineStyleOf_SVGlinkElem_line,
+                computedtyleOfElement:computedStyleOf_SVGlinkElem_line,
+                propertyName:"stroke",
+                attributeName:"stroke",
+                renderByThisObj:renderByThisObj.line,
+                prevReportObj:reportObj.PrevObj.line,
+                renderedReportObj:reportObj.RenderedObj.line,
+                failuredMessagesObj:reportObj.FailuredMessages.line
+            });
 
             untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("stroke"), 1); //未処理プロパティリストから削除
         }
         
         if(typeof renderByThisObj.line.stroke_width != 'undefined'){ //stroke-width指定有り
 
-            applyStyleSafely_NumberToPixel(bindedData.line,
-                                           $3SVGLinkElement_line,
-                                           inlineStyleOf_SVGlinkElem_line,
-                                           computedStyleOf_SVGlinkElem_line,
-                                           "stroke_width",
-                                           "stroke-width",
-                                           renderByThisObj.line,
-                                           reportObj.PrevObj.line,
-                                           reportObj.RenderedObj.line,
-                                           reportObj.FailuredMessages.line
-            );
+            applyStyleSafely_NumberToPixel({
+                bindedObj:bindedData.line,
+                $3element:$3SVGLinkElement_line,
+                $3sameTypeElement:$3SVGLinkElement_line_forSelection, //selectionlayerにも反映させる
+                inlineStyleOfElement:inlineStyleOf_SVGlinkElem_line,
+                computedtyleOfElement:computedStyleOf_SVGlinkElem_line,
+                propertyName:"stroke_width",
+                attributeName:"stroke-width",
+                renderByThisObj:renderByThisObj.line,
+                prevReportObj:reportObj.PrevObj.line,
+                renderedReportObj:reportObj.RenderedObj.line,
+                failuredMessagesObj:reportObj.FailuredMessages.line
+            });
 
             untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("stroke_width"), 1); //未処理プロパティリストから削除
         }
 
         if(typeof renderByThisObj.line.marker_end != 'undefined'){ //stroke指定有り
 
-            applyStyleSafely_StringToString(bindedData.line,
-                                            $3SVGLinkElement_line,
-                                            inlineStyleOf_SVGlinkElem_line,
-                                            computedStyleOf_SVGlinkElem_line,
-                                            "marker_end",
-                                            "marker-end",
-                                            renderByThisObj.line,
-                                            reportObj.PrevObj.line,
-                                            reportObj.RenderedObj.line,
-                                            reportObj.FailuredMessages.line,
-                                            function(writtenInJson, convertedResultObj){
+            applyStyleSafely_StringToString({
+                bindedObj:bindedData.line,
+                $3element:$3SVGLinkElement_line,
+                $3sameTypeElement:$3SVGLinkElement_line_forSelection, //selectionlayerにも反映させる
+                inlineStyleOfElement:inlineStyleOf_SVGlinkElem_line,
+                computedtyleOfElement:computedStyleOf_SVGlinkElem_line,
+                propertyName:"marker_end",
+                attributeName:"marker-end",
+                renderByThisObj:renderByThisObj.line,
+                prevReportObj:reportObj.PrevObj.line,
+                renderedReportObj:reportObj.RenderedObj.line,
+                failuredMessagesObj:reportObj.FailuredMessages.line,
+                callbackWhenJustBeforeApply:function(writtenInJson, convertedResultObj){
 
-                                                var applyThisAtrribute;
+                    var applyThisAtrribute;
 
-                                                //pattern check
-                                                switch(writtenInJson){
-                                                    case "arrow1":
-                                                    {
-                                                        applyThisAtrribute = "url(\"#" + writtenInJson + "\")" ;
-                                                    }
-                                                    break;
+                    //pattern check
+                    switch(writtenInJson){
+                        case "arrow1":
+                        {
+                            applyThisAtrribute = "url(\"#" + writtenInJson + "\")" ;
+                        }
+                        break;
 
-                                                    default:
-                                                    {
-                                                        var wrn = "Unknown marker \`" + writtenInJson + "\` specified in \`marker_end\`. ";
-                                                        console.warn(wrn);
-                                                        convertedResultObj.succeeded = false;
-                                                        convertedResultObj.warningMessage = wrn;
-                                                    }
-                                                    break;
-                                                }
+                        default:
+                        {
+                            var wrn = "Unknown marker \`" + writtenInJson + "\` specified in \`marker_end\`. ";
+                            console.warn(wrn);
+                            convertedResultObj.succeeded = false;
+                            convertedResultObj.warningMessage = wrn;
+                        }
+                        break;
+                    }
 
-                                                return applyThisAtrribute;
-                                            }
-            );
+                    return applyThisAtrribute;
+                }
+            });
 
             untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("marker_end"), 1); //未処理プロパティリストから削除
         }
 
         if(typeof renderByThisObj.line.stroke_dasharray != 'undefined'){ //stroke指定有り
 
-            applyStyleSafely_StringToString(bindedData.line,
-                                            $3SVGLinkElement_line,
-                                            inlineStyleOf_SVGlinkElem_line,
-                                            computedStyleOf_SVGlinkElem_line,
-                                            "stroke_dasharray",
-                                            "stroke-dasharray",
-                                            renderByThisObj.line,
-                                            reportObj.PrevObj.line,
-                                            reportObj.RenderedObj.line,
-                                            reportObj.FailuredMessages.line,
-                                            function(writtenInJson, convertedResultObj){
+            applyStyleSafely_StringToString({
+                bindedObj:bindedData.line,
+                $3element:$3SVGLinkElement_line,
+                $3sameTypeElement:$3SVGLinkElement_line_forSelection, //selectionlayerにも反映させる
+                inlineStyleOfElement:inlineStyleOf_SVGlinkElem_line,
+                computedtyleOfElement:computedStyleOf_SVGlinkElem_line,
+                propertyName:"stroke_dasharray",
+                attributeName:"stroke-dasharray",
+                renderByThisObj:renderByThisObj.line,
+                prevReportObj:reportObj.PrevObj.line,
+                renderedReportObj:reportObj.RenderedObj.line,
+                failuredMessagesObj:reportObj.FailuredMessages.line,
+                callbackWhenJustBeforeApply:function(writtenInJson, convertedResultObj){
 
-                                                //"px"とスペースは無視する
-                                                writtenInJson = writtenInJson.replace(/px/g, "");
-                                                writtenInJson = writtenInJson.replace(/ /g, "");
+                    //"px"とスペースは無視する
+                    writtenInJson = writtenInJson.replace(/px/g, "");
+                    writtenInJson = writtenInJson.replace(/ /g, "");
 
-                                                return writtenInJson;
-                                            },
-                                            function(triedAttribute, appliedAttribute){
+                    return writtenInJson;
+                },
+                callbackWhenVerify:function(triedAttribute, appliedAttribute){
 
-                                                var convertedResultObj = {
-                                                    succeeded:true
-                                                };
+                    var convertedResultObj = {
+                        succeeded:true
+                    };
 
-                                                //"px"とスペースは無視する
-                                                appliedAttribute = appliedAttribute.replace(/px/g, "");
-                                                appliedAttribute = appliedAttribute.replace(/ /g, "");
+                    //"px"とスペースは無視する
+                    appliedAttribute = appliedAttribute.replace(/px/g, "");
+                    appliedAttribute = appliedAttribute.replace(/ /g, "");
 
-                                                if(triedAttribute != appliedAttribute){
-                                                    convertedResultObj.succeeded = false;
-                                                    var wrn  = "Specified style stroke_dasharray:\`" + triedAttribute + "\` did not applied. " +
-                                                               "Browser applied \`" + appliedAttribute + "\`.";
-                                                    console.warn(wrn);
-                                                    convertedResultObj.warningMessage = wrn;
-                                                }
+                    if(triedAttribute != appliedAttribute){
+                        convertedResultObj.succeeded = false;
+                        var wrn  = "Specified style stroke_dasharray:\`" + triedAttribute + "\` did not applied. " +
+                                    "Browser applied \`" + appliedAttribute + "\`.";
+                        console.warn(wrn);
+                        convertedResultObj.warningMessage = wrn;
+                    }
 
-                                                return convertedResultObj;
-                                            }
-            );
+                    return convertedResultObj;
+                }
+            });
 
             untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("stroke_dasharray"), 1); //未処理プロパティリストから削除
         }
@@ -3266,41 +3274,52 @@
 
     //<Utilities for style>----------------------------------------------------------------------------
 
+    //
     // "abcdef"(string) -> "abcdef"(string)
-    function applyStyleSafely_StringToString(bindedObj,
-                                             $3element,
-                                             inlineStyleOfElement,
-                                             computedtyleOfElement,
-                                             propertyName,
-                                             attributeName,
-                                             renderByThisObj,
-                                             prevReportObj,
-                                             renderedReportObj,
-                                             FailuredMessagesObj,
-                                             callbackWhenJustBeforeApply, //RenderByThisObj内の適用したい文字列を、
-                                                                          //そのまま適用したくない場合にOverRideする
-                                             
-                                             callbackWhenVerify){         //D3selection.style()で適用した後の適用可否チェック処理を、
-                                                                          //OverRideする
+    //
+    //指定必須プロパティ
+    //
+    // | Propery name          | Description                                   |
+    // | --------------------- | --------------------------------------------- |
+    // | bindedObj             | Objcet that was binded by d3.js               |
+    // | $3element             | DOM element selection(d3.js selection)        |
+    // | inlineStyleOfElement  | Inline style of DOM element                   |
+    // | computedtyleOfElement | Computed style of DOM element                 |
+    // | propertyName          | Specified property name in argment object     |
+    // | attributeName         | To appliying attribute name (in inline style) |
+    // | renderByThisObj       | Argment Object                                |
+    // | prevReportObj         | Object to save previous style                 |
+    // | renderedReportObj     | Object to save rendered style                 |
+    // | failuredMessagesObj   | Object to save warning message                |
+    // 
+    //任意指定プロパティ
+    //
+    // | Propery name                | Description                                                |
+    // | --------------------------- | ---------------------------------------------------------- |
+    // | $3sameTypeElement           | DOM element selection (d3.js selection)                    |
+    // | callbackWhenJustBeforeApply | Call back function that invoked just before applying style |
+    // | callbackWhenVerify          | Call back function that invoked just after applied style   |
+    //
+    function applyStyleSafely_StringToString(argmentsObj){
 
         //変更前状態を取得
-        var previousAttribute = inlineStyleOfElement.getPropertyValue(attributeName);
+        var previousAttribute = argmentsObj.inlineStyleOfElement.getPropertyValue(argmentsObj.attributeName);
         if(previousAttribute == ""){ //未設定の場合
             previousAttribute = null;
         }
 
-        if(renderByThisObj[propertyName] === null){ //削除指定の場合
-            $3element.style(attributeName, null);
+        if(argmentsObj.renderByThisObj[argmentsObj.propertyName] === null){ //削除指定の場合
+            argmentsObj.$3element.style(argmentsObj.attributeName, null);
 
-            prevReportObj[propertyName] = previousAttribute;
-            renderedReportObj[propertyName] = null;
-            delete bindedObj[propertyName];
+            argmentsObj.prevReportObj[argmentsObj.propertyName] = previousAttribute;
+            argmentsObj.renderedReportObj[argmentsObj.propertyName] = null;
+            delete argmentsObj.bindedObj[argmentsObj.propertyName];
 
-        }else if(typeof renderByThisObj[propertyName] != 'string'){ //型がstringでない場合
-            var wrn = "Wrong type specified in \`" + propertyName + "\`. " +
-                      "specified type:\`" + (typeof (renderByThisObj[propertyName])) + "\`, expected type:\`string\`.";
+        }else if(typeof argmentsObj.renderByThisObj[argmentsObj.propertyName] != 'string'){ //型がstringでない場合
+            var wrn = "Wrong type specified in \`" + argmentsObj.propertyName + "\`. " +
+                      "specified type:\`" + (typeof (argmentsObj.renderByThisObj[argmentsObj.propertyName])) + "\`, expected type:\`string\`.";
             console.warn(wrn);
-            FailuredMessagesObj[propertyName] = wrn;
+            argmentsObj.failuredMessagesObj[argmentsObj.propertyName] = wrn;
         
         }else{ //型はstring
 
@@ -3308,22 +3327,22 @@
                 succeeded:true
             };
             var applyThisAttribute;
-            if(typeof callbackWhenJustBeforeApply == 'function'){ //コールバック関数による変換指定アリの場合
-                applyThisAttribute = callbackWhenJustBeforeApply(renderByThisObj[propertyName], convertedResultObj); //指定したCallback関数に変換させる
+            if(typeof argmentsObj.callbackWhenJustBeforeApply == 'function'){ //コールバック関数による変換指定アリの場合
+                applyThisAttribute = argmentsObj.callbackWhenJustBeforeApply(argmentsObj.renderByThisObj[argmentsObj.propertyName], convertedResultObj); //指定したCallback関数に変換させる
             }else{ //コールバック関数による変換指定ナシの場合
-                applyThisAttribute = renderByThisObj[propertyName]; //指定文字列をそのまま使用する
+                applyThisAttribute = argmentsObj.renderByThisObj[argmentsObj.propertyName]; //指定文字列をそのまま使用する
             }
 
             if(!convertedResultObj.succeeded){ //コールバック関数による変換失敗の場合
-                FailuredMessagesObj[propertyName] = convertedResultObj.warningMessage;
+                argmentsObj.failuredMessagesObj[argmentsObj.propertyName] = convertedResultObj.warningMessage;
 
             }else{
-                $3element.style(attributeName, applyThisAttribute); //style適用
+                argmentsObj.$3element.style(argmentsObj.attributeName, applyThisAttribute); //style適用
 
                 //適用可否チェック
-                var appliedAttribute = computedtyleOfElement.getPropertyValue(attributeName);
-                if(typeof callbackWhenVerify == 'function'){ //コールバック関数によるチェック指定アリの場合
-                    convertedResultObj = callbackWhenVerify(applyThisAttribute, appliedAttribute); //一致確認用CallBakk関数に比較させる
+                var appliedAttribute = argmentsObj.computedtyleOfElement.getPropertyValue(argmentsObj.attributeName);
+                if(typeof argmentsObj.callbackWhenVerify == 'function'){ //コールバック関数によるチェック指定アリの場合
+                    convertedResultObj = argmentsObj.callbackWhenVerify(applyThisAttribute, appliedAttribute); //一致確認用CallBakk関数に比較させる
                 
                 }else{ //コールバック関数によるチェック指定ナシの場合
                     convertedResultObj = {
@@ -3331,7 +3350,7 @@
                     };
                     if(applyThisAttribute != appliedAttribute){ //文字列が一致しない場合
                         convertedResultObj.succeeded = false;
-                        var wrn  = "Specified style in \`" + propertyName + "\` did not applied. " +
+                        var wrn  = "Specified style in \`" + argmentsObj.propertyName + "\` did not applied. " +
                                    "specified style:\`" + applyThisAttribute + "\`, browser applied style:\`" + appliedAttribute + "\`.";
                         console.warn(wrn);
                         convertedResultObj.warningMessage = wrn;
@@ -3340,95 +3359,113 @@
 
                 if(!(convertedResultObj.succeeded)){ //computed styleに適用されなかった場合
                     
-                    FailuredMessagesObj[propertyName] = convertedResultObj.warningMessage;
-                    $3element.style(attributeName, previousAttribute); //変更前の状態に戻す
+                    argmentsObj.failuredMessagesObj[argmentsObj.propertyName] = convertedResultObj.warningMessage;
+                    argmentsObj.$3element.style(argmentsObj.attributeName, previousAttribute); //変更前の状態に戻す
                 
                 }else{ //適用された場合
-                    prevReportObj[propertyName] = previousAttribute;
-                    renderedReportObj[propertyName] = renderByThisObj[propertyName];
-                    bindedObj[propertyName]= renderByThisObj[propertyName];
+
+                    //todo
+                    // selection layer に適用が必要かどうか判断して、
+                    // 必要な場合のみ適用する
+
+                    if(typeof argmentsObj.$3sameTypeElement == 'object'){ //同じstyleを適用するelementがある場合
+                        argmentsObj.$3sameTypeElement.style(argmentsObj.attributeName, applyThisAttribute); //style適用
+                    }
+
+                    argmentsObj.prevReportObj[argmentsObj.propertyName] = previousAttribute;
+                    argmentsObj.renderedReportObj[argmentsObj.propertyName] = argmentsObj.renderByThisObj[argmentsObj.propertyName];
+                    argmentsObj.bindedObj[argmentsObj.propertyName]= argmentsObj.renderByThisObj[argmentsObj.propertyName];
                 }
             }
         }
     }
 
+    //
     // 0.0(number) -> "0.0px"(string)
-    function applyStyleSafely_NumberToPixel(bindedObj,
-                                            $3element,
-                                            inlineStyleOfElement,
-                                            computedtyleOfElement,
-                                            propertyName,
-                                            attributeName,
-                                            renderByThisObj,
-                                            prevReportObj,
-                                            renderedReportObj,
-                                            FailuredMessagesObj){
+    //
+    //指定必須プロパティ
+    //
+    // | Propery name          | Description                                   |
+    // | --------------------- | --------------------------------------------- |
+    // | bindedObj             | Objcet that was binded by d3.js               |
+    // | $3element             | DOM element selection(d3.js selection)        |
+    // | inlineStyleOfElement  | Inline style of DOM element                   |
+    // | computedtyleOfElement | Computed style of DOM element                 |
+    // | propertyName          | Specified property name in argment object     |
+    // | attributeName         | To appliying attribute name (in inline style) |
+    // | renderByThisObj       | Argment Object                                |
+    // | prevReportObj         | Object to save previous style                 |
+    // | renderedReportObj     | Object to save rendered style                 |
+    // | failuredMessagesObj   | Object to save warning message                |
+    //
+    function applyStyleSafely_NumberToPixel(argmentsObj){
             
         //変更前状態を取得
-        var previousAttribute = inlineStyleOfElement.getPropertyValue(attributeName);
+        var previousAttribute = argmentsObj.inlineStyleOfElement.getPropertyValue(argmentsObj.attributeName);
         if(previousAttribute == ""){
             previousAttribute = null;
         }
 
-        if(renderByThisObj[propertyName] === null){ //削除指定の場合
-            $3element.style(attributeName, null); //削除
+        if(argmentsObj.renderByThisObj[argmentsObj.propertyName] === null){ //削除指定の場合
+            argmentsObj.$3element.style(argmentsObj.attributeName, null); //削除
 
             if(previousAttribute !== null){
                 previousAttribute = parseFloat(previousAttribute); // "0.0px"(string) -> 0.0(number) 形式に変換
             }
-            prevReportObj[propertyName] = previousAttribute;
-            renderedReportObj[propertyName] = null;
-            delete bindedObj[propertyName];
+            argmentsObj.prevReportObj[argmentsObj.propertyName] = previousAttribute;
+            argmentsObj.renderedReportObj[argmentsObj.propertyName] = null;
+            delete argmentsObj.bindedObj[argmentsObj.propertyName];
         
-        }else if(typeof renderByThisObj[propertyName] != 'number'){ //型がnumberでない場合
-            var wrn = "Wrong type specified in \`" + propertyName + "\`. " +
-                      "specified type:\`" + (typeof (renderByThisObj[propertyName])) + "\`, expected type:\`number\`.";
+        }else if(typeof argmentsObj.renderByThisObj[argmentsObj.propertyName] != 'number'){ //型がnumberでない場合
+            var wrn = "Wrong type specified in \`" + argmentsObj.propertyName + "\`. " +
+                      "specified type:\`" + (typeof (argmentsObj.renderByThisObj[argmentsObj.propertyName])) + "\`, expected type:\`number\`.";
             console.warn(wrn);
-            FailuredMessagesObj[propertyName] = wrn;
+            argmentsObj.failuredMessagesObj[argmentsObj.propertyName] = wrn;
         
         }else{ //型がnumber
             var pixcelNumberRegex = new RegExp(/^[-]?[0-9]+(\.[0-9]+)?px$/);
-            var applyThisAttribute = renderByThisObj[propertyName] + "px";
+            var applyThisAttribute = argmentsObj.renderByThisObj[argmentsObj.propertyName] + "px";
 
             if(!(pixcelNumberRegex.test(applyThisAttribute))){ //指定数値が `0.0px`形式にならない場合(ex: NaNを指定)
-                var wrn = "Invalid Number \`" + renderByThisObj[propertyName].toString() + "\` specified.";
+                var wrn = "Invalid Number \`" + argmentsObj.renderByThisObj[argmentsObj.propertyName].toString() + "\` specified.";
                 console.warn(wrn);
-                FailuredMessagesObj[propertyName] = wrn;
+                argmentsObj.failuredMessagesObj[argmentsObj.propertyName] = wrn;
 
             }else{
-                $3element.style(attributeName, applyThisAttribute);
+                argmentsObj.$3element.style(argmentsObj.attributeName, applyThisAttribute);
 
                 //適用可否チェック
-                var appliedAttribute = computedtyleOfElement.getPropertyValue(attributeName);
+                var appliedAttribute = argmentsObj.computedtyleOfElement.getPropertyValue(argmentsObj.attributeName);
 
                 if(!(pixcelNumberRegex.test(appliedAttribute))){ // `0.0px`形式に設定できていない場合
                                                                  // 指数表記になるような極端な数値も、このルートに入る
 
-                    var wrn = "Specified style in \`" + propertyName + "\` did not applied. " +
+                    var wrn = "Specified style in \`" + argmentsObj.propertyName + "\` did not applied. " +
                               "specified style:\`" + applyThisAttribute + "\`, browser applied style:\`" + appliedAttribute + "\`.";
                     console.warn(wrn);
-                    FailuredMessagesObj[propertyName] = wrn;
+                    argmentsObj.failuredMessagesObj[argmentsObj.propertyName] = wrn;
 
-                    $3element.style(attributeName, previousAttribute); //変更前の状態に戻す
+                    argmentsObj.$3element.style(argmentsObj.attributeName, previousAttribute); //変更前の状態に戻す
 
                 }else{
 
                     //適用されたstrke-widthと指定したstrke-widthの差分チェック
-                    if( Math.abs(parseFloat(appliedAttribute) - renderByThisObj[propertyName]) >= 0.1){
-                        var wrn = "Specified style in \`" + propertyName + "\` did not applied. " +
+                    if( Math.abs(parseFloat(appliedAttribute) - argmentsObj.renderByThisObj[argmentsObj.propertyName]) >= 0.1){
+                        var wrn = "Specified style in \`" + argmentsObj.propertyName + "\` did not applied. " +
                                   "specified style:\`" + applyThisAttribute + "\`, browser applied style:\`" + appliedAttribute + "\`.";
                         console.warn(wrn);
-                        FailuredMessagesObj[propertyName] = wrn;
+                        argmentsObj.failuredMessagesObj[argmentsObj.propertyName] = wrn;
 
-                        $3element.style(attributeName, previousAttribute); //変更前の状態に戻す
+                        argmentsObj.$3element.style(argmentsObj.attributeName, previousAttribute); //変更前の状態に戻す
                     
                     }else{ //適用された場合
                         if(previousAttribute !== null){
                             previousAttribute = parseFloat(previousAttribute); // "0.0px"(string) -> 0.0(number) 形式に変換
                         }
-                        prevReportObj[propertyName] = previousAttribute;
-                        renderedReportObj[propertyName] = renderByThisObj[propertyName];
-                        bindedObj[propertyName] = renderByThisObj[propertyName];
+
+                        argmentsObj.prevReportObj[argmentsObj.propertyName] = previousAttribute;
+                        argmentsObj.renderedReportObj[argmentsObj.propertyName] = argmentsObj.renderByThisObj[argmentsObj.propertyName];
+                        argmentsObj.bindedObj[argmentsObj.propertyName] = argmentsObj.renderByThisObj[argmentsObj.propertyName];
                     }
                 }
             }
