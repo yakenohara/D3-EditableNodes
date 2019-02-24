@@ -1472,11 +1472,6 @@
         }
     }
 
-    //todo delete this
-    xxx = function deltest(toDeleteKeyArr){
-        return deleteNodes(toDeleteKeyArr);
-    }
-
     //
     //SVGノード(複数)を削除する
     //
@@ -3805,7 +3800,7 @@
         var $historyMessageElem  = $($3historyMessageElem.node());
 
         //transactionに対するMouseEnterイベント
-        $historyMessageElem.mouseenter(function(){ //todo forcesimulation
+        $historyMessageElem.mouseenter(function(){
             
             var thisElem = this;
             var specifiedIndex = parseInt($(thisElem).attr("data-history_index"));
@@ -4132,8 +4127,7 @@
     function exportNodes(selectedOnly){
 
         var toExportObjArr = {};
-        toExportObjArr.datas = [];
-
+        
         //吐き出し用Obj生成ループ
         $3svgNodes.each(function(d,i){
             
@@ -4145,17 +4139,42 @@
 
             //吐き出し用Objを生成
             var toExportObj = {};
+            toExportObj.key = d.key;
             toExportObj.type = d.type;
             toExportObj[d.type] = {};
             mergeObj(d[d.type], toExportObj[d.type], false); // contentコピー
 
+            if(typeof toExportObjArr.datas == 'undefined'){ //data property未定義(= 1回目の追加の場合)
+                toExportObjArr.datas = [];
+            }
             toExportObjArr.datas.push(toExportObj); //配列に追加
         });
 
-        //todo link の吐き出し用Obj生成ループ
+        //link の吐き出し用Obj生成ループ
+        $3svgLinks.each(function(d,i){
+            
+            //選択ノードチェック
+            if(selectedOnly &&
+               (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() != 'true')){ //選択していない場合
+                return; //吐き出し対象から除外
+            }
 
-        if(toExportObjArr.datas.length == 0){ //吐き出すNodeが存在しない場合 //todo linkの存在を考慮
-            console.warn("No Node to Export");
+            //吐き出し用Objを生成
+            var toExportObj = {};
+            toExportObj.source = d.source.key;
+            toExportObj.target = d.target.key;
+            toExportObj.type = d.type;
+            toExportObj[d.type] = {};
+            mergeObj(d[d.type], toExportObj[d.type], false); // contentコピー
+
+            if(typeof toExportObjArr.links == 'undefined'){ //data property未定義(= 1回目の追加の場合)
+                toExportObjArr.links = [];
+            }
+            toExportObjArr.links.push(toExportObj); //配列に追加
+        });
+
+        if((toExportObjArr.datas.length == 0) && (toExportObjArr.links.length == 0)){ //吐き出すNodeが存在しない場合 //todo linkの存在を考慮
+            console.warn("No Node and Link to Export");
         
         }else{ //吐き出すNodeが存在する場合
             var txtCntnt = JSON.stringify(toExportObjArr, null, '    ');
