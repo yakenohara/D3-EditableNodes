@@ -534,7 +534,7 @@
         .data(dataset.datas, function(d){return d.key});
 
     $3svgLinks = $3svgLinksGroup.selectAll("g.link") // link追加
-        .data(dataset.links);
+        .data(dataset.links, function(d){return d.key});
 
     //ファイルのDragoverイベント
     $SVGDrawingAreaElement.get(0).addEventListener('dragover', function(e){
@@ -1351,7 +1351,7 @@
             if(numOfAppeddedLink > 0){
                 
                 $3svgLinks = $3svgLinksGroup.selectAll("g.link")
-                    .data(dataset.links);
+                    .data(dataset.links, function(d){return d.key});
                     
                 $3svgLinks.enter()
                     .append("g")
@@ -1398,7 +1398,7 @@
                         });
                     });
 
-                //増えた<g>要素に合わせて$node selectionを再調整
+                //増えた<g>要素に合わせて$link selectionを再調整
                 $3svgLinks = $3svgLinksGroup.selectAll("g.link")
                     .data(dataset.links);
             
@@ -1466,11 +1466,16 @@
         }
     }
 
+    //todo delete this
+    xxx = function deltest(toDeleteKeyArr){
+        return deleteNodes(toDeleteKeyArr);
+    }
+
     // todo linkを消せるようにする
     //
     //SVGノード(複数)を削除する
     //
-    xxx = function deleteNodes(toDeleteKeyArr){ //todo localize
+    function deleteNodes(toDeleteKeyArr){ //todo localize
 
         var deletingTotalReport = {};
         deletingTotalReport.type = 'delete';
@@ -1516,6 +1521,7 @@
 
         //削除指定keyが1つも見つからなかった場合
         if((numOfDeletedNodes == 0) && (numOfDeletedLinks == 0)){
+            console.warn("Valid key(s) not found");
             return deletingTotalReport; //allNGで返す
         }
 
@@ -1555,11 +1561,9 @@
 
         if(numOfDeletedLinks > 0){
 
-            //todo linkがおかしくなる
-
             //rebind using D3.js
             $3svgLinks = $3svgLinksGroup.selectAll("g.link")
-                    .data(dataset.links);
+                    .data(dataset.links, function(d){return d.key});
 
             $3svgLinks.exit()
                 .each(function(d,i){
