@@ -76,7 +76,6 @@
     };
     transactionHistory = [];  //history
 
-    var linkKey = -1; //linkの内部処理用id値
     var nowEditng = false;　      //Property Edit Console が起動中かどうか
     var editingKeys = []; //Property Edit Console の 編集対象ノードのkey
     var lastSelectedData = null;　//最後に選択状態にしたNode    
@@ -690,7 +689,7 @@
 
             $3svgLinks.each(function(d, i){
                 d.$3bindedSVGLinkElement.attr("transform", d3.event.transform);
-                //todo slection layer control
+                d.$3bindedSelectionLayerSVGElement.attr("transform", d3.event.transform);
             });
 
             if(nowEditng){
@@ -898,9 +897,40 @@
             //定義型チェックループ
             for(var i = 0 ; i < appendThisObjArr.links.length  ; i++){
 
-                if(typeof appendThisObjArr.links[i].key != 'undefined'){ //links[]内にkeyプロパティが存在する場合
-                    console.warn("links[" + i.toString() + "] has rserved property \`key\`:\`" + appendThisObjArr.links[i].key + "\`. This specified property will be ignored.");
-                    delete appendThisObjArr.links[i].key;
+                var typeOf_key = (typeof appendThisObjArr.links[i].key);
+
+                switch(typeOf_key){
+                    case 'undefined':
+                    {
+                        appendThisObjArr.links[i].key = i.toString();//appendThisObjArr.links[]内のindex noをkeyとして使う
+                    }
+                    break;
+
+                    case 'string':
+                    {
+                        //空文字回避
+                        if(appendThisObjArr.links[i].key == ""){
+                            var empstr = "(EmptyString)";
+                            console.warn("\`\`(empty string) is defined in links[" + i + "\].key ." +
+                                         " key:\`" + empstr + "\` will apply.");
+                            appendThisObjArr.links[i].key = empstr;
+                        }
+                    }
+                    break;
+
+                    case 'number':
+                    {
+                        appendThisObjArr.links[i].key = appendThisObjArr.links[i].key.toString(); //文字列型に変換
+                    }
+                    break;
+
+                    default: //unknown な型の場合
+                    {
+                        console.warn("key \`" + appendThisObjArr.links[i].key.toString() + "\` is defined as \`" + typeOf_key + "\` type. " +
+                                     "key \`" + i.toString() + "\` will apply.");
+                        appendThisObjArr.links[i].key = i.toString();
+                    }
+                    break;
                 }
 
                 var sourceKeyNameIsDefinedInArgDatas = keyIsDefinedInArgDatas("source");
@@ -981,50 +1011,15 @@
 
                 //key重複チェック
                 if(typeof (getBindedDataFromKey(toAppendObj.key)) != 'undefined'){ //重複があった場合
-                    
-                    var incrementedIntNum;
+                            
+                    var uniqueKeyName = makeUniqueKey(toAppendObj.key, getBindedDataFromKey);
 
-                    var stringInFront;
-
-                    //ieee754 の 倍精度浮動小数点数 で正確に表せる整数値(より1桁少なく)まで取り出す
-                    var intNumPart = toAppendObj.key.match(/(\d){1,15}$/);
-
-                    if(intNumPart === null){ //数値部分が存在しない場合
-                        stringInFront = toAppendObj.key + "_";
-                        intNumPart = 2;
-                    
-                    }else{ //数値部分が存在する場合
-                        stringInFront = toAppendObj.key.substr(0, toAppendObj.key.length - intNumPart[0].length); //マッチした部分以外を抽出
-                        incrementedIntNum = parseInt(intNumPart) + 1;
-                        if(incrementedIntNum.toString().length > 15){
-                            stringInFront = toAppendObj.key + "_";
-                            intNumPart = 2;
-                        }else{
-                            intNumPart = incrementedIntNum;
-                        }
-                    }
-
-                    // Unique Key 生成
-                    while(true){
-                        var tryThisKeyName = stringInFront + intNumPart.toString();
+                    console.warn("datas[" + i + "\].key:\`" + appendThisObjArr.datas[i].key  + "\` is already used. " +
+                                 "Unique key:\`" + uniqueKeyName + "\` will apply.");
+                    convToAvoidDupliKeyDifi[toAppendObj.key] = uniqueKeyName; //key名変更を記録
+                    toAppendObj.key = uniqueKeyName; //重複しないkeyで上書き
+                    //note appendingTotalReport.AllOK は変更しない (NodeRenderingに失敗したわけではない為)
                         
-                        if(typeof (getBindedDataFromKey(tryThisKeyName)) == 'undefined'){ //重複がなかった場合
-                            console.warn("datas[" + i + "\].key:\`" + appendThisObjArr.datas[i].key  + "\` is already used. " +
-                                         "Unique key:\`" + tryThisKeyName + "\` will apply.");
-                            convToAvoidDupliKeyDifi[toAppendObj.key] = tryThisKeyName; //key名変更を記録
-                            toAppendObj.key = tryThisKeyName; //重複しないkeyで上書き
-                            //note appendingTotalReport.AllOK は変更しない (NodeRenderingに失敗したわけではない為)
-                            break;
-                        }
-
-                        incrementedIntNum = intNumPart + 1;
-                        if(incrementedIntNum.toString().length > 15){
-                            stringInFront = stringInFront + intNumPart.toString() + "_";
-                            intNumPart = 2;
-                        }else{
-                            intNumPart = incrementedIntNum;
-                        }
-                    }
                 }
 
                 dataset.datas.push(toAppendObj); //datas[]へ追加
@@ -1099,7 +1094,7 @@
                     //
                     // SVGノードの単一選択イベント 
                     //
-                    // note doubleclick時に2回呼ばれて不要がTogglingが発生するが、
+                    // note doubleclick時に2回呼ばれて不要なTogglingが発生するが、
                     //      .on('dblclick', function()~ によって強制的に選択状態にされる
                     //
                     d.$3bindedSVGElement.on('click', function(d){
@@ -1307,8 +1302,6 @@
                     var toAppendObj = {};
                     mergeObj(appendThisObjArr.links[i], toAppendObj, false); //objectコピー
 
-                    toAppendObj.key = (++linkKey).toString();
-
                     var sourceKeyIsExist = isExistKey("source");
                     var targetKeyIsExist = isExistKey("target");
 
@@ -1342,6 +1335,19 @@
                     }
 
                     if(sourceKeyIsExist && targetKeyIsExist){
+
+                        //key重複チェック
+                        if(typeof (getBindedLinkDataFromKey(toAppendObj.key)) != 'undefined'){ //重複があった場合
+                            
+                            var uniqueKeyName = makeUniqueKey(toAppendObj.key, getBindedLinkDataFromKey);
+
+                            console.warn("links[" + i + "\].key:\`" + appendThisObjArr.links[i].key  + "\` is already used. " +
+                                         "Unique key:\`" + uniqueKeyName + "\` will apply.");
+                            toAppendObj.key = uniqueKeyName; //重複しないkeyで上書き
+                            //note appendingTotalReport.AllOK は変更しない (NodeRenderingに失敗したわけではない為)
+                                
+                        }
+
                         dataset.links.push(toAppendObj); //dataset.links[]に追加
                         numOfAppeddedLink++;
                     }
@@ -1471,11 +1477,10 @@
         return deleteNodes(toDeleteKeyArr);
     }
 
-    // todo linkを消せるようにする
     //
     //SVGノード(複数)を削除する
     //
-    function deleteNodes(toDeleteKeyArr){ //todo localize
+    function deleteNodes(toDeleteKeyArr){
 
         var deletingTotalReport = {};
         deletingTotalReport.type = 'delete';
@@ -1578,6 +1583,7 @@
                     //SVG削除前のPropertyを保存する為、defaltObjで再度レンダリングする
                     var renderReport = renderSVGLink(d, defaultObj); //SVGレンダリング
                     renderReport.PrevObj.type = d.type; //削除前のtypeをPrevObjに保存
+                    
                     if(!renderReport.allOK){ //失敗が発生した場合
                         deletingTotalReport.allOK = false;
                     }
@@ -3141,6 +3147,22 @@
             }
         }
 
+        //結合先Nodeが指定されていた場合のチェック
+        sourceOrTargetCheck('source');
+        sourceOrTargetCheck('target');
+        function sourceOrTargetCheck(sourceOrTarget){
+            if(typeof renderByThisObj[sourceOrTarget] == 'string'){ //simulation 実行前の場合
+
+                if(typeof bindedData[sourceOrTarget] == 'object'){ //結合先変更の場合
+                    reportObj.PrevObj[sourceOrTarget] = bindedData[sourceOrTarget].key;
+                }else{ //1回目の描画の場合
+                    reportObj.PrevObj[sourceOrTarget] = null;
+                }
+    
+                reportObj.RenderedObj[sourceOrTarget] = renderByThisObj[sourceOrTarget];
+            }
+        }
+
         return reportObj;
     }
 
@@ -3470,10 +3492,6 @@
                     argmentsObj.$3element.style(argmentsObj.attributeName, previousAttribute); //変更前の状態に戻す
                 
                 }else{ //適用された場合
-
-                    //todo
-                    // selection layer に適用が必要かどうか判断して、
-                    // 必要な場合のみ適用する
 
                     if(typeof argmentsObj.$3sameTypeElement == 'object'){ //同じstyleを適用するelementがある場合
                         argmentsObj.$3sameTypeElement.style(argmentsObj.attributeName, applyThisAttribute); //style適用
@@ -3941,20 +3959,30 @@
             //削除対象key収集ループ
             var toDeleteKeyArr = {};
             toDeleteKeyArr.datas = [];
+            toDeleteKeyArr.links = [];
+
+            //transaction.reportsArr.datas[]の網羅ループ
             for(var i = 0 ; i < transaction.reportsArr.datas.length ; i++){
                 var reportObj = transaction.reportsArr.datas[i];
                 toDeleteKeyArr.datas.push(reportObj.key); //削除指定keyArrayに追加
             }
 
-            //todo transaction.reportsArr.links[]の網羅ループ
+            //transaction.reportsArr.links[]の網羅ループ
+            for(var i = 0 ; i < transaction.reportsArr.links.length ; i++){
+                var reportObj = transaction.reportsArr.links[i];
+                toDeleteKeyArr.links.push(reportObj.key); //削除指定keyArrayに追加
+            }
 
-            rollbackRenderringReport = deleteNodes(toDeleteKeyArr); //Node(s)削除
+            rollbackRenderringReport = deleteNodes(toDeleteKeyArr); //Node(s), Link(s)削除
         }
 
         function call_appendNodes(){
             //追加NodeArray生成ループ
             var toAppendObjArr = {};
             toAppendObjArr.datas = [];
+            toAppendObjArr.links = [];
+
+            //transaction.reportsArr.datas[]の網羅ループ
             for(var i = 0 ; i < transaction.reportsArr.datas.length ; i++){
                 var reportObj = transaction.reportsArr.datas[i];
                 var toAppendObj = {};
@@ -3963,9 +3991,16 @@
                 toAppendObjArr.datas.push(toAppendObj);
             }
 
-            //todo transaction.reportsArr.links[]の網羅ループ
-
-            rollbackRenderringReport = appendNodes(toAppendObjArr); //Nodes(s)復活
+            //transaction.reportsArr.links[]の網羅ループ
+            for(var i = 0 ; i < transaction.reportsArr.links.length ; i++){
+                var reportObj = transaction.reportsArr.links[i];
+                var toAppendObj = {};
+                mergeObj(reportObj[toApplyObjName], toAppendObj, false); //オブジェクトコピー
+                toAppendObj.key = reportObj.key; //キー番号をhistoryから復活させる
+                toAppendObjArr.links.push(toAppendObj);
+            }
+            
+            rollbackRenderringReport = appendNodes(toAppendObjArr); //Nodes(s), Link(s)復活
         }
 
         function call_changeNodes(){
@@ -5785,6 +5820,52 @@
         
     }
 
+    //key重複チェック
+    function makeUniqueKey(baseKeyName, bindedDataGetter){
+        
+        var incrementedIntNum;
+        var stringInFront;
+        var uniqueKey;
+
+        //ieee754 の 倍精度浮動小数点数 で正確に表せる整数値(より1桁少なく)まで取り出す
+        var intNumPart = baseKeyName.match(/(\d){1,15}$/);
+
+        if(intNumPart === null){ //数値部分が存在しない場合
+            stringInFront = baseKeyName + "_";
+            intNumPart = 2;
+        
+        }else{ //数値部分が存在する場合
+            stringInFront = baseKeyName.substr(0, baseKeyName.length - intNumPart[0].length); //マッチした部分以外を抽出
+            incrementedIntNum = parseInt(intNumPart) + 1;
+            if(incrementedIntNum.toString().length > 15){
+                stringInFront = baseKeyName + "_";
+                intNumPart = 2;
+            }else{
+                intNumPart = incrementedIntNum;
+            }
+        }
+
+        // Unique Key 生成
+        while(true){
+            var tryThisKeyName = stringInFront + intNumPart.toString();
+            
+            if(typeof (bindedDataGetter(tryThisKeyName)) == 'undefined'){ //重複がなかった場合
+                uniqueKey = tryThisKeyName;
+                break;
+            }
+
+            incrementedIntNum = intNumPart + 1;
+            if(incrementedIntNum.toString().length > 15){
+                stringInFront = stringInFront + intNumPart.toString() + "_";
+                intNumPart = 2;
+            }else{
+                intNumPart = incrementedIntNum;
+            }
+        }
+
+        return uniqueKey;
+    }
+
     //
     //dataset.datas[]から特定キー番号のオブジェクトを返す
     //存在しない場合は、'undefined'を返す
@@ -5803,6 +5884,31 @@
         for(var i = 0 ; i <  dataset.datas.length ; i++){
             if(dataset.datas[i].key == findByThisKey){
                 bindedData = dataset.datas[i];
+                break;
+            }
+        }
+
+        return bindedData;
+    }
+
+    //
+    //dataset.datas[]から特定キー番号のオブジェクトを返す
+    //存在しない場合は、'undefined'を返す
+    //
+    function getBindedLinkDataFromKey(findByThisKey){
+
+        //引数チェック
+        if(typeof findByThisKey != 'string'){
+            console.warn("specified argument \`findByThisKey\` type is not \`string\`");
+            return;
+        }
+
+        var bindedData;
+
+        //検索ループ
+        for(var i = 0 ; i <  dataset.links.length ; i++){
+            if(dataset.links[i].key == findByThisKey){
+                bindedData = dataset.links[i];
                 break;
             }
         }
