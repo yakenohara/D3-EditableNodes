@@ -3501,6 +3501,12 @@
     // | renderedReportObj     | Object to save rendered style                 |
     // | failuredMessagesObj   | Object to save warning message                |
     //
+    //任意指定プロパティ
+    //
+    // | Propery name                | Description                                                |
+    // | --------------------------- | ---------------------------------------------------------- |
+    // | $3sameTypeElement           | DOM element selection (d3.js selection)                    |
+    //
     function applyStyleSafely_NumberToPixel(argmentsObj){
             
         //変更前状態を取得
@@ -3562,6 +3568,12 @@
                         argmentsObj.$3element.style(argmentsObj.attributeName, previousAttribute); //変更前の状態に戻す
                     
                     }else{ //適用された場合
+
+                        //同形式のDOM element に対しても style を適用する
+                        if(typeof argmentsObj.$3sameTypeElement != 'undefined'){
+                            argmentsObj.$3sameTypeElement.style(argmentsObj.attributeName, applyThisAttribute);
+                        }
+                        
                         if(previousAttribute !== null){
                             previousAttribute = parseFloat(previousAttribute); // "0.0px"(string) -> 0.0(number) 形式に変換
                         }
