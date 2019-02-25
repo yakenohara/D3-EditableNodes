@@ -77,7 +77,8 @@
     transactionHistory = [];  //history
 
     var nowEditng = false;　      //Property Edit Console が起動中かどうか
-    var editingKeys = []; //Property Edit Console の 編集対象ノードのkey
+    var editingNodeKeys = []; //Property Edit Console の 編集対象ノードのkey
+    var editingLinkKeys = []; //Property Edit Console の 編集対象Linkのkey
     var lastSelectedData = null;　//最後に選択状態にしたNode    
     var pointingIndexOfHistory = -1;      //historyのどのindexが選択されているか
     
@@ -1114,7 +1115,7 @@
                                 }
                             }
 
-                            //別ノードすべてを選択解除する(links[])
+                            //Linkすべてを選択解除する
                             for(var i = 0 ; i < dataset.links.length ; i++){
                                 dataset.links[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
                                     .attr("data-selected", "false"); //選択解除
@@ -1164,7 +1165,11 @@
                             }
                         }
 
-                        //todo linkに対する 選択解除
+                        //Linkすべてを選択解除する
+                        for(var i = 0 ; i < dataset.links.length ; i++){
+                            dataset.links[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
+                                .attr("data-selected", "false"); //選択解除
+                        }
                         
                         editSVGNodes();
                         lastSelectedData = d; //最終選択Nodeの記憶
@@ -1397,9 +1402,6 @@
 
                         d.$3bindedSVGLinkElement.on('click', function(d){
 
-                            //todo selection control
-                            console.log("clicked.");
-
                             //External Componentが未loadの場合はハジく
                             if(!(checkSucceededLoadOf_ExternalComponent())){return;}
                             
@@ -1438,8 +1440,37 @@
 
                         d.$3bindedSVGLinkElement.on('dblclick', function(d){
 
-                            //todo selection control and launch editor
-                            console.log("dbl clicked.");
+                            //External Componentが未loadの場合はハジく
+                            if(!(checkSucceededLoadOf_ExternalComponent())){return;}
+                            
+                            if(nowEditng){ // 編集中の場合
+                                        // -> 発生し得ないルート
+                                        //    (直前に呼ばれる単一選択イベントによって、編集中が解除される為)
+                    
+                                exitEditing(); //編集モードの終了
+                            
+                            }
+                    
+                            //Nodeすべてを選択解除する
+                            for(var i = 0 ; i < dataset.datas.length ; i++){
+                                dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden") //選択解除
+                                    .attr("data-selected", "false"); //選択解除
+                            }
+
+                            //別Linkすべてを選択解除して、自分のLinkのみ選択状態にする
+                            for(var i = 0 ; i < dataset.links.length ; i++){
+                                if(dataset.links[i].key != d.key){ //自分のノードでない場合
+                                    dataset.links[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden") //選択解除
+                                        .attr("data-selected", "false"); //選択解除
+                                
+                                }else{ //自分のノードの場合
+                                    dataset.links[i].$3bindedSelectionLayerSVGElement.style("visibility",null) //選択
+                                        .attr("data-selected", "true"); //選択解除
+                                }
+                            }
+                            lastSelectedData = null;
+                            
+                            editSVGNodes();
                         });
                     });
 
@@ -4267,20 +4298,29 @@
     //
     function editSVGNodes(){
 
-        editingKeys = [];
+        editingNodeKeys = [];
+        editingLinkKeys = [];
+        
         //選択状態のNodeに対するSelectionLayerを非表示にする
         $3svgNodes.each(function(d,i){
 
             if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択状態の場合
                 d.$3bindedSelectionLayerSVGElement.style("visibility","hidden"); //非表示にする
-                editingKeys.push(d.key);
+                editingNodeKeys.push(d.key);
                 propertyEditorsManager.append(d);
             }
         });
 
-        //todo linkに対する同様処理
+        //選択状態のLinkに対するSelectionLayerを非表示にする
+        $3svgLinks.each(function(d,i){
 
-        if(editingKeys.length > 0){ //1つ以上のNodeを選択している場合
+            if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択状態の場合
+                d.$3bindedSelectionLayerSVGElement.style("visibility","hidden"); //非表示にする
+                editingLinkKeys.push(d.key);
+            }
+        });
+
+        if(editingNodeKeys.length > 0 || editingLinkKeys > 0){ //1つ以上の Node or Link を選択している場合
             //選択 Node(s) を元に PropertyEditConsole に反映
             adjustPropertyEditConsole();
             $propertyEditConsoleElement.slideDown(100); //PropertyEditorを表示
@@ -4306,7 +4346,7 @@
 
         propertyEditorsManager.exit(); // Node個別編集用 PropertyEditor を終了
 
-        var editingKeysForCheck = editingKeys.slice(0, editingKeys.length);
+        var editingKeysForCheck = editingNodeKeys.slice(0, editingNodeKeys.length);
 
         $3svgNodes.each(function(d,i){
 
@@ -4358,7 +4398,7 @@
                 }
             }
 
-            //todo link に対する同様の処理
+            //todo link の選択状態を考慮
 
             if(computedStylesOfData.length > 0){ //編集対象Nodeが存在する場合
 
