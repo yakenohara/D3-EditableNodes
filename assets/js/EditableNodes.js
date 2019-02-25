@@ -1114,7 +1114,11 @@
                                 }
                             }
 
-                            //todo linkに対する 選択解除
+                            //別ノードすべてを選択解除する(links[])
+                            for(var i = 0 ; i < dataset.links.length ; i++){
+                                dataset.links[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
+                                    .attr("data-selected", "false"); //選択解除
+                            }
                         }
                 
                         var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
@@ -1395,6 +1399,41 @@
 
                             //todo selection control
                             console.log("clicked.");
+
+                            //External Componentが未loadの場合はハジく
+                            if(!(checkSucceededLoadOf_ExternalComponent())){return;}
+                            
+                            exitEditing(); //編集モードの終了
+                    
+                            if(!(d3.event.ctrlKey)){ //ctrl key 押下でない場合
+                    
+                                //別ノードすべてを選択解除する
+                                for(var i = 0 ; i < dataset.datas.length ; i++){
+                                    dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
+                                        .attr("data-selected", "false"); //選択解除
+                                }
+
+                                //別ノードすべてを選択解除する(links[])
+                                for(var i = 0 ; i < dataset.links.length ; i++){
+                                    if(dataset.links[i].key != d.key){ //自分のノードでない場合
+                                        dataset.links[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
+                                            .attr("data-selected", "false"); //選択解除
+                                    }
+                                }
+                            }
+                    
+                            var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
+                    
+                            //選択状態を切り替える
+                            if(isSelected){ //選択状態の場合
+                                d.$3bindedSelectionLayerSVGElement.style("visibility","hidden") //非表示にする
+                                    .attr("data-selected", "false"); //選択解除
+                    
+                            }else{ //非選択状態の場合
+                                d.$3bindedSelectionLayerSVGElement.style("visibility",null) //表示状態にする
+                                    .attr("data-selected", "true"); //選択
+                            }
+                            lastSelectedData = null;
                         });
 
                         d.$3bindedSVGLinkElement.on('dblclick', function(d){
@@ -4214,8 +4253,10 @@
             //nothing to do
         
         }else{ // 編集中でない場合
+            
+            editSVGNodes(); //note 選択状態になっているNodeかLinkが1つ以上あるかどうかは、この関数内で確認する
+
             if(lastSelectedData !== null){ //選択対象Nodeが存在する場合
-                editSVGNodes();
                 propertyEditorsManager.focus(lastSelectedData);
             }
         }
