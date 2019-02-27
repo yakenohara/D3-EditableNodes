@@ -1893,6 +1893,10 @@
                     }
                     renderSVGLink(d, renderByThisObj);
                 });
+
+                if(nowEditng){
+                    adjustPropertyEditConsole(true); //Node個別編集機能のみadjustする(heavyすぎる為)
+                }
             });
 
         simulation.force("link")
