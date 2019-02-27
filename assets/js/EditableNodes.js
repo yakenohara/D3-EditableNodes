@@ -83,12 +83,14 @@
     var pointingIndexOfHistory = -1;      //historyのどのindexが選択されているか
     
     var $3motherElement; //全てのもと
-    var $3propertyEditConsoleElement; //Property Edit Console (D3.js selection)
-    var $propertyEditConsoleElement;  //Property Edit Console (jQuery selection)
-    var $3transactionHistoryElement;  //Transaction History (D3.js selection)
-    var $transactionHistoryElement;   //Transaction History (jQuery selection)
-    var $3SVGDrawingAreaElement;      //描画用SVG領域 (D3.js selection)
-    var $SVGDrawingAreaElement;       //描画用SVG領域 (jQuery selection)
+    var $3propertyEditConsoleElement;        //Property Edit Console (D3.js selection)
+    var $propertyEditConsoleElement;         //Property Edit Console (jQuery selection)
+    var $propertyEditConsoleElement_node;    //(For Node) Property Edit Console (jQuery selection)
+    var $propertyEditConsoleElement_link;    //(For Link) Property Edit Console (jQuery selection)
+    var $3transactionHistoryElement;         //Transaction History (D3.js selection)
+    var $transactionHistoryElement;          //Transaction History (jQuery selection)
+    var $3SVGDrawingAreaElement;             //描画用SVG領域 (D3.js selection)
+    var $SVGDrawingAreaElement;              //描画用SVG領域 (jQuery selection)
     var $3svgNodesGroup;
     var $3svgNodes;
     var $3svgLinksGroup;
@@ -156,6 +158,9 @@
         var propertyEditingBehavor_frame_stroke_width;
         var propertyEditingBehavor_frame_stroke_dasharray;
         var propertyEditingBehavor_frame_fill;
+
+        $propertyEditConsoleElement_node = $propertyEditConsoleElement.find(".type.node");
+        $propertyEditConsoleElement_link = $propertyEditConsoleElement.find(".type.link");
 
         //text.text_content
         propertyEditingBehavor_text_text_content = new propertyEditorBehavor_text(['text','text_content']);
@@ -4320,7 +4325,7 @@
             }
         });
 
-        if(editingNodeKeys.length > 0 || editingLinkKeys > 0){ //1つ以上の Node or Link を選択している場合
+        if(editingNodeKeys.length > 0 || editingLinkKeys.length > 0){ //1つ以上の Node or Link を選択している場合
             //選択 Node(s) を元に PropertyEditConsole に反映
             adjustPropertyEditConsole();
             $propertyEditConsoleElement.slideDown(100); //PropertyEditorを表示
@@ -4400,7 +4405,11 @@
 
             //todo link の選択状態を考慮
 
-            if(computedStylesOfData.length > 0){ //編集対象Nodeが存在する場合
+            if(computedStylesOfData.length == 0){ //編集対象Nodeが存在しない場合
+                $propertyEditConsoleElement_node.hide();
+
+            }else{ //編集対象Nodeが存在する場合
+                $propertyEditConsoleElement_node.show();
 
                 var mergedStyle = {};
                 mergedStyle.text = {};
@@ -4438,9 +4447,8 @@
                         break;
                     }
                 }
-
+                
                 propertyEditorsManager.adjust(mergedStyle, mergedExplicitness);
-
             }
         }
         

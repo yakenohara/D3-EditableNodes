@@ -1,139 +1,153 @@
 <div>
 
-    <div class="description">text</div>
+    <div class="type node">
 
-    <!-- text.text_anchor -->
-    <div class="propertyEditor text_text_anchor">
-        <div class="textAnchorType" data-text_anchor_type="start" title="text-anhchor:start;">
-            <svg class="SVGicon" width="18" height="18">
-                <line x1="2" y1="3" x2="16" y2="3" stroke-width="1"/>
-                <line x1="2" y1="7" x2="9" y2="7" stroke-width="1"/>
-                <line x1="2" y1="11" x2="16" y2="11" stroke-width="1"/>
-                <line x1="2" y1="15" x2="9" y2="15" stroke-width="1"/>
-            </svg>
+        <div class="description">Node</div>
+
+        <div class="description">text</div>
+
+        <!-- text.text_anchor -->
+        <div class="propertyEditor text_text_anchor">
+            <div class="textAnchorType" data-text_anchor_type="start" title="text-anhchor:start;">
+                <svg class="SVGicon" width="18" height="18">
+                    <line x1="2" y1="3" x2="16" y2="3" stroke-width="1"/>
+                    <line x1="2" y1="7" x2="9" y2="7" stroke-width="1"/>
+                    <line x1="2" y1="11" x2="16" y2="11" stroke-width="1"/>
+                    <line x1="2" y1="15" x2="9" y2="15" stroke-width="1"/>
+                </svg>
+            </div>
+            <div class="textAnchorType" data-text_anchor_type="middle" title="text-anhchor:middle;">
+                <svg class="SVGicon" width="18" height="18">
+                    <line x1="2" y1="3" x2="16" y2="3" stroke-width="1"/>
+                    <line x1="5" y1="7" x2="13" y2="7" stroke-width="1"/>
+                    <line x1="2" y1="11" x2="16" y2="11" stroke-width="1"/>
+                    <line x1="5" y1="15" x2="13" y2="15" stroke-width="1"/>
+                </svg>
+            </div>
+            <div class="textAnchorType" data-text_anchor_type="end" title="text-anhchor:end;">
+                <svg class="SVGicon" width="18" height="18">
+                    <line x1="2" y1="3" x2="16" y2="3" stroke-width="1"/>
+                    <line x1="9" y1="7" x2="16" y2="7" stroke-width="1"/>
+                    <line x1="2" y1="11" x2="16" y2="11" stroke-width="1"/>
+                    <line x1="9" y1="15" x2="16" y2="15" stroke-width="1"/>
+                </svg>
+            </div>
+            <button class="setAsDefault" type="button" title="set as default">default</button>
+            <small class="message explicitness"></small>
         </div>
-        <div class="textAnchorType" data-text_anchor_type="middle" title="text-anhchor:middle;">
-            <svg class="SVGicon" width="18" height="18">
-                <line x1="2" y1="3" x2="16" y2="3" stroke-width="1"/>
-                <line x1="5" y1="7" x2="13" y2="7" stroke-width="1"/>
-                <line x1="2" y1="11" x2="16" y2="11" stroke-width="1"/>
-                <line x1="5" y1="15" x2="13" y2="15" stroke-width="1"/>
-            </svg>
+
+        <!-- text.text_font_size -->
+        <div class="propertyEditor text_font_size" title="font-size:">
+            <input type="number" class="number_property" />
+            <button class="setAsDefault" type="button" title="set as default">default</button>
+            <small class="message explicitness"></small>
         </div>
-        <div class="textAnchorType" data-text_anchor_type="end" title="text-anhchor:end;">
-            <svg class="SVGicon" width="18" height="18">
-                <line x1="2" y1="3" x2="16" y2="3" stroke-width="1"/>
-                <line x1="9" y1="7" x2="16" y2="7" stroke-width="1"/>
-                <line x1="2" y1="11" x2="16" y2="11" stroke-width="1"/>
-                <line x1="9" y1="15" x2="16" y2="15" stroke-width="1"/>
-            </svg>
+
+        <!-- text.text_fill -->
+        <div class="propertyEditor text_text_fill" title="fill:">
+            <input type="text" class="picker" /> <!-- spectrum を登録するための Element -->
+            <input type="text" class="pickedColorText" />
+            <button class="setAsDefault" type="button" title="set as default">default</button>
+            <small class="message explicitness"></small>
         </div>
-        <button class="setAsDefault" type="button" title="set as default">default</button>
-        <small class="message explicitness"></small>
-    </div>
 
-    <!-- text.text_font_size -->
-    <div class="propertyEditor text_font_size" title="font-size:">
-        <input type="number" class="number_property" />
-        <button class="setAsDefault" type="button" title="set as default">default</button>
-        <small class="message explicitness"></small>
-    </div>
-
-    <!-- text.text_fill -->
-    <div class="propertyEditor text_text_fill" title="fill:">
-        <input type="text" class="picker" /> <!-- spectrum を登録するための Element -->
-        <input type="text" class="pickedColorText" />
-        <button class="setAsDefault" type="button" title="set as default">default</button>
-        <small class="message explicitness"></small>
-    </div>
-
-    <!-- text.text_font_family -->
-    <div class="propertyEditor text_font_family" title="font-family:">
-        <input type="text" class="text_property" />
-        <button class="setAsDefault" type="button" title="set as default">default</button>
-        <small class="message explicitness"></small>
-    </div>
-
-    <!-- text.text_font_weight -->
-    <div class="propertyEditor text_font_weight">
-        <div class="fontWeightType" data-font_weight_type="normal" title="font-weight:normal;">normal</div>
-        <div class="fontWeightType" data-font_weight_type="bold" title="font-weight:bold;"><b>bold</b></div>
-        <button class="setAsDefault" type="button" title="set as default">default</button>
-        <small class="message explicitness"></small>
-    </div>
-
-    <!-- text.text_font_style -->
-    <div class="propertyEditor text_font_style">
-        <div class="fontStyleType" data-font_style_type="normal" title="font-style:normal;">normal</div>
-        <div class="fontStyleType" data-font_style_type="italic" title="font-style:italic;"><i>italic</i></div>
-        <button class="setAsDefault" type="button" title="set as default">default</button>
-        <small class="message explicitness"></small>
-    </div>
-
-    <!-- text.text_decoration -->
-    <div class="propertyEditor text_text_decoration" title="text-decoration:">
-        <input type="text" class="text_property" />
-        <button class="setAsDefault" type="button" title="set as default">default</button>
-        <small class="message explicitness"></small>
-    </div>
-
-    <div class="description">frame</div>
-
-    <!-- text.frame_shape -->
-    <div class="propertyEditor text_frame_shape">
-        <div class="frameShapeType" data-frame_shape_type="rect" title="shape:rect;">
-            <svg class="SVGicon" width="18" height="18">
-                <rect x="3" y="5" width="14" height="10" stroke-width="1.5" fill-opacity="0" />
-            </svg>
+        <!-- text.text_font_family -->
+        <div class="propertyEditor text_font_family" title="font-family:">
+            <input type="text" class="text_property" />
+            <button class="setAsDefault" type="button" title="set as default">default</button>
+            <small class="message explicitness"></small>
         </div>
-        <div class="frameShapeType" data-frame_shape_type="circle" title="shape:circle;">
-            <svg class="SVGicon" width="18" height="18">
-                <circle cx="9.5" cy="9.5" r="7" stroke-width="1.5" fill-opacity="0" />
-            </svg>
+
+        <!-- text.text_font_weight -->
+        <div class="propertyEditor text_font_weight">
+            <div class="fontWeightType" data-font_weight_type="normal" title="font-weight:normal;">normal</div>
+            <div class="fontWeightType" data-font_weight_type="bold" title="font-weight:bold;"><b>bold</b></div>
+            <button class="setAsDefault" type="button" title="set as default">default</button>
+            <small class="message explicitness"></small>
         </div>
-        <div class="frameShapeType" data-frame_shape_type="ellipse" title="shape:ellipse;">
-            <svg class="SVGicon" width="18" height="18">
-                <ellipse cx="9.5" cy="9.5" rx="8" ry="5" stroke-width="1.5" fill-opacity="0" />
-            </svg>
+
+        <!-- text.text_font_style -->
+        <div class="propertyEditor text_font_style">
+            <div class="fontStyleType" data-font_style_type="normal" title="font-style:normal;">normal</div>
+            <div class="fontStyleType" data-font_style_type="italic" title="font-style:italic;"><i>italic</i></div>
+            <button class="setAsDefault" type="button" title="set as default">default</button>
+            <small class="message explicitness"></small>
         </div>
-        <button class="setAsDefault" type="button" title="set as default">default</button>
-        <small class="message explicitness"></small>
+
+        <!-- text.text_decoration -->
+        <div class="propertyEditor text_text_decoration" title="text-decoration:">
+            <input type="text" class="text_property" />
+            <button class="setAsDefault" type="button" title="set as default">default</button>
+            <small class="message explicitness"></small>
+        </div>
+
+        <div class="description">frame</div>
+
+        <!-- text.frame_shape -->
+        <div class="propertyEditor text_frame_shape">
+            <div class="frameShapeType" data-frame_shape_type="rect" title="shape:rect;">
+                <svg class="SVGicon" width="18" height="18">
+                    <rect x="3" y="5" width="14" height="10" stroke-width="1.5" fill-opacity="0" />
+                </svg>
+            </div>
+            <div class="frameShapeType" data-frame_shape_type="circle" title="shape:circle;">
+                <svg class="SVGicon" width="18" height="18">
+                    <circle cx="9.5" cy="9.5" r="7" stroke-width="1.5" fill-opacity="0" />
+                </svg>
+            </div>
+            <div class="frameShapeType" data-frame_shape_type="ellipse" title="shape:ellipse;">
+                <svg class="SVGicon" width="18" height="18">
+                    <ellipse cx="9.5" cy="9.5" rx="8" ry="5" stroke-width="1.5" fill-opacity="0" />
+                </svg>
+            </div>
+            <button class="setAsDefault" type="button" title="set as default">default</button>
+            <small class="message explicitness"></small>
+        </div>
+
+        <!-- text.frame_fill -->
+        <div class="propertyEditor frame_fill" title="fill:">
+            <input type="text" class="picker" /> <!-- spectrum を登録するための Element -->
+            <input type="text" class="pickedColorText" />
+            <button class="setAsDefault" type="button" title="set as default">default</button>
+            <small class="message explicitness"></small>
+        </div>
+
+        <div class="description">frame border</div>
+
+        <!-- text.frame_stroke_width -->
+        <div class="propertyEditor frame_stroke_width" title="stroke-width:">
+            <input type="number" class="number_property" />
+            <button class="setAsDefault" type="button" title="set as default">default</button>
+            <small class="message explicitness"></small>
+        </div>
+
+        <!-- text.frame_stroke -->
+        <div class="propertyEditor frame_stroke" title="stroke:">
+            <input type="text" class="picker" /> <!-- spectrum を登録するための Element -->
+            <input type="text" class="pickedColorText" />
+            <button class="setAsDefault" type="button" title="set as default">default</button>
+            <small class="message explicitness"></small>
+        </div>
+
+        <!-- text.frame_stroke_dasharray -->
+        <div class="propertyEditor frame_stroke_dasharray" title="stroke-dasharray:">
+            <input type="text" class="text_property" />
+            <button class="setAsDefault" type="button" title="set as default">default</button>
+            <small class="message explicitness"></small>
+        </div>
+
+        <div class="propertyEditor all">
+            <button class="setAsDefault" type="button" title="set as default (all)">default (All)</button>
+        </div>
+
     </div>
 
-    <!-- text.frame_fill -->
-    <div class="propertyEditor frame_fill" title="fill:">
-        <input type="text" class="picker" /> <!-- spectrum を登録するための Element -->
-        <input type="text" class="pickedColorText" />
-        <button class="setAsDefault" type="button" title="set as default">default</button>
-        <small class="message explicitness"></small>
-    </div>
+    <div class="type link">
 
-    <div class="description">frame border</div>
+        <div class="description">Link</div>
 
-    <!-- text.frame_stroke_width -->
-    <div class="propertyEditor frame_stroke_width" title="stroke-width:">
-        <input type="number" class="number_property" />
-        <button class="setAsDefault" type="button" title="set as default">default</button>
-        <small class="message explicitness"></small>
-    </div>
+        <div class="description">line</div>
 
-    <!-- text.frame_stroke -->
-    <div class="propertyEditor frame_stroke" title="stroke:">
-        <input type="text" class="picker" /> <!-- spectrum を登録するための Element -->
-        <input type="text" class="pickedColorText" />
-        <button class="setAsDefault" type="button" title="set as default">default</button>
-        <small class="message explicitness"></small>
-    </div>
-
-    <!-- text.frame_stroke_dasharray -->
-    <div class="propertyEditor frame_stroke_dasharray" title="stroke-dasharray:">
-        <input type="text" class="text_property" />
-        <button class="setAsDefault" type="button" title="set as default">default</button>
-        <small class="message explicitness"></small>
-    </div>
-
-    <div class="propertyEditor all">
-        <button class="setAsDefault" type="button" title="set as default (all)">default (All)</button>
     </div>
     
 </div>
