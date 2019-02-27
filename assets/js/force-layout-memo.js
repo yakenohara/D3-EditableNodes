@@ -11,7 +11,7 @@
     };
 
     //外部コンポーネントパス
-    var url_externalComponent = "assets/components/EditableNodes_components.html";
+    var url_externalComponent = "assets/components/force-layout-memo_compo.html";
 
     //ファイル出力(Export)時に設定するファイル名
     var fileName_Export = "Nodes.json";
