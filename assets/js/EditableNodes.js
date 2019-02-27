@@ -398,9 +398,9 @@
         //line.marker_end
         var $propertyEditor_line_marker_end = $propertyEditConsoleElement.find(".propertyEditor.marker_end");
         var elemAndValArr_line_marker_end = [];
-        elemAndValArr_line_marker_end.push({$elem: $propertyEditor_line_marker_end.children('.frameShapeType[data-frame_shape_type="rect"]').eq(0),
+        elemAndValArr_line_marker_end.push({$elem: $propertyEditor_line_marker_end.children('.arrowType[data-arrow_type="none"]').eq(0),
                                              useThisVal: null});
-        elemAndValArr_line_marker_end.push({$elem: $propertyEditor_line_marker_end.children('.frameShapeType[data-frame_shape_type="circle"]').eq(0),
+        elemAndValArr_line_marker_end.push({$elem: $propertyEditor_line_marker_end.children('.arrowType[data-arrow_type="arrow1"]').eq(0),
                                              useThisVal: 'arrow1'});
         var $propertyEditor_line_marker_end_expMsg = $propertyEditor_line_marker_end.children(".message.explicitness").eq(0);
         var $propertyEditor_line_marker_end_defaultBtnElem = $propertyEditor_line_marker_end.children(".setAsDefault").eq(0);
@@ -1968,34 +1968,12 @@
         }
 
         //コールバックがなかった(=登録リスナがなかった)場合は、totalReportも失敗とする
-        if(totalReport.reportsArr.datas.length == 0){
+        if(totalReport.reportsArr.datas.length == 0 && totalReport.reportsArr.links.length == 0){
             totalReport.allOK = false;
             totalReport.allNG = true;
         }
 
         return totalReport;
-    }
-
-    function printRenderingFailuredSVGElements(totalReport){
-
-        //引数チェック
-        if(totalReport.reportsArr.datas.length == 0){ //コールバックがなかった(=登録リスナがなかった)場合
-            console.warn("No SVG Node to Apply");
-            return;
-        }
-
-        //失敗レポート検索ループ
-        for(var i = 0 ; i < totalReport.reportsArr.datas.length ; i++){
-            var reportObj = totalReport.reportsArr.datas[i];
-            if(!reportObj.allOK){ //失敗していた場合
-                var bindedData = getBindedDataFromKey(reportObj.key);
-                if(typeof bindedData == 'undefined'){ //データが見つからない場合
-                    console.warn("Cannot find \`key:" + reportObj.key + "\`"); //keyIDのみ表示する
-                }else{
-                    console.warn((getDomPath(bindedData.$3bindedSVGElement.node())).join('/')); //対象SVGのDomPathを表示する
-                }
-            }
-        }
     }
 
     function checkToBindData(checkThisData){
@@ -3556,6 +3534,11 @@
                 }
             });
 
+            if(reportObj.PrevObj.line.marker_end !== null){
+                var matchedStrs = reportObj.PrevObj.line.marker_end.match(/(url\("#)(.*)("\))/);
+                reportObj.PrevObj.line.marker_end = matchedStrs[2]; // `url#\"` と `\")` を取り除いた文字列にする
+            }
+
             untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("marker_end"), 1); //未処理プロパティリストから削除
         }
 
@@ -4178,7 +4161,8 @@
         }
 
         if( (typeof rollbackRenderringReport == 'object') && (!rollbackRenderringReport.allOK)){ //ロールバックに失敗した場合
-            console.error("Cannot roll back \`" + getDomPath(bindedData.$3bindedSVGElement.node()).join('/') + "\`");
+            console.error("Cannot apply history. Check following report.");
+            console.error(rollbackRenderringReport);
         }
 
         function call_deleteNodes(){
@@ -5396,18 +5380,21 @@
                         }
                         elemAndValArr[i].$elem.removeClass(className_nodeIsSelected); //選択解除
                     }
-                    enteredElem.classList.add(className_nodeIsSelected); //クリックされた要素を選択状態にする
+                    enteredElem.classList.add(className_nodeIsSelected); //Mouse Enter された要素を選択状態にする
 
-                    if(bufTotalReport.allOK){ //適用全部成功の場合
-                        $expMsgElem.text("explicit");
-                    
-                    }else{ //適用一部失敗の場合
-                        $expMsgElem.text("explicit (some part)");
-                        //note ロールバックは不要
+                    if(event.data.useThisVal === null){ //削除指定の場合
+                        $expMsgElem.text("");
+
+                    }else{
+                        if(bufTotalReport.allOK){ //適用全部成功の場合
+                            $expMsgElem.text("explicit");
+                        
+                        }else{ //適用一部失敗の場合
+                            $expMsgElem.text("explicit (some part)");
+                            //note ロールバックは不要
+                        }
                     }
-                    
                 }
-
             });
 
             // Mouse Click Event
@@ -5478,6 +5465,10 @@
                 propertyEditingBehavor_setAsdefault.enable();
 
                 if(valOfNode !== null){// merged Styleが算出できた
+
+                    if(valOfNode == 'none'){
+                        valOfNode = null;
+                    }
 
                     var $toSelectElem = get$elemByVal(valOfNode); //property editor要素を取得
                     if(typeof $toSelectElem != 'undefined'){ //選択対象要素がある場合
@@ -6084,9 +6075,7 @@
         //marker_end
         propNameL2 = 'marker_end';
         var computedMarker_end = computedStyleOf_SVGnodeElem_line.getPropertyValue('marker-end');
-        if(computedMarker_end == 'none'){
-            computedMarker_end = null;
-        }else{
+        if(computedMarker_end != 'none'){
             var matchedStrs = computedMarker_end.match(/(url\("#)(.*)("\))/);
             computedMarker_end = matchedStrs[2]; // `url#\"` と `\")` を取り除いた文字列にする
         }

@@ -75,7 +75,8 @@
 }
 
 #editableNode .propertyEditConsole .propertyEditor .textAnchorType,
-.frameShapeType{
+.frameShapeType,
+.arrowType{
     display: inline-block;
     padding: 2px;
     cursor: pointer;
