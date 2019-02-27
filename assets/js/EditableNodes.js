@@ -3649,6 +3649,10 @@
         if(argmentsObj.renderByThisObj[argmentsObj.propertyName] === null){ //削除指定の場合
             argmentsObj.$3element.style(argmentsObj.attributeName, null);
 
+            if(typeof argmentsObj.$3sameTypeElement == 'object'){ //同じstyleを適用するelementがある場合
+                argmentsObj.$3sameTypeElement.style(argmentsObj.attributeName, null); //style適用
+            }
+
             argmentsObj.prevReportObj[argmentsObj.propertyName] = previousAttribute;
             argmentsObj.renderedReportObj[argmentsObj.propertyName] = null;
             delete argmentsObj.bindedObj[argmentsObj.propertyName];
@@ -3748,6 +3752,11 @@
 
         if(argmentsObj.renderByThisObj[argmentsObj.propertyName] === null){ //削除指定の場合
             argmentsObj.$3element.style(argmentsObj.attributeName, null); //削除
+
+            //同形式のDOM element に対しても style を適用する
+            if(typeof argmentsObj.$3sameTypeElement != 'undefined'){
+                argmentsObj.$3sameTypeElement.style(argmentsObj.attributeName, null);
+            }
 
             if(previousAttribute !== null){
                 previousAttribute = parseFloat(previousAttribute); // "0.0px"(string) -> 0.0(number) 形式に変換
