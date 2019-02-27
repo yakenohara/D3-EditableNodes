@@ -96,6 +96,7 @@
     var $3svgLinksGroup;
     var $3svgLinks;
     var $3selectionLayersGroup;
+    var lastTransForm = null;
 
     //Node初期化用Objを作る
     function makeSetDafaultObj(includeIndividualpart){
@@ -811,14 +812,16 @@
     // SVG領域の Zoom・Pan イベント
     $3SVGDrawingAreaElement.call(d3.zoom()
         .on("zoom", function(){
+            lastTransForm = d3.event.transform; //最終状態を保存(Node Append/復活時に利用する)
+
             $3svgNodes.each(function(d, i){
-                d.$3bindedSVGElement.attr("transform", d3.event.transform);
-                d.$3bindedSelectionLayerSVGElement.attr("transform", d3.event.transform);
+                d.$3bindedSVGElement.attr("transform", lastTransForm);
+                d.$3bindedSelectionLayerSVGElement.attr("transform", lastTransForm);
             });
 
             $3svgLinks.each(function(d, i){
-                d.$3bindedSVGLinkElement.attr("transform", d3.event.transform);
-                d.$3bindedSelectionLayerSVGElement.attr("transform", d3.event.transform);
+                d.$3bindedSVGLinkElement.attr("transform", lastTransForm);
+                d.$3bindedSelectionLayerSVGElement.attr("transform", lastTransForm);
             });
 
             if(nowEditng){
@@ -1162,6 +1165,7 @@
             $3svgNodes.enter()
                 .append("g")
                 .classed("node", true)
+                .attr("transform", lastTransForm)
                 .each(function(d ,i){
 
                     var bindedSVGElement = this;
@@ -1501,6 +1505,7 @@
                 $3svgLinks.enter()
                     .append("g")
                     .classed("link", true)
+                    .attr("transform", lastTransForm)
                     .each(function(d, i){
                         var bindedSVGLinkElement = this;
                         d.$3bindedSVGLinkElement = d3.select(bindedSVGLinkElement);
