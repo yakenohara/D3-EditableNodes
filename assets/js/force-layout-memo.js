@@ -4287,6 +4287,7 @@
                     rollbackRenderringReport.reportsArr.links.push(singleReport);
                 }
             }
+            startForce(); //force simulation
         }
     }
 
