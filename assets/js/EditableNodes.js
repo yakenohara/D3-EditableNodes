@@ -159,6 +159,11 @@
         var propertyEditingBehavor_frame_stroke_dasharray;
         var propertyEditingBehavor_frame_fill;
 
+        var propertyEditingBehavor_line_stroke;
+        var propertyEditingBehavor_line_stroke_width;
+        var propertyEditingBehavor_line_marker_end;
+        var propertyEditingBehavor_line_stroke_dasharray;
+
         $propertyEditConsoleElement_node = $propertyEditConsoleElement.find(".type.node");
         $propertyEditConsoleElement_link = $propertyEditConsoleElement.find(".type.link");
 
@@ -351,7 +356,7 @@
                                                                            adjustPropertyEditors);
         
         // Default all
-        var $propertyEditor_all = $propertyEditConsoleElement.find(".propertyEditor.all");
+        var $propertyEditor_all = $propertyEditConsoleElement.find(".propertyEditor.all.node");
         var $propertyEditor_all_defaultBtnElem = $propertyEditor_all.children(".setAsDefault").eq(0);
         var dummuyFor_propertyEditor_all;
         new propertyEditorBehavor_setAsDefault($propertyEditor_all_defaultBtnElem,
@@ -360,14 +365,94 @@
                                                confirmPropertyEditors,
                                                adjustPropertyEditConsole); // <- 全てのProperty Editor を adjustする
 
+        //<for Link>--------------------------------------------------------------------------------------------------
+
+        //line.stroke
+        var $propertyEditor_line_stroke = $propertyEditConsoleElement.find(".propertyEditor.stroke");
+        var $propertyEditor_line_stroke_picker = $propertyEditor_line_stroke.children(".picker").eq(0);
+        var $propertyEditor_line_stroke_inputElem = $propertyEditor_line_stroke.children(".pickedColorText").eq(0);
+        var $propertyEditor_line_stroke_defaultBtnElem = $propertyEditor_line_stroke.children(".setAsDefault").eq(0);
+        var $propertyEditor_line_stroke_expMsg = $propertyEditor_line_stroke.children(".message.explicitness").eq(0);
+        propertyEditingBehavor_line_stroke = new propertyEditorBehavor_fill($propertyEditor_line_stroke_inputElem,
+                                                                             $propertyEditor_line_stroke_picker,
+                                                                             $propertyEditor_line_stroke_defaultBtnElem,
+                                                                             $propertyEditor_line_stroke_expMsg,
+                                                                             'links',
+                                                                             ['line', 'stroke'],
+                                                                             confirmPropertyEditorsLink,
+                                                                             adjustPropertyEditorsLink);
+
+        //line.stroke_width
+        var $propertyEditor_line_stroke_width = $propertyEditConsoleElement.find(".propertyEditor.stroke_width");
+        var $propertyEditor_line_stroke_width_input = $propertyEditor_line_stroke_width.children(".number_property").eq(0);
+        var $propertyEditor_line_stroke_width_defaultBtnElem = $propertyEditor_line_stroke_width.children(".setAsDefault").eq(0);
+        var $propertyEditor_line_stroke_width_expMsg = $propertyEditor_line_stroke_width.children(".message.explicitness").eq(0);
+        propertyEditingBehavor_line_stroke_width = new propertyEditorBehavor_numberInput($propertyEditor_line_stroke_width_input,
+                                                                                      $propertyEditor_line_stroke_width_defaultBtnElem,
+                                                                                      $propertyEditor_line_stroke_width_expMsg,
+                                                                                      'links',
+                                                                                      ['line', 'stroke_width'],
+                                                                                      confirmPropertyEditorsLink,
+                                                                                      adjustPropertyEditorsLink);
+                                                                                      
+        //line.marker_end
+        var $propertyEditor_line_marker_end = $propertyEditConsoleElement.find(".propertyEditor.marker_end");
+        var elemAndValArr_line_marker_end = [];
+        elemAndValArr_line_marker_end.push({$elem: $propertyEditor_line_marker_end.children('.frameShapeType[data-frame_shape_type="rect"]').eq(0),
+                                             useThisVal: null});
+        elemAndValArr_line_marker_end.push({$elem: $propertyEditor_line_marker_end.children('.frameShapeType[data-frame_shape_type="circle"]').eq(0),
+                                             useThisVal: 'arrow1'});
+        var $propertyEditor_line_marker_end_expMsg = $propertyEditor_line_marker_end.children(".message.explicitness").eq(0);
+        var $propertyEditor_line_marker_end_defaultBtnElem = $propertyEditor_line_marker_end.children(".setAsDefault").eq(0);
+        propertyEditingBehavor_line_marker_end = new propertyEditorBehavor_radioButtons(elemAndValArr_line_marker_end,
+                                                                                         $propertyEditor_line_marker_end_defaultBtnElem,
+                                                                                         $propertyEditor_line_marker_end_expMsg,
+                                                                                         'links',
+                                                                                         ['line', 'marker_end'],
+                                                                                         confirmPropertyEditorsLink,
+                                                                                         adjustPropertyEditorsLink);
+                                                                                      
+        //line.stroke_dasharray
+        var $propertyEditor_line_stroke_dasharray = $propertyEditConsoleElement.find(".propertyEditor.stroke_dasharray");
+        var $propertyEditor_line_stroke_dasharray_input = $propertyEditor_line_stroke_dasharray.children(".text_property").eq(0);
+        var $propertyEditor_line_stroke_dasharray_defaultBtnElem = $propertyEditor_line_stroke_dasharray.children(".setAsDefault").eq(0);
+        var $propertyEditor_line_stroke_dasharray_expMsg = $propertyEditor_line_stroke_dasharray.children(".message.explicitness").eq(0);
+        propertyEditingBehavor_line_stroke_dasharray = new propertyEditorBehavor_textInput($propertyEditor_line_stroke_dasharray_input,
+                                                                                            $propertyEditor_line_stroke_dasharray_defaultBtnElem,
+                                                                                            $propertyEditor_line_stroke_dasharray_expMsg,
+                                                                                            'links',
+                                                                                            ['line', 'stroke_dasharray'],
+                                                                                            confirmPropertyEditorsLink,
+                                                                                            adjustPropertyEditorsLink);
+
+        // Default all
+        var $propertyEditor_all_link = $propertyEditConsoleElement.find(".propertyEditor.all.link");
+        var $propertyEditor_all_link_defaultBtnElem = $propertyEditor_all_link.children(".setAsDefault").eq(0);
+        var dummuyFor_propertyEditor_all_link;
+        new propertyEditorBehavor_setAsDefault($propertyEditor_all_link_defaultBtnElem,
+                                               'links',
+                                               dummuyFor_propertyEditor_all_link, // <- 'undefined'を渡して、全て削除とする
+                                               confirmPropertyEditorsLink,
+                                               adjustPropertyEditConsole); // <- 全てのProperty Editor を adjustする
+
+        //-------------------------------------------------------------------------------------------------</for Link>
+
         // Property Editor の編集状態を Style Object (Nodeの状態) に合わせる
         this.adjust = function(computedStyleObj, explicitnessObj){
             adjustPropertyEditors(computedStyleObj, explicitnessObj);
         }
 
+        this.adjustLink = function(computedStyleObj, explicitnessObj){
+            adjustPropertyEditorsLink(computedStyleObj, explicitnessObj);
+        }
+
         // Property Editor が編集中の場合、編集状態を確定させる
         this.confirm = function(){
             confirmPropertyEditors();
+        }
+
+        this.confirmLink = function(){
+            confirmPropertyEditorsLink();
         }
 
         // Node個別編集用 PropertyEditor を指定dataに対して追加する
@@ -453,6 +538,20 @@
             }
         }
 
+        //
+        // Property Editor(Link用) の編集状態を Style Object (Linkの状態) に合わせる
+        //
+        function adjustPropertyEditorsLink(computedStyleObj, explicitnessObj){
+            
+            if((typeof computedStyleObj == 'object') && (typeof computedStyleObj == 'object')){ 
+
+                propertyEditingBehavor_line_stroke.adjustToStyleObj(computedStyleObj, explicitnessObj);
+                propertyEditingBehavor_line_stroke_width.adjustToStyleObj(computedStyleObj, explicitnessObj);
+                propertyEditingBehavor_line_marker_end.adjustToStyleObj(computedStyleObj, explicitnessObj);
+                propertyEditingBehavor_line_stroke_dasharray.adjustToStyleObj(computedStyleObj, explicitnessObj);
+            }
+        }
+        
         function confirmPropertyEditors(){
 
             propertyEditingBehavor_text_text_content.confirm();
@@ -468,6 +567,13 @@
             propertyEditingBehavor_frame_stroke_width.confirm();
             propertyEditingBehavor_frame_stroke_dasharray.confirm();
             propertyEditingBehavor_frame_fill.confirm();
+        }
+
+        function confirmPropertyEditorsLink(){
+            propertyEditingBehavor_line_stroke.confirm();
+            propertyEditingBehavor_line_stroke_width.confirm();
+            propertyEditingBehavor_line_marker_end.confirm();
+            propertyEditingBehavor_line_stroke_dasharray.confirm();
         }
     }
     //----------------------------------------------------------</Element Selections and Settings of PropertyEditor>
@@ -641,7 +747,11 @@
                     .attr("data-selected", "false"); //選択解除
             }
 
-            //todo linkすべてを選択解除する
+            //linkすべてを選択解除する
+            for(var i = 0 ; i < dataset.links.length ; i++){
+                dataset.links[i].$3bindedSelectionLayerSVGElement.style("visibility", "hidden")
+                    .attr("data-selected", "false"); //選択解除
+            }
 
             lastSelectedData = null;
         }
@@ -1212,6 +1322,7 @@
                             bufTotalReport.allNG = true;
                             bufTotalReport.reportsArr = {};
                             bufTotalReport.reportsArr.datas = [];
+                            bufTotalReport.reportsArr.links = [];
 
                             beforeDragInfo_nodes = [];
 
@@ -1263,6 +1374,7 @@
                             draggingReports.allNG = true;
                             draggingReports.reportsArr = {};
                             draggingReports.reportsArr.datas = [];
+                            draggingReports.reportsArr.links = [];
 
                             for(var idx = 0 ; idx < beforeDragInfo_nodes.length ; idx++){
 
@@ -1417,6 +1529,30 @@
                         }
                         
                         appendingTotalReport.reportsArr.links.push(renderReport_link);
+
+                        //Property変更用EventListener
+                        bindedSVGLinkElement.addEventListener("propertyEditConsole_rerender",function(eventObj){
+
+                            if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //自分のNodeが選択中の場合
+                        
+                                //引数チェック
+                                if(typeof eventObj.argObj == 'undefined'){ //引数なし
+                                    console.warn("propertyEditConsole_rerender was not specified \`argObj\`.");
+                                    return;
+                                }
+                                if(typeof eventObj.argObj.renderByThisObj != 'object'){ //nodeレンダリング用objが存在しない
+                                    console.warn("propertyEditConsole_rerender was not specified \`argObj.renderByThisObj\`.");
+                                    return;
+                                }
+                        
+                                var renderReport = renderLineTypeSVGLink(d, eventObj.argObj.renderByThisObj);
+                        
+                                if(typeof eventObj.argObj.clbkFunc == 'function'){ //コールバック関数が存在する
+                                    eventObj.argObj.clbkFunc(renderReport, "links");
+                                }
+                            }
+                            
+                        });
 
                         d.$3bindedSVGLinkElement.on('click', function(d){
 
@@ -1823,6 +1959,12 @@
         var nodes = $3svgNodes.nodes();
         for(var i = 0 ; i < nodes.length ; i++){
             nodes[i].dispatchEvent(eventObj);
+        }
+
+        //すべてのlink要素にイベントを発行する
+        var links = $3svgLinks.nodes();
+        for(var i = 0 ; i < links.length ; i++){
+            links[i].dispatchEvent(eventObj);
         }
 
         //コールバックがなかった(=登録リスナがなかった)場合は、totalReportも失敗とする
@@ -3995,7 +4137,7 @@
         var rollbackRenderringReport;
         
         //引数チェック
-        if(transaction.reportsArr.datas.length == 0){ //トランザクションレポートが存在しない
+        if(transaction.reportsArr.datas.length == 0 && transaction.reportsArr.links.length == 0){ //トランザクションレポートが存在しない
             console.warn("Specified trunsaction not contains SVG rendering report.");
             return;
         }
@@ -4120,7 +4262,29 @@
                 }
             }
 
-            //todo transaction.reportsArr.links[]の網羅ループ
+            //レンダリングレポート網羅ループ
+            for(var i = 0 ; i < transaction.reportsArr.links.length ; i++){
+                var reportObj = transaction.reportsArr.links[i];
+                var bindedData = getBindedLinkDataFromKey(reportObj.key);
+
+                if(typeof bindedData == 'undefined'){ //対象のノードデータが存在しない場合
+                    console.error("\`key:" + reportObj.key + "\` not found in D3.js binded link array.");
+
+                }else{ //対象のノードデータが存在する場合
+                    
+                    var singleReport = renderSVGLink(bindedData, reportObj[toApplyObjName]);
+
+                    if(!singleReport.allOK){ //失敗が発生した場合
+                        rollbackRenderringReport.allOK = false;
+                    }
+
+                    if(!singleReport.allNG){ //成功が1つ以上ある場合
+                        rollbackRenderringReport.allNG = false;
+                    }
+
+                    rollbackRenderringReport.reportsArr.links.push(singleReport);
+                }
+            }
         }
     }
 
@@ -4206,7 +4370,15 @@
             }
         }
 
-        //todo link選択状態の表示化ループ
+        //link選択状態の表示化ループ
+        for(var i = 0 ; i < dataset.links.length ; i++){
+
+            var bindedData = dataset.links[i];
+
+            if(bindedData.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == "true"){ // 選択対象Nodeの場合
+                bindedData.$3bindedSelectionLayerSVGElement.style("visibility",null); //選択状態にする
+            }
+        }
 
         $propertyEditConsoleElement.slideUp(100); //edit consoleの終了
 
@@ -4262,7 +4434,7 @@
             toExportObjArr.links.push(toExportObj); //配列に追加
         });
 
-        if((toExportObjArr.datas.length == 0) && (toExportObjArr.links.length == 0)){ //吐き出すNodeが存在しない場合 //todo linkの存在を考慮
+        if((typeof toExportObjArr.datas == 'undefined') && (typeof toExportObjArr.links == 'undefined')){ //吐き出すNodeが存在しない場合
             console.warn("No Node and Link to Export");
         
         }else{ //吐き出すNodeが存在する場合
@@ -4374,10 +4546,17 @@
             }
         });
 
-        //todo linkに対する同様処理
+        var editingLinkKeysForCheck = editingLinkKeys.slice(0, editingLinkKeys.length);
+
+        $3svgLinks.each(function(d,i){
+
+            if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択状態の場合
+                editingLinkKeysForCheck.splice(editingLinkKeysForCheck.indexOf(d.key), 1);
+            }
+        });
 
         //選択中Nodeの数が減っていたら(= 選択中Nodeのいづれかが、historyのrollbackで削除されたら)
-        if(editingKeysForCheck.length > 0){
+        if(editingKeysForCheck.length > 0 || editingLinkKeysForCheck.length > 0){
             exitEditing(); //Property Edit Consoleを終了
             
         }else{
@@ -4397,6 +4576,7 @@
         }else{ //すべてadjustする場合
 
             var computedStylesOfData = [];
+            var computedStylesOfLink = [];
 
             //選択状態になっているNodeから適用済みStyleを抽出するループ
             for(var i = 0 ; i < dataset.datas.length ; i++){
@@ -4416,8 +4596,6 @@
                     }
                 }
             }
-
-            //todo link の選択状態を考慮
 
             if(computedStylesOfData.length == 0){ //編集対象Nodeが存在しない場合
                 $propertyEditConsoleElement_node.hide();
@@ -4463,6 +4641,63 @@
                 }
                 
                 propertyEditorsManager.adjust(mergedStyle, mergedExplicitness);
+            }
+
+            //選択状態になっているNodeから適用済みStyleを抽出するループ
+            for(var i = 0 ; i < dataset.links.length ; i++){
+
+                var bindedData = dataset.links[i];
+
+                if(bindedData.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ // 選択対象Linkの場合
+                    
+                    var computedStyleObj = {};
+                    var explicitnessObj = {};
+                    var sccedded = getComputedStyleOfLink(bindedData, computedStyleObj, explicitnessObj); // Linkに適用されたスタイルの取得
+                    
+                    if(sccedded){
+                        computedStylesOfLink.push({computedStyle:computedStyleObj,
+                                                   explicitness:explicitnessObj});
+                        
+                    }
+                }
+            }
+
+            if(computedStylesOfLink.length == 0){ //編集対象Nodeが存在しない場合
+                $propertyEditConsoleElement_link.hide();
+
+            }else{ //編集対象Nodeが存在する場合
+                $propertyEditConsoleElement_link.show();
+
+                var propName1 = 'line';
+                var mergedStyle = {};
+                mergedStyle[propName1] = {};
+                var mergedExplicitness = {};
+                mergedExplicitness[propName1] = {};
+
+                // computedStylesOfLink[]からスタイルをマージ
+                for(var i = 0 ; i < computedStylesOfLink.length ; i++){
+                    var computedStlOfData =  computedStylesOfLink[i];
+                    switch(computedStlOfData.computedStyle.type){
+                        case "line":
+                        {
+                            //各Propertyのマージ
+                            mergeStyles(computedStlOfData.computedStyle[propName1], computedStlOfData.explicitness[propName1], mergedStyle[propName1], mergedExplicitness[propName1], "stroke");
+                            mergeStyles(computedStlOfData.computedStyle[propName1], computedStlOfData.explicitness[propName1], mergedStyle[propName1], mergedExplicitness[propName1], "stroke_width");
+                            mergeStyles(computedStlOfData.computedStyle[propName1], computedStlOfData.explicitness[propName1], mergedStyle[propName1], mergedExplicitness[propName1], "marker_end");
+                            mergeStyles(computedStlOfData.computedStyle[propName1], computedStlOfData.explicitness[propName1], mergedStyle[propName1], mergedExplicitness[propName1], "stroke_dasharray");
+                            
+                        }
+                        break;
+
+                        default:
+                        {
+                            //nothing to do
+                        }
+                        break;
+                    }
+                }
+                
+                propertyEditorsManager.adjustLink(mergedStyle, mergedExplicitness);
             }
         }
         
@@ -5784,6 +6019,87 @@
         computedStyleObj.text.frame_fill = computedStyleOf_SVGnodeElem_DOTframe_frame.getPropertyValue("fill");
         explicitnessObj.text.frame_fill = (typeof bindedData.text.frame_fill != 'undefined');
 
+    }
+
+    //
+    //SVG(Link)に適用されたスタイルを抽出する
+    //抽出成功の場合は、true,
+    //失敗の場合はfalseを返却する
+    //
+    function getComputedStyleOfLink(bindedData, computedStyleObj, explicitnessObj){
+
+        
+        //type指定チェック
+        if(typeof (bindedData.type) == 'undefined'){
+            console.warn("\"type\" property is not specified");
+            return false; //存在しない場合場合は終了する
+        }
+
+        //初期化
+        computedStyleObj.key = bindedData.key;
+        explicitnessObj.key = true; //常に明示的とする
+        
+        switch(bindedData.type){
+            case "line":
+            {
+                computedStyleObj.type = "line";
+                computedStyleObj.line = {};
+                explicitnessObj.type = true; //常に明示的な指定とする
+                explicitnessObj.line = {};
+
+                getComputedStyleOfLineTypeLink(bindedData, computedStyleObj, explicitnessObj);
+            }
+            break;
+
+            default:
+            {
+                console.warn("unknown data type"); //<-仮の処理
+                return false;
+            }
+            break;
+        }
+
+        return true;
+
+    }
+
+    function getComputedStyleOfLineTypeLink(bindedData, computedStyleObj, explicitnessObj){
+        
+        var $3SVGnodeElem_line = bindedData.$3bindedSVGLinkElement.select("line");
+        var computedStyleOf_SVGnodeElem_line = window.getComputedStyle($3SVGnodeElem_line.node());
+
+        var propNameL1 = 'line';
+        var propNameL2;
+        
+        //stroke
+        propNameL2 = 'stroke';
+        computedStyleObj[propNameL1][propNameL2] = computedStyleOf_SVGnodeElem_line.getPropertyValue('stroke');
+        explicitnessObj[propNameL1][propNameL2] = (typeof bindedData[propNameL1][propNameL2] != 'undefined');
+
+        //stroke_width
+        propNameL2 = 'stroke_width';
+        computedStyleObj[propNameL1][propNameL2] = parseFloat(computedStyleOf_SVGnodeElem_line.getPropertyValue("stroke-width"));
+        explicitnessObj[propNameL1][propNameL2] = (typeof bindedData[propNameL1][propNameL2] != 'undefined');
+
+        //marker_end
+        propNameL2 = 'marker_end';
+        var computedMarker_end = computedStyleOf_SVGnodeElem_line.getPropertyValue('marker-end');
+        if(computedMarker_end == 'none'){
+            computedMarker_end = null;
+        }else{
+            var matchedStrs = computedMarker_end.match(/(url\("#)(.*)("\))/);
+            computedMarker_end = matchedStrs[2]; // `url#\"` と `\")` を取り除いた文字列にする
+        }
+        computedStyleObj[propNameL1][propNameL2] = computedMarker_end;
+        explicitnessObj[propNameL1][propNameL2] = (typeof bindedData[propNameL1][propNameL2] != 'undefined');
+
+        //stroke_dasharray
+        propNameL2 = 'stroke_dasharray';
+        var computedStrokeDashArray = computedStyleOf_SVGnodeElem_line.getPropertyValue("stroke-dasharray");
+        computedStrokeDashArray = computedStrokeDashArray.replace(/px/g, "");
+        computedStrokeDashArray = computedStrokeDashArray.replace(/ /g, ""); //"px"とスペースは無視する
+        computedStyleObj[propNameL1][propNameL2] = computedStrokeDashArray;
+        explicitnessObj[propNameL1][propNameL2] = (typeof bindedData[propNameL1][propNameL2] != 'undefined');
     }
 
     function getTransformObj(attrTransformStr){
