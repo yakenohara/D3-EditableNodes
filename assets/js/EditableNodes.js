@@ -163,7 +163,7 @@
         $propertyEditConsoleElement_link = $propertyEditConsoleElement.find(".type.link");
 
         //text.text_content
-        propertyEditingBehavor_text_text_content = new propertyEditorBehavor_text(['text','text_content']);
+        propertyEditingBehavor_text_text_content = new propertyEditorBehavor_text('datas', ['text','text_content']);
 
         //text.text_anchor
         var $propertyEditor_text_text_anchor = $propertyEditConsoleElement.find(".propertyEditor.text_text_anchor");
@@ -179,6 +179,7 @@
         propertyEditingBehavor_text_text_anchor = new propertyEditorBehavor_radioButtons(elemAndValArr_text_text_anchor,
                                                                                          $propertyEditor_text_text_anchor_defaultBtnElem,
                                                                                          $propertyEditor_text_text_anchor_expMsg,
+                                                                                         'datas',
                                                                                          ['text', 'text_anchor'],
                                                                                          confirmPropertyEditors, // <- Preview開始時に
                                                                                                                  //    編集中のPropertyEditerのBufferを確定させる
@@ -194,6 +195,7 @@
         propertyEditingBehavor_text_font_family = new propertyEditorBehavor_textInput($propertyEditor_text_font_family_input,
                                                                                       $propertyEditor_text_font_family_defaultBtnElem,
                                                                                       $propertyEditor_text_font_family_expMsg,
+                                                                                      'datas',
                                                                                       ['text', 'text_font_family'],
                                                                                       confirmPropertyEditors,
                                                                                       adjustPropertyEditors);
@@ -206,6 +208,7 @@
         propertyEditingBehavor_text_font_size = new propertyEditorBehavor_numberInput($propertyEditor_text_font_size_input,
                                                                                       $propertyEditor_text_font_size_defaultBtnElem,
                                                                                       $propertyEditor_text_font_size_expMsg,
+                                                                                      'datas',
                                                                                       ['text', 'text_font_size'],
                                                                                       confirmPropertyEditors,
                                                                                       adjustPropertyEditors);
@@ -220,6 +223,7 @@
                                                                                $propertyEditor_text_text_fill_picker,
                                                                                $propertyEditor_text_text_fill_defaultBtnElem,
                                                                                $propertyEditor_text_text_fill_expMsg,
+                                                                               'datas',
                                                                                ['text', 'text_fill'],
                                                                                confirmPropertyEditors,
                                                                                adjustPropertyEditors);
@@ -236,6 +240,7 @@
         propertyEditingBehavor_text_text_font_weight = new propertyEditorBehavor_radioButtons(elemAndValArr_text_font_weight,
                                                                                               $propertyEditor_text_font_weight_defaultBtnElem,
                                                                                               $propertyEditor_text_font_weight_expMsg,
+                                                                                              'datas',
                                                                                               ['text', 'text_font_weight'],
                                                                                               confirmPropertyEditors,
                                                                                               adjustPropertyEditors);
@@ -252,6 +257,7 @@
         propertyEditingBehavor_text_text_font_style = new propertyEditorBehavor_radioButtons(elemAndValArr_text_font_style,
                                                                                              $propertyEditor_text_font_style_defaultBtnElem,
                                                                                              $propertyEditor_text_font_style_expMsg,
+                                                                                             'datas',
                                                                                              ['text', 'text_font_style'],
                                                                                              confirmPropertyEditors,
                                                                                              adjustPropertyEditors);
@@ -264,6 +270,7 @@
         propertyEditingBehavor_text_text_decoration = new propertyEditorBehavor_textInput($propertyEditor_text_text_decoration_input,
                                                                                       $propertyEditor_text_text_decoration_defaultBtnElem,
                                                                                       $propertyEditor_text_text_decoration_expMsg,
+                                                                                      'datas',
                                                                                       ['text', 'text_text_decoration'],
                                                                                       confirmPropertyEditors,
                                                                                       adjustPropertyEditors);
@@ -282,6 +289,7 @@
         propertyEditingBehavor_text_frame_shape = new propertyEditorBehavor_radioButtons(elemAndValArr_text_frame_shape,
                                                                                          $propertyEditor_text_frame_shape_defaultBtnElem,
                                                                                          $propertyEditor_text_frame_shape_expMsg,
+                                                                                         'datas',
                                                                                          ['text', 'frame_shape'],
                                                                                          confirmPropertyEditors,
                                                                                          adjustPropertyEditors);
@@ -296,6 +304,7 @@
                                                                              $propertyEditor_frame_stroke_picker,
                                                                              $propertyEditor_frame_stroke_defaultBtnElem,
                                                                              $propertyEditor_frame_stroke_expMsg,
+                                                                             'datas',
                                                                              ['text', 'frame_stroke'],
                                                                              confirmPropertyEditors,
                                                                              adjustPropertyEditors);
@@ -308,6 +317,7 @@
         propertyEditingBehavor_frame_stroke_width = new propertyEditorBehavor_numberInput($propertyEditor_frame_stroke_width_input,
                                                                                       $propertyEditor_frame_stroke_width_defaultBtnElem,
                                                                                       $propertyEditor_frame_stroke_width_expMsg,
+                                                                                      'datas',
                                                                                       ['text', 'frame_stroke_width'],
                                                                                       confirmPropertyEditors,
                                                                                       adjustPropertyEditors);
@@ -320,6 +330,7 @@
         propertyEditingBehavor_frame_stroke_dasharray = new propertyEditorBehavor_textInput($propertyEditor_frame_stroke_dasharray_input,
                                                                                             $propertyEditor_frame_stroke_dasharray_defaultBtnElem,
                                                                                             $propertyEditor_frame_stroke_dasharray_expMsg,
+                                                                                            'datas',
                                                                                             ['text', 'frame_stroke_dasharray'],
                                                                                             confirmPropertyEditors,
                                                                                             adjustPropertyEditors);
@@ -334,6 +345,7 @@
                                                                            $propertyEditor_frame_fill_picker,
                                                                            $propertyEditor_frame_fill_defaultBtnElem,
                                                                            $propertyEditor_frame_fill_expMsg,
+                                                                           'datas',
                                                                            ['text', 'frame_fill'],
                                                                            confirmPropertyEditors,
                                                                            adjustPropertyEditors);
@@ -343,6 +355,7 @@
         var $propertyEditor_all_defaultBtnElem = $propertyEditor_all.children(".setAsDefault").eq(0);
         var dummuyFor_propertyEditor_all;
         new propertyEditorBehavor_setAsDefault($propertyEditor_all_defaultBtnElem,
+                                               'datas',
                                                dummuyFor_propertyEditor_all, // <- 'undefined'を渡して、全て削除とする
                                                confirmPropertyEditors,
                                                adjustPropertyEditConsole); // <- 全てのProperty Editor を adjustする
@@ -1091,7 +1104,7 @@
                             var renderReport = renderTextTypeSVGNode(d, eventObj.argObj.renderByThisObj);
                     
                             if(typeof eventObj.argObj.clbkFunc == 'function'){ //コールバック関数が存在する
-                                eventObj.argObj.clbkFunc(renderReport);
+                                eventObj.argObj.clbkFunc(renderReport, "datas");
                             }
                         }
                         
@@ -1279,7 +1292,7 @@
 
                             if(!draggingReports.allNG){ //1つ以上適用成功の場合
                                 draggingReports.message = draggingReports.reportsArr.datas.length + " node(s) moved.";
-                                overWriteScceededTransaction(draggingReports, bufTotalReport);
+                                overWriteScceededTransaction(draggingReports, bufTotalReport, 'datas');
                             }
 
                         })
@@ -1785,12 +1798,13 @@
         totalReport.allNG = true;
         totalReport.reportsArr = {};
         totalReport.reportsArr.datas = [];
+        totalReport.reportsArr.links = [];
 
         var eventObj = document.createEvent("Event");
         eventObj.initEvent("propertyEditConsole_rerender", false, false);
         eventObj.argObj　= {};
         eventObj.argObj.renderByThisObj = argObj;
-        eventObj.argObj.clbkFunc = function(renderReport){ //ノード変更レポートの追加用コールバック関数
+        eventObj.argObj.clbkFunc = function(renderReport, datasOrLinks){ //ノード変更レポートの追加用コールバック関数
             
             //失敗が発生し場合は、totalReportも失敗とする
             if(!renderReport.allOK){
@@ -1802,7 +1816,7 @@
                 totalReport.allNG = false;
             }
 
-            totalReport.reportsArr.datas.push(renderReport);
+            totalReport.reportsArr[datasOrLinks].push(renderReport);
         }
         
         //すべてのnode要素にイベントを発行する
@@ -4641,7 +4655,7 @@
     //
     // text タイプ の Property Editor の Behavor
     //
-    function propertyEditorBehavor_text(structureArr){
+    function propertyEditorBehavor_text(arrNameShouldBeStored, structureArr){
 
         var editingDataArr = [];
         var bufTotalReport;
@@ -4800,7 +4814,7 @@
             
             if(!totalReport.allNG){ //1つ以上適用成功の場合
                 totalReport.message = structureArr.join("/") + ":" + text_content;
-                overWriteScceededTransaction(totalReport, bufTotalReport);
+                overWriteScceededTransaction(totalReport, bufTotalReport, arrNameShouldBeStored);
             }
         }
 
@@ -4820,13 +4834,14 @@
                                          // historyに残すべきTransactionが少なくとも1件以上存在する事を表す
             bufTotalReport.reportsArr = {};
             bufTotalReport.reportsArr.datas = [];
+            bufTotalReport.reportsArr.links = [];
         }
     }
 
     //
     // <input type="text"> タイプ の Property Editor の Behavor
     //
-    function propertyEditorBehavor_textInput($inputElem, $defaultButtonElem, $expMsgElem, structureArr, callbackBeforePreview, callbackWhenEventDone){
+    function propertyEditorBehavor_textInput($inputElem, $defaultButtonElem, $expMsgElem, arrNameShouldBeStored, structureArr, callbackBeforePreview, callbackWhenEventDone){
         
         var bufTotalReport; //編集中に保存する Buffer
         var initExpMessage = null;
@@ -4838,6 +4853,7 @@
 
         //Default化ボタンの登録
         propertyEditingBehavor_setAsdefault = new propertyEditorBehavor_setAsDefault($defaultButtonElem,
+                                                                                     arrNameShouldBeStored,
                                                                                      structureArr,
                                                                                      callbackBeforePreview,
                                                                                      adjustPropertyEditConsole);
@@ -4857,7 +4873,7 @@
 
             if(!totalReport.allNG){ //1つ以上のNodeで適用成功の場合
                 totalReport.message = structureArr.join('/') + ":" + toApplyText;
-                overWriteScceededTransaction(totalReport, bufTotalReport);
+                overWriteScceededTransaction(totalReport, bufTotalReport, arrNameShouldBeStored);
 
                 if(totalReport.allOK){ //全てのNodeで適用成功の場合
                     $expMsgElem.text("explicit");
@@ -4939,6 +4955,7 @@
                                          //    historyに残すべきTransactionが少なくとも1件以上存在する事を表す
             bufTotalReport.reportsArr = {};
             bufTotalReport.reportsArr.datas = [];
+            bufTotalReport.reportsArr.links = [];
         }
 
         //バッファに積んだ Rendering Report を 確定させる
@@ -4956,7 +4973,7 @@
     //
     // <input type="number"> タイプ の Property Editor の Behavor
     //
-    function propertyEditorBehavor_numberInput($inputElem, $defaultButtonElem, $expMsgElem, structureArr, callbackBeforePreview, callbackWhenEventDone){
+    function propertyEditorBehavor_numberInput($inputElem, $defaultButtonElem, $expMsgElem, arrNameShouldBeStored, structureArr, callbackBeforePreview, callbackWhenEventDone){
         
         var bufTotalReport; //編集中に保存する Buffer
         var initExpMessage = null;
@@ -4968,6 +4985,7 @@
 
         //Default化ボタンの登録
         propertyEditingBehavor_setAsdefault = new propertyEditorBehavor_setAsDefault($defaultButtonElem,
+                                                                                     arrNameShouldBeStored,
                                                                                      structureArr,
                                                                                      callbackBeforePreview,
                                                                                      adjustPropertyEditConsole);
@@ -5000,7 +5018,7 @@
 
             if(!totalReport.allNG){ //1つ以上のNodeで適用成功の場合
                 totalReport.message = structureArr.join('/') + ":" + toApplyVal.toString();
-                overWriteScceededTransaction(totalReport, bufTotalReport);
+                overWriteScceededTransaction(totalReport, bufTotalReport, arrNameShouldBeStored);
 
                 if(totalReport.allOK){ //全てのNodeで適用成功の場合
                     $expMsgElem.text("explicit");
@@ -5080,6 +5098,7 @@
                                          //    historyに残すべきTransactionが少なくとも1件以上存在する事を表す
             bufTotalReport.reportsArr = {};
             bufTotalReport.reportsArr.datas = [];
+            bufTotalReport.reportsArr.links = [];
         }
 
         //バッファに積んだ Rendering Report を 確定させる
@@ -5096,7 +5115,7 @@
     //
     // Radio Buttons タイプ の Property Editor の Behavor
     //
-    function propertyEditorBehavor_radioButtons(elemAndValArr, $defaultButtonElem, $expMsgElem, structureArr, callbackBeforePreview, callbackWhenEventDone){
+    function propertyEditorBehavor_radioButtons(elemAndValArr, $defaultButtonElem, $expMsgElem, arrNameShouldBeStored, structureArr, callbackBeforePreview, callbackWhenEventDone){
 
         var clicked = false;
         var beforeExpMessage = "";
@@ -5106,6 +5125,7 @@
 
         //Default化ボタンの登録
         propertyEditingBehavor_setAsdefault = new propertyEditorBehavor_setAsDefault($defaultButtonElem,
+                                                                                     arrNameShouldBeStored,
                                                                                      structureArr,
                                                                                      callbackBeforePreview,
                                                                                      adjustPropertyEditConsole);
@@ -5268,7 +5288,7 @@
     //
     // Colopickerとinput要素を使って色指定するタイプ の Property Editor の Behavor
     //
-    function propertyEditorBehavor_fill($inputElem, $pickerElem, $defaultButtonElem, $expMsgElem, structureArr, callbackBeforePreview, callbackWhenEventDone){
+    function propertyEditorBehavor_fill($inputElem, $pickerElem, $defaultButtonElem, $expMsgElem, arrNameShouldBeStored, structureArr, callbackBeforePreview, callbackWhenEventDone){
 
         var bufTotalReport; //<input>要素 or spectrum の編集中に保存する Buffer
         var initExpMessage = null; // cancel 時に戻すべきメッセージ用文字列
@@ -5284,6 +5304,7 @@
 
         //Default化ボタンの登録
         propertyEditingBehavor_setAsdefault = new propertyEditorBehavor_setAsDefault($defaultButtonElem,
+                                                                                     arrNameShouldBeStored,
                                                                                      structureArr,
                                                                                      callbackBeforePreview,
                                                                                      adjustPropertyEditConsole);
@@ -5449,6 +5470,7 @@
                                          //    historyに残すべきTransactionが少なくとも1件以上存在する事を表す
             bufTotalReport.reportsArr = {};
             bufTotalReport.reportsArr.datas = [];
+            bufTotalReport.reportsArr.links = [];
         }
 
         //Buffer初期化 & 表示を元に戻す
@@ -5477,7 +5499,7 @@
 
             if(!totalReport.allNG){ //1つ以上のNodeで適用成功の場合
                 totalReport.message = structureArr.join('/') + ":" + toFillStr;
-                overWriteScceededTransaction(totalReport, bufTotalReport);
+                overWriteScceededTransaction(totalReport, bufTotalReport, arrNameShouldBeStored);
 
                 if(totalReport.allOK){ //全てのNodeで適用成功の場合
                     $expMsgElem.text("explicit");
@@ -5505,7 +5527,7 @@
     //
     // 各Property Editor で Default に戻すボタンの Behavor
     //
-    function propertyEditorBehavor_setAsDefault($buttunElem, structureArr, callbackBeforePreview, callbackWhenEventDone){
+    function propertyEditorBehavor_setAsDefault($buttunElem, arrNameShouldBeStored, structureArr, callbackBeforePreview, callbackWhenEventDone){
         
         var bufTotalReport = null; //Rendering Report 用バッファ
         var clicked = false;
@@ -5514,8 +5536,16 @@
         
         //toRenderObjの作成
         if(typeof structureArr == 'undefined'){ //'undefined'の場合は全て削除する
-            toRenderObj = makeSetDafaultObj();
-            messageTitle = "All Property:defalt"
+
+            if(arrNameShouldBeStored == 'datas'){ //datas[]用のデフォルト指定オブジェクトの場合
+                toRenderObj = makeSetDafaultObj();
+                messageTitle = "All Property of data:defalt"
+            
+            }else{ //links[]用のデフォルト指定オブジェクトの場合
+                toRenderObj = makeSetDafaultObj_forLink();
+                messageTitle = "All Property of link:defalt"
+
+            }
 
         }else{
             toRenderObj = makeNestedObj(null, structureArr);
@@ -5571,7 +5601,7 @@
     //
     // caution renderringReport.allNG = falseな時だけコールする
     //
-    function overWriteScceededTransaction(fromThisTransaction, toThisTransaction){ //?
+    function overWriteScceededTransaction(fromThisTransaction, toThisTransaction, arrNameShouldBeStored){
 
         if(toThisTransaction.allNG){ //allNGの場合は、この関数がコールされないので、
                                     //1回目のコールを表す
@@ -5588,56 +5618,56 @@
         }
         
         //レンダリングレポート網羅ループ
-        for(var i_f = 0 ; i_f < fromThisTransaction.reportsArr.datas.length ; i_f++){
+        for(var i_f = 0 ; i_f < fromThisTransaction.reportsArr[arrNameShouldBeStored].length ; i_f++){
 
-            if(!fromThisTransaction.reportsArr.datas[i_f].allNG){ //property全て失敗でなければ
+            if(!fromThisTransaction.reportsArr[arrNameShouldBeStored][i_f].allNG){ //property全て失敗でなければ
                 
                 //マージ対象ノード検索ループ
                 var i_t = 0;
                 
-                for( ; i_t < toThisTransaction.reportsArr.datas.length ; i_t++){
+                for( ; i_t < toThisTransaction.reportsArr[arrNameShouldBeStored].length ; i_t++){
 
                     //マージ対象のノードkeyが見つかった場合
-                    if(toThisTransaction.reportsArr.datas[i_t].key == fromThisTransaction.reportsArr.datas[i_f].key){
+                    if(toThisTransaction.reportsArr[arrNameShouldBeStored][i_t].key == fromThisTransaction.reportsArr[arrNameShouldBeStored][i_f].key){
                         break;
                     }
                 }
 
-                if(i_t == toThisTransaction.reportsArr.datas.length){ //マージ対象のノードkeyが見つからなかった場合
-                    toThisTransaction.reportsArr.datas.push({}); //空のオブジェクトを追加する
-                    toThisTransaction.reportsArr.datas[i_t].key = fromThisTransaction.reportsArr.datas[i_f].key;
+                if(i_t == toThisTransaction.reportsArr[arrNameShouldBeStored].length){ //マージ対象のノードkeyが見つからなかった場合
+                    toThisTransaction.reportsArr[arrNameShouldBeStored].push({}); //空のオブジェクトを追加する
+                    toThisTransaction.reportsArr[arrNameShouldBeStored][i_t].key = fromThisTransaction.reportsArr[arrNameShouldBeStored][i_f].key;
 
                     //allOK
-                    toThisTransaction.reportsArr.datas[i_t].allOK = fromThisTransaction.reportsArr.datas[i_f].allOK;
+                    toThisTransaction.reportsArr[arrNameShouldBeStored][i_t].allOK = fromThisTransaction.reportsArr[arrNameShouldBeStored][i_f].allOK;
                     //allNG
-                    toThisTransaction.reportsArr.datas[i_t].allNG = false;
+                    toThisTransaction.reportsArr[arrNameShouldBeStored][i_t].allNG = false;
                     //PrevObj
-                    toThisTransaction.reportsArr.datas[i_t].PrevObj = {};
-                    mergeObj(fromThisTransaction.reportsArr.datas[i_f].PrevObj, toThisTransaction.reportsArr.datas[i_t].PrevObj,false);
+                    toThisTransaction.reportsArr[arrNameShouldBeStored][i_t].PrevObj = {};
+                    mergeObj(fromThisTransaction.reportsArr[arrNameShouldBeStored][i_f].PrevObj, toThisTransaction.reportsArr[arrNameShouldBeStored][i_t].PrevObj,false);
                     //RenderedObj
-                    toThisTransaction.reportsArr.datas[i_t].RenderedObj = {};
+                    toThisTransaction.reportsArr[arrNameShouldBeStored][i_t].RenderedObj = {};
                     //FailuredMessages
-                    toThisTransaction.reportsArr.datas[i_t].FailuredMessages = {};
+                    toThisTransaction.reportsArr[arrNameShouldBeStored][i_t].FailuredMessages = {};
 
                 }else{ //マージ対象のノードkeyが見つかった場合
 
                     //allOK
-                    if(!fromThisTransaction.reportsArr.datas[i_f].allOK){ //一部失敗がある場合
-                        toThisTransaction.reportsArr.datas[i_t].allOK = false;
+                    if(!fromThisTransaction.reportsArr[arrNameShouldBeStored][i_f].allOK){ //一部失敗がある場合
+                        toThisTransaction.reportsArr[arrNameShouldBeStored][i_t].allOK = false;
                     }
                     
                     //allNGは不要
                     
                     //PrevObj
-                    mergeObj(fromThisTransaction.reportsArr.datas[i_f].PrevObj, toThisTransaction.reportsArr.datas[i_t].PrevObj,true); //toThisTransactionに存在しない時だけmerge
+                    mergeObj(fromThisTransaction.reportsArr[arrNameShouldBeStored][i_f].PrevObj, toThisTransaction.reportsArr[arrNameShouldBeStored][i_t].PrevObj,true); //toThisTransactionに存在しない時だけmerge
                     
                 }
                 
                 //RenderedObj
-                mergeObj(fromThisTransaction.reportsArr.datas[i_f].RenderedObj, toThisTransaction.reportsArr.datas[i_t].RenderedObj,false);
+                mergeObj(fromThisTransaction.reportsArr[arrNameShouldBeStored][i_f].RenderedObj, toThisTransaction.reportsArr[arrNameShouldBeStored][i_t].RenderedObj,false);
                 
                 //FailuredMessages
-                mergeObj(fromThisTransaction.reportsArr.datas[i_f].FailuredMessages, toThisTransaction.reportsArr.datas[i_t].FailuredMessages,false);
+                mergeObj(fromThisTransaction.reportsArr[arrNameShouldBeStored][i_f].FailuredMessages, toThisTransaction.reportsArr[arrNameShouldBeStored][i_t].FailuredMessages,false);
             }
         }
     }
