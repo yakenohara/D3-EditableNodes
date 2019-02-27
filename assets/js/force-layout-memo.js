@@ -29,7 +29,7 @@
     var valOfLineHightInText = 1.3;
 
     //全ての親となるDOM要素のID名
-    var idName_superElement = "editableNode";
+    var idName_superElement = "force-layout-memo";
 
     //Property Edit Console要素のclass名
     var className_propertyEditConsoleElement = "propertyEditConsole";

@@ -1,55 +1,55 @@
 /* <ユーザーが好みで変更する定義>------------------------------------------------------ */
-#editableNode{
+#force-layout-memo{
     width: 100%;
     height: 800px;
 }
 
-#editableNode .SVGForNodesMapping{
+#force-layout-memo .SVGForNodesMapping{
     /* border: 1px solid black; */
     background-color: rgb(44, 44, 44);
 }
 
-#editableNode .nodes .node .frame{
+#force-layout-memo .nodes .node .frame{
     stroke: rgb(0, 89, 255);
     stroke-width: 2px;
     fill: rgb(44, 44, 44);
 }
 
-#editableNode .nodes .node .textContent{
+#force-layout-memo .nodes .node .textContent{
     font-family: arial, sans-serif;
     font-size: 11px;
     fill: rgb(255, 255, 255);
 
 }
 
-#editableNode .links .link line{
+#force-layout-memo .links .link line{
     stroke-width: 2px;
     stroke: rgb(255, 0, 0);
 }
 
-#editableNode .selectionLayers .selectionLayer{
+#force-layout-memo .selectionLayers .selectionLayer{
     fill: rgba(40, 207, 96, 0.644);
     stroke: rgba(40, 207, 96, 0.644);
 }
 
-#editableNode .propertyEditConsole{
+#force-layout-memo .propertyEditConsole{
     background-color: rgb(167, 167, 167);
 }
 
 
-#editableNode .propertyEditConsole .propertyEditor .selected{
+#force-layout-memo .propertyEditConsole .propertyEditor .selected{
     background-color: rgba(0, 89, 255, 0.548);
 }
 
-#editableNode .propertyEditConsole .propertyEditor .SVGicon{
+#force-layout-memo .propertyEditConsole .propertyEditor .SVGicon{
     stroke:black;
 }
 
-#editableNode .transactionHistory{
+#force-layout-memo .transactionHistory{
     background-color: rgb(160, 160, 160);
 }
 
-#editableNode .transactionHistory .selected{
+#force-layout-memo .transactionHistory .selected{
     background-color: rgb(77, 74, 255);
 }
 
@@ -57,24 +57,24 @@
 
 /* <構造定義>------------------------------------------------------ */
 
-#editableNode .propertyEditConsole .description{
+#force-layout-memo .propertyEditConsole .description{
     font-size:medium;
     padding: 3px 5px;
 }
 
-#editableNode .propertyEditConsole .propertyEditor{
+#force-layout-memo .propertyEditConsole .propertyEditor{
     padding: 0px 5px;
 }
 
 /* div要素リストを横並びにする為に設定する */
-#editableNode .propertyEditConsole .propertyEditor.text_text_anchor,
+#force-layout-memo .propertyEditConsole .propertyEditor.text_text_anchor,
 .text_frame_shape,
 .text_font_weight,
 .text_font_style{
     font-size:0;
 }
 
-#editableNode .propertyEditConsole .propertyEditor .textAnchorType,
+#force-layout-memo .propertyEditConsole .propertyEditor .textAnchorType,
 .frameShapeType,
 .arrowType{
     display: inline-block;
@@ -82,7 +82,7 @@
     cursor: pointer;
 }
 
-#editableNode .propertyEditConsole .propertyEditor .text_property{
+#force-layout-memo .propertyEditConsole .propertyEditor .text_property{
     vertical-align: middle;
 
     width:200px;
@@ -94,7 +94,7 @@
     padding:4px;
 }
 
-#editableNode .propertyEditConsole .propertyEditor .number_property{
+#force-layout-memo .propertyEditConsole .propertyEditor .number_property{
     vertical-align: middle;
 
     width:50px;
@@ -106,7 +106,7 @@
     padding:4px;
 }
 
-#editableNode .propertyEditConsole .propertyEditor .fontWeightType,
+#force-layout-memo .propertyEditConsole .propertyEditor .fontWeightType,
 .fontStyleType{
     display: inline-block;
     padding: 4px;
@@ -114,12 +114,12 @@
     font-size:15px;
 }
 
-#editableNode .propertyEditConsole .propertyEditor .message.explicitness{
+#force-layout-memo .propertyEditConsole .propertyEditor .message.explicitness{
     font-size:small;
 }
 
 
-#editableNode .propertyEditConsole .propertyEditor .pickedColorText{
+#force-layout-memo .propertyEditConsole .propertyEditor .pickedColorText{
     vertical-align: middle;
 
     width:150px;
@@ -131,20 +131,20 @@
     padding:4px;
 }
 
-#editableNode .propertyEditConsole .propertyEditor.all{
+#force-layout-memo .propertyEditConsole .propertyEditor.all{
     padding: 10px 10px;
 }
 
-#editableNode .propertyEditConsole .propertyEditor button{
+#force-layout-memo .propertyEditConsole .propertyEditor button{
     border-style: none;
 }
 
-#editableNode .transactionHistory{
+#force-layout-memo .transactionHistory{
     width: 200px;
     max-height: 300px;
 }
 
-#editableNode .transactionHistory .transaction{
+#force-layout-memo .transactionHistory .transaction{
     padding: 3px 5px;
     cursor: pointer;
 }
