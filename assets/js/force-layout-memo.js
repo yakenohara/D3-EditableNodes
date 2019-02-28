@@ -767,7 +767,6 @@
             add:{
                 name: "Add (A)",
                 accesskey: 'a',
-                //todo 'a'キーを押してNode追加すると、Nodeに'a'が追加されてしまう
                 callback: function(itemKey, opt){
                     var appendingTotalReport = appendNodes({
                         datas:[
@@ -4961,6 +4960,7 @@
                 .attr("wrap","off");
             
             var textareaElem = $3textareaElem.node();
+            var keyDownInvoked = false;
             
             adjustTextarea(bindedData, $3textareaElem); //追加した<textarea>の表示調整
             
@@ -4968,12 +4968,24 @@
                                  $3textareaElem: $3textareaElem};
             
             editingDataArr.push(appendThisObj); //編集対象Nodeとして保存
-            
+
+            $3textareaElem.node().onkeydown = function(){
+                keyDownInvoked = true;
+            }
+
             //<textarea>内のキータイプイベント
             $3textareaElem.node().oninput = function(){
-                //SVGNodeへの反映&<textarea>調整
-                renderAndMergeBufTotalReport($3textareaElem.node().value);
-                adjustEditors($3textareaElem);
+                if(keyDownInvoked){
+                    //SVGNodeへの反映&<textarea>調整
+                    renderAndMergeBufTotalReport($3textareaElem.node().value);
+                    adjustEditors($3textareaElem);
+                
+                }else{
+                    //キーボードショートカットを使用してNode追加した場合は、
+                    //押下したショートカットキーによってoninputイベントが発火してしまうことを防ぐ
+                    $3textareaElem.attr("value", textareaValue); //初期状態に戻す
+                }
+                
             }
 
             //<textarea>内の改行挿入イベント
@@ -5004,13 +5016,13 @@
             Mousetrap(textareaElem).bind(keySettings.submitEditingTextTypeSVGNode, function(e){
                 comfirmBufTotalReport(); //Bufferの確定
 
-                //todo 確定して次のNodeを追加する
                 exitEditing(); //編集モードの終了
 
+                var uniqueKeyName = makeUniqueKey(bindedData.key, getBindedDataFromKey);
                 var appendingTotalReport = appendNodes({
                     datas:[
                         {
-                            key:"0",
+                            key:uniqueKeyName,
                             type:"text",
                             text: {
                                 text_content: ""
@@ -5020,7 +5032,7 @@
                     links:[
                         {
                             source:bindedData.key,
-                            target:"0" //todo source, target が重複してしまう可能性回避
+                            target:uniqueKeyName
                         }
                     ]
                 });
