@@ -96,7 +96,10 @@
     var $3svgLinksGroup;
     var $3svgLinks;
     var $3selectionLayersGroup;
-    var lastTransForm = null;
+    var lastTransFormObj_d3style = null; //最後に zoom・pan を行った時の d3.event.transform object
+    var lastCoordinate = {
+        rightClick:{x:0, y:0}
+    }
 
     //Node初期化用Objを作る
     function makeSetDafaultObj(includeIndividualpart){
@@ -778,6 +781,10 @@
                         datas:[
                             {
                                 key:uniqueDataKeyName,
+                                coordinate: { //右クリック位置に挿入する
+                                    x:lastCoordinate.rightClick.x,
+                                    y:lastCoordinate.rightClick.y
+                                },
                                 type:"text",
                                 text: {
                                     text_content: ""
@@ -828,6 +835,69 @@
                 
             },
         },
+        position: function (opt, x, y) {
+
+            var boundingClientRect = $SVGDrawingAreaElement.get(0).getBoundingClientRect();
+            
+            var transformObj = {
+                translates: {x:0, y:0},
+                scale: 1
+            };
+
+            if(lastTransFormObj_d3style !== null){
+                transformObj.translates.x = lastTransFormObj_d3style.x;
+                transformObj.translates.y = lastTransFormObj_d3style.y;
+                transformObj.scale = lastTransFormObj_d3style.k;
+            }
+
+            //右クリック位置の保存
+            lastCoordinate.rightClick.x = ((x - boundingClientRect.left)  - transformObj.translates.x) / transformObj.scale;
+            lastCoordinate.rightClick.y = ((y - boundingClientRect.top) - transformObj.translates.y) / transformObj.scale;
+
+            var $win = $(window);
+
+            //<Same as jquery.contextMenu-2.7.1.js>-----------------
+
+            var offset;
+            // determine contextMenu position
+            if (!x && !y) {
+                opt.determinePosition.call(this, opt.$menu);
+                return;
+            } else if (x === 'maintain' && y === 'maintain') {
+                // x and y must not be changed (after re-show on command click)
+                offset = opt.$menu.position();
+            } else {
+                // x and y are given (by mouse event)
+                var offsetParentOffset = opt.$menu.offsetParent().offset();
+                offset = {top: y - offsetParentOffset.top, left: x -offsetParentOffset.left};
+            }
+
+            // correct offset if viewport demands it
+            var bottom = $win.scrollTop() + $win.height(),
+                right = $win.scrollLeft() + $win.width(),
+                height = opt.$menu.outerHeight(),
+                width = opt.$menu.outerWidth();
+
+            if (offset.top + height > bottom) {
+                offset.top -= height;
+            }
+
+            if (offset.top < 0) {
+                offset.top = 0;
+            }
+
+            if (offset.left + width > right) {
+                offset.left -= width;
+            }
+
+            if (offset.left < 0) {
+                offset.left = 0;
+            }
+
+            opt.$menu.css(offset);
+
+            //----------------</Same as jquery.contextMenu-2.7.1.js>
+        },
         callback: function(itemKey, opt){ //keyup event
             //DL確認画面終了後にhide出来ないことがあるので、先にhideする
             opt.$menu.trigger("contextmenu:hide");
@@ -839,16 +909,16 @@
     // SVG領域の Zoom・Pan イベント
     $3SVGDrawingAreaElement.call(d3.zoom()
         .on("zoom", function(){
-            lastTransForm = d3.event.transform; //最終状態を保存(Node Append/復活時に利用する)
+            lastTransFormObj_d3style = d3.event.transform; //最終状態を保存(Node Append/復活時に利用する)
 
             $3svgNodes.each(function(d, i){
-                d.$3bindedSVGElement.attr("transform", lastTransForm);
-                d.$3bindedSelectionLayerSVGElement.attr("transform", lastTransForm);
+                d.$3bindedSVGElement.attr("transform", lastTransFormObj_d3style);
+                d.$3bindedSelectionLayerSVGElement.attr("transform", lastTransFormObj_d3style);
             });
 
             $3svgLinks.each(function(d, i){
-                d.$3bindedSVGLinkElement.attr("transform", lastTransForm);
-                d.$3bindedSelectionLayerSVGElement.attr("transform", lastTransForm);
+                d.$3bindedSVGLinkElement.attr("transform", lastTransFormObj_d3style);
+                d.$3bindedSelectionLayerSVGElement.attr("transform", lastTransFormObj_d3style);
             });
 
             if(nowEditng){
@@ -1195,7 +1265,7 @@
             $3svgNodes.enter()
                 .append("g")
                 .classed("node", true)
-                .attr("transform", lastTransForm)
+                .attr("transform", lastTransFormObj_d3style)
                 .each(function(d ,i){
 
                     var bindedSVGElement = this;
@@ -1502,7 +1572,7 @@
                 $3svgLinks.enter()
                     .append("g")
                     .classed("link", true)
-                    .attr("transform", lastTransForm)
+                    .attr("transform", lastTransFormObj_d3style)
                     .each(function(d, i){
                         var bindedSVGLinkElement = this;
                         d.$3bindedSVGLinkElement = d3.select(bindedSVGLinkElement);
@@ -1881,7 +1951,10 @@
         simulation = d3.forceSimulation()
             .force("link", d3.forceLink().id(function(d) { return d.key; }))
             .force("charge", d3.forceManyBody())
-            .force("center", d3.forceCenter(400, 400));
+            .force("center", d3.forceCenter( //仮の処理
+                $3motherElement.node().clientWidth / 2,
+                $3motherElement.node().clientHeight / 2
+            ));
 
         simulation.nodes(dataset.datas)
             .on("tick", function(){
