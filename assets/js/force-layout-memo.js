@@ -851,7 +851,7 @@
             }
 
             //右クリック位置の保存
-            lastCoordinate.rightClick.x = ((x - boundingClientRect.left)  - transformObj.translates.x) / transformObj.scale;
+            lastCoordinate.rightClick.x = ((x - boundingClientRect.left) - transformObj.translates.x) / transformObj.scale;
             lastCoordinate.rightClick.y = ((y - boundingClientRect.top) - transformObj.translates.y) / transformObj.scale;
 
             var $win = $(window);
@@ -963,9 +963,6 @@
         }else{ // 編集中でない場合
 
             deleteSVGNodes(); //選択状態のNode(s)を削除
-
-            //todo 関係するLinkを削除
-
             lastSelectedData = null;
             disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
         }
@@ -1279,11 +1276,23 @@
 
                     checkToBindData(d); //data書式のチェック
                     
-                    //座標追加
-                    if(typeof d.coordinate == 'undefined'){
+                    if(typeof d.coordinate == 'undefined'){ //座標指定がない場合
+
+                        var transformObj = {
+                            translates: {x:0, y:0},
+                            scale: 1
+                        };
+            
+                        if(lastTransFormObj_d3style !== null){
+                            transformObj.translates.x = lastTransFormObj_d3style.x;
+                            transformObj.translates.y = lastTransFormObj_d3style.y;
+                            transformObj.scale = lastTransFormObj_d3style.k;
+                        }
+                        
+                        //描画領域の中心にを指定する
                         d.coordinate = {
-                            x: ($3motherElement.node().offsetWidth / 2), //<-仮の処理
-                            y: (60*(i+1)) //<-仮の処理
+                            x: (($3motherElement.node().offsetWidth / 2) - transformObj.translates.x) / transformObj.scale,
+                            y: (($3motherElement.node().offsetHeight / 2) - transformObj.translates.y) / transformObj.scale
                         };
                     }
                     
@@ -5121,6 +5130,10 @@
                     datas:[
                         {
                             key:uniqueDataKeyName,
+                            coordinate:{
+                                x:bindedData.coordinate.x,
+                                y:bindedData.coordinate.y + 60 //仮の処理
+                            },
                             type:"text",
                             text: {
                                 text_content: ""
