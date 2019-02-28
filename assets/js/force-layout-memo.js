@@ -768,9 +768,16 @@
                 name: "Add (A)",
                 accesskey: 'a',
                 callback: function(itemKey, opt){
+                    var uniqueDataKeyName;
+                    if(dataset.datas.length == 0){
+                        uniqueDataKeyName = '0';
+                    }else{
+                        uniqueDataKeyName = makeUniqueKey(dataset.datas[(dataset.datas.length-1)].key, getBindedDataFromKey);
+                    }
                     var appendingTotalReport = appendNodes({
                         datas:[
                             {
+                                key:uniqueDataKeyName,
                                 type:"text",
                                 text: {
                                     text_content: ""
@@ -1686,7 +1693,7 @@
         }
 
         if((toDeleteKeyArr.datas.length > 0) || (toDeleteKeyArr.links.length > 0)){ //削除対象Nodeが存在する場合
-            var deletingTotalReport = deleteNodes(toDeleteKeyArr);
+            var deletingTotalReport = deleteNodes(toDeleteKeyArr, true); //source か target で紐づけられた link も削除する
             appendHistory(deletingTotalReport);
         }
     }
@@ -1694,7 +1701,7 @@
     //
     //SVGノード(複数)を削除する
     //
-    function deleteNodes(toDeleteKeyArr){
+    function deleteNodes(toDeleteKeyArr, deleteLinkIfdefined){
 
         var deletingTotalReport = {};
         deletingTotalReport.type = 'delete';
@@ -1705,7 +1712,12 @@
         deletingTotalReport.reportsArr.links = [];
 
         var numOfDeletedNodes = 0;
+        var toDeleteDataKeyArr = [];
         var numOfDeletedLinks = 0;
+
+        if(deleteLinkIfdefined){
+            toDeleteDataKeyArr = toDeleteKeyArr.datas.slice(0, toDeleteKeyArr.datas.length);
+        }
 
         //削除対象Nodeをdataset.datas[]から検索 & 削除
         for(var i = dataset.datas.length-1 ; i >= 0 ; i--){
@@ -1726,6 +1738,16 @@
                 dataset.links.splice(i,1); //dataset.links[]から削除
                 toDeleteKeyArr.links.splice(foundIdx, 1); //削除指定KeyArrayからも削除
                 numOfDeletedLinks++;
+
+            }else if(deleteLinkIfdefined){ //data削除時に、source か target で紐づけられた linkを削除する指定がある場合
+
+                var sourceFoundIdx = toDeleteDataKeyArr.indexOf(dataset.links[i].source.key);
+                var targetFoundIdx = toDeleteDataKeyArr.indexOf(dataset.links[i].target.key);
+
+                if(sourceFoundIdx >= 0 || targetFoundIdx >= 0){ //削除指定keyArray内に存在する場合
+                    dataset.links.splice(i,1); //dataset.links[]から削除
+                    numOfDeletedLinks++;
+                }
             }
         }
 
@@ -1797,6 +1819,8 @@
                     //SVG削除前のPropertyを保存する為、defaltObjで再度レンダリングする
                     var renderReport = renderSVGLink(d, defaultObj); //SVGレンダリング
                     renderReport.PrevObj.type = d.type; //削除前のtypeをPrevObjに保存
+                    renderReport.PrevObj.source = d.source.key;
+                    renderReport.PrevObj.target = d.target.key;
                     
                     if(!renderReport.allOK){ //失敗が発生した場合
                         deletingTotalReport.allOK = false;
@@ -4191,7 +4215,7 @@
                 toDeleteKeyArr.links.push(reportObj.key); //削除指定keyArrayに追加
             }
 
-            rollbackRenderringReport = deleteNodes(toDeleteKeyArr); //Node(s), Link(s)削除
+            rollbackRenderringReport = deleteNodes(toDeleteKeyArr, false); //Node(s), Link(s)削除
         }
 
         function call_appendNodes(){
@@ -5018,11 +5042,12 @@
 
                 exitEditing(); //編集モードの終了
 
-                var uniqueKeyName = makeUniqueKey(bindedData.key, getBindedDataFromKey);
+                var uniqueDataKeyName = makeUniqueKey(bindedData.key, getBindedDataFromKey);
+                var uniqueLinkKeyName = makeUniqueKey(bindedData.key, getBindedLinkDataFromKey);
                 var appendingTotalReport = appendNodes({
                     datas:[
                         {
-                            key:uniqueKeyName,
+                            key:uniqueDataKeyName,
                             type:"text",
                             text: {
                                 text_content: ""
@@ -5031,8 +5056,10 @@
                     ],
                     links:[
                         {
+                            key:uniqueLinkKeyName,
+                            type:defaultLinkhape,
                             source:bindedData.key,
-                            target:uniqueKeyName
+                            target:uniqueDataKeyName
                         }
                     ]
                 });
