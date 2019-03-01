@@ -8,6 +8,12 @@
         submitEditingTextTypeSVGNode: "enter", //Node編集状態の確定
         insertLF: "alt+enter", //textTypeのNode編集時に改行を挿入する
         deleteNodes: "del", //Nodeの削除
+        selectNodeRight: "right",
+        selectNodeLeft: "left",
+        selectNodeAbove: "up",
+        selectNodeBelow: "down",
+        highlightNodesSource: "s",
+        highlightNodesTarget: "t",
     };
 
     //外部コンポーネントパス
@@ -66,7 +72,7 @@
                                    //    最後に入力されていたtinyColorObjがEmptyな場合は、nullを渡す
         preferredFormat: "rgb",
     }
-    
+
     /* ---------------------------------------------------------------------------------------------</Hard cords> */
     
     //todo localize
@@ -747,13 +753,15 @@
             
             //Nodeすべてを選択解除する
             for(var i = 0 ; i < dataset.datas.length ; i++){
-                dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility", "hidden")
+                dataset.datas[i].$3bindedSelectionLayerSVGElement
+                    .classed("selected", false)
                     .attr("data-selected", "false"); //選択解除
             }
 
             //linkすべてを選択解除する
             for(var i = 0 ; i < dataset.links.length ; i++){
-                dataset.links[i].$3bindedSelectionLayerSVGElement.style("visibility", "hidden")
+                dataset.links[i].$3bindedSelectionLayerSVGElement
+                    .classed("selected", false)
                     .attr("data-selected", "false"); //選択解除
             }
 
@@ -848,6 +856,11 @@
                 transformObj.translates.x = lastTransFormObj_d3style.x;
                 transformObj.translates.y = lastTransFormObj_d3style.y;
                 transformObj.scale = lastTransFormObj_d3style.k;
+            }
+
+            if(x == 0 && y == 0){ // application keyによる起動の場合
+                x = boundingClientRect.left + ($3motherElement.node().offsetWidth / 2); // 画面中央にメニューを表示する
+                y = boundingClientRect.top + ($3motherElement.node().offsetHeight / 2);
             }
 
             //右クリック位置の保存
@@ -945,6 +958,8 @@
         }
     );
 
+    //todo Mousetrap(domElement).bind(~)の形式にしない理由を記載
+
     // Nodeに対する複数編集イベント
     Mousetrap.bind(keySettings.editSVGNodes, function(e){
         call_editSVGNodes(true);
@@ -967,6 +982,35 @@
             disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
         }
     });
+
+    
+    Mousetrap.bind(keySettings.highlightNodesSource, function(e, combo){
+        console.log("key down `" + combo + "`");
+
+        //External Componentが未loadの場合はハジく
+        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
+
+        //Property Edit Consle 表示中 or 選択した data がない時はハジく
+        if(nowEditng || lastSelectedData === null){return;}
+
+        //highlight
+        lastSelectedData.$3bindedSelectionLayerSVGElement.classed("highlight", true);
+
+
+        //highlightした node を target にした link も highlight する
+        for(var i = 0 ; i < dataset.links.length ; i++){
+            if(dataset.links[i].target.key == lastSelectedData.key){
+                dataset.links[i].$3bindedSelectionLayerSVGElement.classed("highlight", true);
+            }
+        }
+        
+        
+
+    }, 'keydown');
+    
+    Mousetrap.bind(keySettings.highlightNodesSource, function(e, combo){
+        console.log("key up `" + combo + "`");
+    }, 'keyup');
 
     //
     //ページ移動前確認(外部コンポーネントload後にaddEventする)
@@ -1271,7 +1315,7 @@
                     d.$3bindedSelectionLayerSVGElement = $3selectionLayersGroup.append("g")
                         .classed("selectionLayer",true)
                         .style("pointer-events", "none")
-                        .style("visibility", "hidden")
+                        .attr("transform", lastTransFormObj_d3style)
                         .attr("data-selected", "false");
 
                     checkToBindData(d); //data書式のチェック
@@ -1351,14 +1395,16 @@
                             //別ノードすべてを選択解除する
                             for(var i = 0 ; i < dataset.datas.length ; i++){
                                 if(dataset.datas[i].key != d.key){ //自分のノードでない場合
-                                    dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
+                                    dataset.datas[i].$3bindedSelectionLayerSVGElement
+                                        .classed("selected", false)
                                         .attr("data-selected", "false"); //選択解除
                                 }
                             }
 
                             //Linkすべてを選択解除する
                             for(var i = 0 ; i < dataset.links.length ; i++){
-                                dataset.links[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
+                                dataset.links[i].$3bindedSelectionLayerSVGElement
+                                    .classed("selected", false)
                                     .attr("data-selected", "false"); //選択解除
                             }
                         }
@@ -1367,12 +1413,14 @@
                 
                         //選択状態を切り替える
                         if(isSelected){ //選択状態の場合
-                            d.$3bindedSelectionLayerSVGElement.style("visibility","hidden") //非表示にする
+                            d.$3bindedSelectionLayerSVGElement
+                                .classed("selected", false)
                                 .attr("data-selected", "false"); //選択解除
                             lastSelectedData = null; //最終選択Nodeをnullにする(すべてのNodeが非選択になる為)
                 
                         }else{ //非選択状態の場合
-                            d.$3bindedSelectionLayerSVGElement.style("visibility",null) //表示状態にする
+                            d.$3bindedSelectionLayerSVGElement
+                                .classed("selected", true)
                                 .attr("data-selected", "true"); //選択
                             
                             lastSelectedData = d; //最終選択Nodeの記憶
@@ -1589,7 +1637,7 @@
                         d.$3bindedSelectionLayerSVGElement = $3selectionLayersGroup.append("g")
                             .classed("selectionLayer",true)
                             .style("pointer-events", "none")
-                            .style("visibility", "hidden")
+                            .attr("transform", lastTransFormObj_d3style)
                             .attr("data-selected", "false");
 
                         checkToBindLink(d); //link書式のチェック
@@ -1646,14 +1694,16 @@
                     
                                 //別ノードすべてを選択解除する
                                 for(var i = 0 ; i < dataset.datas.length ; i++){
-                                    dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
+                                    dataset.datas[i].$3bindedSelectionLayerSVGElement
+                                        .classed("selected", false)
                                         .attr("data-selected", "false"); //選択解除
                                 }
 
                                 //別ノードすべてを選択解除する(links[])
                                 for(var i = 0 ; i < dataset.links.length ; i++){
                                     if(dataset.links[i].key != d.key){ //自分のノードでない場合
-                                        dataset.links[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
+                                        dataset.links[i].$3bindedSelectionLayerSVGElement
+                                            .classed("selected", false)
                                             .attr("data-selected", "false"); //選択解除
                                     }
                                 }
@@ -1663,11 +1713,13 @@
                     
                             //選択状態を切り替える
                             if(isSelected){ //選択状態の場合
-                                d.$3bindedSelectionLayerSVGElement.style("visibility","hidden") //非表示にする
+                                d.$3bindedSelectionLayerSVGElement
+                                    .classed("selected", false)
                                     .attr("data-selected", "false"); //選択解除
                     
                             }else{ //非選択状態の場合
-                                d.$3bindedSelectionLayerSVGElement.style("visibility",null) //表示状態にする
+                                d.$3bindedSelectionLayerSVGElement
+                                    .classed("selected", true)
                                     .attr("data-selected", "true"); //選択
                             }
                             lastSelectedData = null;
@@ -1688,18 +1740,21 @@
                     
                             //Nodeすべてを選択解除する
                             for(var i = 0 ; i < dataset.datas.length ; i++){
-                                dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden") //選択解除
+                                dataset.datas[i].$3bindedSelectionLayerSVGElement
+                                    .classed("selected", false)
                                     .attr("data-selected", "false"); //選択解除
                             }
 
                             //別Linkすべてを選択解除して、自分のLinkのみ選択状態にする
                             for(var i = 0 ; i < dataset.links.length ; i++){
                                 if(dataset.links[i].key != d.key){ //自分のノードでない場合
-                                    dataset.links[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden") //選択解除
+                                    dataset.links[i].$3bindedSelectionLayerSVGElement
+                                        .classed("selected", false)
                                         .attr("data-selected", "false"); //選択解除
                                 
                                 }else{ //自分のノードの場合
-                                    dataset.links[i].$3bindedSelectionLayerSVGElement.style("visibility",null) //選択
+                                    dataset.links[i].$3bindedSelectionLayerSVGElement
+                                        .classed("selected", true)
                                         .attr("data-selected", "true"); //選択解除
                                 }
                             }
@@ -4557,7 +4612,7 @@
             var bindedData = dataset.datas[i];
 
             if(bindedData.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == "true"){ // 選択対象Nodeの場合
-                bindedData.$3bindedSelectionLayerSVGElement.style("visibility",null); //選択状態にする
+                bindedData.$3bindedSelectionLayerSVGElement.classed("selected", true); //選択状態にする
             }
         }
 
@@ -4567,7 +4622,7 @@
             var bindedData = dataset.links[i];
 
             if(bindedData.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == "true"){ // 選択対象Nodeの場合
-                bindedData.$3bindedSelectionLayerSVGElement.style("visibility",null); //選択状態にする
+                bindedData.$3bindedSelectionLayerSVGElement.classed("selected", true); //選択状態にする
             }
         }
 
@@ -4669,18 +4724,21 @@
         //別ノードすべてを選択解除して、自分のノードのみ選択状態にする
         for(var i = 0 ; i < dataset.datas.length ; i++){
             if(dataset.datas[i].key != bindedData.key){ //自分のノードでない場合
-                dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden") //選択解除
+                dataset.datas[i].$3bindedSelectionLayerSVGElement
+                    .classed("selected", false)
                     .attr("data-selected", "false"); //選択解除
             
             }else{ //自分のノードの場合
-                dataset.datas[i].$3bindedSelectionLayerSVGElement.style("visibility",null) //選択
-                    .attr("data-selected", "true"); //選択解除
+                dataset.datas[i].$3bindedSelectionLayerSVGElement
+                    .classed("selected", true) //選択
+                    .attr("data-selected", "true");
             }
         }
 
         //Linkすべてを選択解除する
         for(var i = 0 ; i < dataset.links.length ; i++){
-            dataset.links[i].$3bindedSelectionLayerSVGElement.style("visibility","hidden")
+            dataset.links[i].$3bindedSelectionLayerSVGElement
+                .classed("selected", false)
                 .attr("data-selected", "false"); //選択解除
         }
         
@@ -4723,7 +4781,7 @@
         $3svgNodes.each(function(d,i){
 
             if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択状態の場合
-                d.$3bindedSelectionLayerSVGElement.style("visibility","hidden"); //非表示にする
+                d.$3bindedSelectionLayerSVGElement.classed("selected", false); //非表示にする
                 editingNodeKeys.push(d.key);
                 propertyEditorsManager.append(d);
             }
@@ -4733,7 +4791,7 @@
         $3svgLinks.each(function(d,i){
 
             if(d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true'){ //選択状態の場合
-                d.$3bindedSelectionLayerSVGElement.style("visibility","hidden"); //非表示にする
+                d.$3bindedSelectionLayerSVGElement.classed("selected", false); //非表示にする
                 editingLinkKeys.push(d.key);
             }
         });

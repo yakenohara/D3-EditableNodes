@@ -24,12 +24,17 @@
 
 #force-layout-memo .links .link line{
     stroke-width: 2px;
-    stroke: rgb(255, 0, 0);
+    stroke: rgb(145, 87, 87);
 }
 
-#force-layout-memo .selectionLayers .selectionLayer{
+#force-layout-memo .selectionLayers .selectionLayer.selected{
     fill: rgba(40, 207, 96, 0.644);
     stroke: rgba(40, 207, 96, 0.644);
+}
+
+#force-layout-memo .selectionLayers .selectionLayer.highlight{
+    fill: rgba(255, 29, 255, 0.938);
+    stroke: rgba(255, 29, 255, 0.938);
 }
 
 #force-layout-memo .propertyEditConsole{
@@ -56,6 +61,15 @@
 /* -----------------------------------------------------</ユーザーが好みで変更する定義> */
 
 /* <構造定義>------------------------------------------------------ */
+#force-layout-memo .selectionLayers .selectionLayer
+{
+    visibility: hidden;
+}
+
+#force-layout-memo .selectionLayers .selectionLayer.selected,
+.highlight{
+    visibility: visible;
+}
 
 #force-layout-memo .propertyEditConsole .description{
     font-size:medium;
