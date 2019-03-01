@@ -17,7 +17,7 @@
     var fileName_Export = "Nodes.json";
 
     // frameType 未指定時に設定する Default Shape
-    var defaultTextFrameShape = "rect";
+    var defaultTextFrameShape = "ellipse";
 
     // linkType 未指定時に設定する Default Shape
     var defaultLinkhape = "line";
@@ -1958,12 +1958,9 @@
         });
 
         simulation = d3.forceSimulation()
-            .force("link", d3.forceLink().id(function(d) { return d.key; }))
+            .force("link", d3.forceLink())
             .force("charge", d3.forceManyBody())
-            .force("center", d3.forceCenter( //仮の処理
-                $3motherElement.node().clientWidth / 2,
-                $3motherElement.node().clientHeight / 2
-            ));
+            ;
 
         simulation.nodes(dataset.datas)
             .on("tick", function(){
@@ -1996,41 +1993,136 @@
             });
 
         simulation.force("link")
-            .links(dataset.links);
+            .links(dataset.links)
+            .id(function(d) { return d.key; })
+            ;
 
-        //<Coefficient settings for force simulation>---------------------------------------
+        /* <Coefficient settings for force simulation>--------------------------------------- */
 
         // Documentation
         // https://github.com/d3/d3-force
 
-        simulation.force("link")
-
-            //link.distance([distance])
-            //リンク間距離(default:30)
-            .distance(100)
-
-            ;
-
+        //
+        //d3.forceManyBody()
+        //
         simulation.force("charge")
 
+            //
             //manyBody.strength([strength])
+            //
+            //node同士の引力
             //正値の場合はお互いに引きつけあう
-            //負値の場合はお互いに離しあう (defalt:-30)
+            //負値の場合はお互いに離しあう
+            //
+            // defalt: -30
+            //
             .strength(-60)
+
+            //
+            //manyBody.distanceMax([distance]) 
+            //
+            //node 同士の引力が影響する最大範囲
+            //
+            // range: 0 <= distance <= (infinity)
+            // defalt: (infinity)
+            //
+            .distanceMax(100)
+
+        ;
             
-            ;
+        //
+        //d3.forceLink([links])
+        //
+        simulation.force("link")
+
+            //
+            //link.distance([distance])
+            //
+            //リンク間距離
+            //
+            // default:30
+            //
+            .distance(100)
+
+            //
+            //link.strength([strength])
+            //
+            //リンク間強度
+            //小さい値で link は伸び縮みしやすく、
+            //大きい値で link は伸び縮みしにくくなる
+            //
+            // range: 0.0 <= strength <= 2.0
+            // default: 1 / Math.min(count(link.source), count(link.target))
+            // <!caution!> strengthの有効範囲外で、ブラウザが不安定になる </!caution!>
+            //
+            // .strength(2)
+
+        ;
 
         simulation
-            
+
+            //
+            //simulation.alpha([alpha])
+            //
+            //alpha が `simulation.alphaMin([min])` で設定した min より大きい間、
+            //simulation が継続する。alpha は時間とともに小さくなっていく
+            //
+            // range: 0.0 <= alpha <= 1.0
+            // default: 1.0
+            //
+            //.alpha(1)
+
+            //
+            //simulation.alphaMin([min])
+            //
+            //`simulation.alpha([alpha])` で設定した alpha が min より小さくなると、
+            //simulation が停止する。
+            //
+            // range: 0.0 <= min <= 1.0
+            // default: 0.001
+            //
+            //.alphaMin(0.001)
+
+            //
+            //simulation.alphaDecay([decay])
+            //
+            //`simulation.alpha([alpha])` で設定した alpha の減少速度
+            //大きな値で alpha は早く減少、
+            //小さな値で alpha は遅く減少する
+            //
+            // range: 0.0 <= decay <= 1.0
+            // default: 0.0228… (= 1 - pow(0.001, 1 / 300) )
+            //
+            .alphaDecay(0.3)
+
+            //
+            //simulation.alphaTarget([target])
+            //
+            //`simulation.alpha([alpha])` で設定した alpha が、
+            //時間と共に、ここで設定した target に漸近する
+            //その為、`simulation.alphaMin([min])` で設定した min より大きい値を設定すると、
+            //simulationはずっと継続する
+            //
+            // range: 0.0 <= target <= 1.0
+            // default: 0.0
+            //
+            //alphaTarget(0)
+
+            //
             //simulation.velocityDecay([decay])
-            //摩擦係数. 有効範囲は 0 - 1 (default:0.4)
-            // .velocityDecay(0.4)
+            //
+            //摩擦係数
+            //小さい値で node は滑りやすく、
+            //大きい値で node は滑りにくくなる
+            //
+            // range: 0.0 <= decay <= 1.0
+            // default: 0.4
+            //
+            .velocityDecay(0.2)
 
-            ;
-        
+        ;
 
-
-        //--------------------------------------</Coefficient settings for force simulation>
+        /* --------------------------------------</Coefficient settings for force simulation> */
     }
 
     function fireEvent_PropertyEditConsole_rerender(argObj){
