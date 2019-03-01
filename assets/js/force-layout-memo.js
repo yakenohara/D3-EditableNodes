@@ -14,6 +14,7 @@
         selectNodeBelow: "down",
         highlightNodesSource: "s",
         highlightNodesTarget: "t",
+        highlightNodesSourceAndTarget: "l",
     };
 
     //外部コンポーネントパス
@@ -106,6 +107,14 @@
     var lastCoordinate = {
         rightClick:{x:0, y:0}
     }
+
+    // Bit  0 (0000 0001) : keySettings.highlightNodesSource キー押下がキープされている
+    // Bit  1 (0000 0010) : keySettings.highlightNodesTarget キー押下がキープされている
+    // Bit  2 (0000 0100) : keySettings.highlightNodesSourceAndTarget キー押下がキープされている
+    var binCode_KeyPressing = 0;
+    var sourceHilighted = false;
+    var targetHilighted = false;
+    var highlightingStartPointKey = null;
 
     //Node初期化用Objを作る
     function makeSetDafaultObj(includeIndividualpart){
@@ -983,34 +992,122 @@
         }
     });
 
-    
+    // Node, Link に対する Source, Target highlighting イベント
     Mousetrap.bind(keySettings.highlightNodesSource, function(e, combo){
-        console.log("key down `" + combo + "`");
-
-        //External Componentが未loadの場合はハジく
-        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
-
-        //Property Edit Consle 表示中 or 選択した data がない時はハジく
-        if(nowEditng || lastSelectedData === null){return;}
-
-        //highlight
-        lastSelectedData.$3bindedSelectionLayerSVGElement.classed("highlight", true);
-
-
-        //highlightした node を target にした link も highlight する
-        for(var i = 0 ; i < dataset.links.length ; i++){
-            if(dataset.links[i].target.key == lastSelectedData.key){
-                dataset.links[i].$3bindedSelectionLayerSVGElement.classed("highlight", true);
-            }
-        }
-        
-        
-
+        binCode_KeyPressing |= 1;
+        call_appendHighlight();
     }, 'keydown');
     
     Mousetrap.bind(keySettings.highlightNodesSource, function(e, combo){
-        console.log("key up `" + combo + "`");
+        binCode_KeyPressing &= (~1);
+        call_removeHighlight();
     }, 'keyup');
+
+    Mousetrap.bind(keySettings.highlightNodesTarget, function(e, combo){
+        binCode_KeyPressing |= 2;
+        call_appendHighlight();
+    }, 'keydown');
+
+    Mousetrap.bind(keySettings.highlightNodesTarget, function(e, combo){
+        binCode_KeyPressing &= (~2);
+        call_removeHighlight();
+    }, 'keyup');
+
+    Mousetrap.bind(keySettings.highlightNodesSourceAndTarget, function(e, combo){
+        binCode_KeyPressing |= 4;
+        call_appendHighlight();
+    }, 'keydown');
+
+    Mousetrap.bind(keySettings.highlightNodesSourceAndTarget, function(e, combo){
+        binCode_KeyPressing &= (~4);
+        call_removeHighlight();
+    }, 'keyup');
+
+    function call_appendHighlight(){
+        
+        if((binCode_KeyPressing & (1 | 4)) > 0){ //source highlight 指定
+            if(!sourceHilighted){ // source に対する highlight 有効化を1回もしていない場合
+                appendHighlight("source");
+                sourceHilighted = true;
+            }
+        }
+
+        if((binCode_KeyPressing & (2 | 4)) > 0){ //target highlight 指定
+
+            if(!targetHilighted){ // target に対する highlight 有効化を1回もしていない場合
+                appendHighlight("target");
+                targetHilighted = true;
+            }
+        }
+    }
+
+    function appendHighlight(sourceOrTarget){
+
+        //編集中の場合はハジく
+        if(nowEditng){return;}
+
+        //最終選択 node がある状態で、1回目のコールの場合
+        if(lastSelectedData !== null && highlightingStartPointKey === null){
+            highlightingStartPointKey = lastSelectedData.key;
+        }
+
+        //最終選択 node がある状態で開始されなかった場合
+        if(highlightingStartPointKey === null){return;}
+
+        var toFindSourceOrTarget = (sourceOrTarget == 'source' ? 'target' : 'source' );
+
+        for(var i = 0 ; i < dataset.links.length ; i++){
+            if(dataset.links[i][toFindSourceOrTarget].key == highlightingStartPointKey){
+                dataset.links[i][sourceOrTarget].$3bindedSelectionLayerSVGElement.classed("highlight", true);
+                dataset.links[i].$3bindedSelectionLayerSVGElement.classed("highlight", true);
+            }
+        }
+    }
+
+    function call_removeHighlight(){
+
+        if((binCode_KeyPressing & (1 | 4)) == 0){ //source highlight 解除指定
+
+            if(sourceHilighted){
+                removeHighlight("source");
+                sourceHilighted = false;
+            }
+        }
+
+        if((binCode_KeyPressing & (2 | 4)) == 0){ //target highlight 解除指定
+
+            if(targetHilighted){
+                removeHighlight("target");
+                targetHilighted = false;
+            }
+        }
+
+        if((binCode_KeyPressing & (1 | 2 | 4)) == 0){ //highlight すべて解除後
+            highlightingStartPointKey = null;
+        }
+    }
+
+    function removeHighlight(sourceOrTarget){
+
+        //note
+        //以下2つの処理は appendHighlight() がハジいているので不要
+        //
+        //・編集中の場合はハジく
+        // if(nowEditng){return;}
+        // 
+        //・最終選択 node がある状態で開始されなかった場合
+        // if(highlightingStartPointKey === null){return;}
+
+        var toFindSourceOrTarget = (sourceOrTarget == 'source' ? 'target' : 'source' );
+
+        for(var i = 0 ; i < dataset.links.length ; i++){
+            if(dataset.links[i][toFindSourceOrTarget].key == highlightingStartPointKey){
+                dataset.links[i][sourceOrTarget].$3bindedSelectionLayerSVGElement.classed("highlight", false);
+                dataset.links[i].$3bindedSelectionLayerSVGElement.classed("highlight", false);
+            }
+        }
+    }
+    
 
     //
     //ページ移動前確認(外部コンポーネントload後にaddEventする)

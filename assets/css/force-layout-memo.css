@@ -67,7 +67,7 @@
 }
 
 #force-layout-memo .selectionLayers .selectionLayer.selected,
-.highlight{
+#force-layout-memo .selectionLayers .selectionLayer.highlight{
     visibility: visible;
 }
 
@@ -82,15 +82,15 @@
 
 /* div要素リストを横並びにする為に設定する */
 #force-layout-memo .propertyEditConsole .propertyEditor.text_text_anchor,
-.text_frame_shape,
-.text_font_weight,
-.text_font_style{
+#force-layout-memo .propertyEditConsole .propertyEditor.text_frame_shape,
+#force-layout-memo .propertyEditConsole .propertyEditor.text_font_weight,
+#force-layout-memo .propertyEditConsole .propertyEditor.text_font_style{
     font-size:0;
 }
 
 #force-layout-memo .propertyEditConsole .propertyEditor .textAnchorType,
-.frameShapeType,
-.arrowType{
+#force-layout-memo .propertyEditConsole .propertyEditor .frameShapeType,
+#force-layout-memo .propertyEditConsole .propertyEditor .arrowType{
     display: inline-block;
     padding: 2px;
     cursor: pointer;
@@ -121,7 +121,7 @@
 }
 
 #force-layout-memo .propertyEditConsole .propertyEditor .fontWeightType,
-.fontStyleType{
+#force-layout-memo .propertyEditConsole .propertyEditor .fontStyleType{
     display: inline-block;
     padding: 4px;
     cursor: pointer;
