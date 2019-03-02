@@ -775,7 +775,7 @@
                     .attr("data-selected", "false"); //選択解除
             }
 
-            dataSelectionManager.clearDataSelections(); //node選択履歴をクリア
+            dataSelectionManager.clearSelections(); //node選択履歴をクリア
         }
     });
 
@@ -968,7 +968,13 @@
         }
     );
 
-    //todo Mousetrap(domElement).bind(~)の形式にしない理由を記載
+    //note
+    // Mousetrap() に引数を渡さない
+    // (= Mousetrap(domElement).bind(~)の形式にしない)理由は、
+    // 引数に指定する Dom Element が、キーボード入力を受け付けるタイプの Dom Element
+    // (e.g. <textarea>, <input> 要素)ではない場合に、
+    // Mousetrap がイベントを取得できないから。(特にie以外のブラウザ)
+    
 
     // Nodeに対する複数編集イベント
     Mousetrap.bind(keySettings.editSVGNodes, function(e){
@@ -988,9 +994,27 @@
         }else{ // 編集中でない場合
 
             deleteSVGNodes(); //選択状態のNode(s)を削除
-            dataSelectionManager.clearDataSelections(); //node選択履歴をクリア
+            dataSelectionManager.clearSelections(); //node選択履歴をクリア
             disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
         }
+    });
+
+    //todo arrow key による node 選択
+
+    Mousetrap.bind(keySettings.selectNodeRight, function(e, combo){
+        console.log(">");
+    });
+
+    Mousetrap.bind(keySettings.selectNodeLeft, function(e, combo){
+        console.log("<");
+    });
+
+    Mousetrap.bind(keySettings.selectNodeAbove, function(e, combo){
+        console.log("^");
+    });
+
+    Mousetrap.bind(keySettings.selectNodeBelow, function(e, combo){
+        console.log("v");
     });
 
     // Node, Link に対する Source, Target highlighting イベント
@@ -1507,7 +1531,7 @@
                                     .attr("data-selected", "false"); //選択解除
                             }
 
-                            dataSelectionManager.clearDataSelections(); //node選択履歴をクリア
+                            dataSelectionManager.clearSelections(); //node選択履歴をクリア
                         }
                 
                         var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
@@ -1518,7 +1542,7 @@
                                 .classed("selected", false)
                                 .attr("data-selected", "false"); //選択解除
                             
-                            //node選択履歴を1つ削除(.clearDataSelections()をコールしてもOK)
+                            //node選択履歴を1つ削除(.clearSelections()をコールしていたとしてももOK)
                             dataSelectionManager.popDataSelection();
                 
                         }else{ //非選択状態の場合
@@ -1810,6 +1834,8 @@
                                             .attr("data-selected", "false"); //選択解除
                                     }
                                 }
+
+                                dataSelectionManager.clearSelections(); //node選択履歴をクリア
                             }
                     
                             var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
@@ -1819,15 +1845,17 @@
                                 d.$3bindedSelectionLayerSVGElement
                                     .classed("selected", false)
                                     .attr("data-selected", "false"); //選択解除
+
+                                //link選択履歴を1つ削除(.clearSelections()をコールしていたとしてももOK)
+                                dataSelectionManager.popLinkSelection(); 
                     
                             }else{ //非選択状態の場合
                                 d.$3bindedSelectionLayerSVGElement
                                     .classed("selected", true)
                                     .attr("data-selected", "true"); //選択
-                            }
 
-                            //todo handling
-                            dataSelectionManager.clearDataSelections(); //node選択履歴をクリア
+                                dataSelectionManager.pushLinkSelection(d); //link選択履歴に1つ追加
+                            }
                         });
 
                         d.$3bindedSVGLinkElement.on('dblclick', function(d){
@@ -1864,10 +1892,9 @@
                                 }
                             }
 
-                            //todo handling
-                            dataSelectionManager.clearDataSelections(); //node選択履歴をクリア
-                            
                             editSVGNodes();
+                            dataSelectionManager.clearSelections(); //node選択履歴をクリア
+                            dataSelectionManager.pushLinkSelection(d);
                         });
                     });
 
@@ -4670,24 +4697,32 @@
 
     function clsfnc_dataSelectionManager(){
 
-        //datas[].key 用 stack
-        var lastSelectedDatas = [];
+        var lastSelectedDatas = []; //datas[].key 用 stack
+        var lastSelectedLinks = []; //links[].key 用 stack
 
         //CLEAR
-        this.clearDataSelections = function(){
+        this.clearSelections = function(){
             lastSelectedDatas = [];
+            lastSelectedLinks = [];
         }
-
+        
         //PUSH
         this.pushDataSelection = function(d){
-            console.log(lastSelectedDatas);
             lastSelectedDatas.push(d.key);
+        }
+        this.pushLinkSelection = function(d){
+            lastSelectedLinks.push(d.key);
         }
 
         //POP last data
         this.popDataSelection = function(){
             if(lastSelectedDatas.length > 0){
                 lastSelectedDatas.splice(lastSelectedDatas.length-1, 1);
+            }
+        }
+        this.popLinkSelection = function(){
+            if(lastSelectedLinks.length > 0){
+                lastSelectedLinks.splice(lastSelectedLinks.length-1, 1);
             }
         }
 
@@ -4717,6 +4752,19 @@
         
                             if(oneTransactionReport.reportsArr.datas[j].key == lastSelectedDatas[k]){
                                 var bindeddata = getBindedDataFromKey(lastSelectedDatas[k]);
+                                bindeddata.$3bindedSelectionLayerSVGElement
+                                    .classed("selected", true) //選択
+                                    .attr("data-selected", "true");
+                            }
+                        }
+                    }
+
+                    //復活したLink が select 履歴に存在するか検索するループ
+                    for(var j = 0 ; j < oneTransactionReport.reportsArr.links.length ; j++){
+                        for(var k = 0 ; k < lastSelectedLinks.length ; k++){
+        
+                            if(oneTransactionReport.reportsArr.links[j].key == lastSelectedLinks[k]){
+                                var bindeddata = getBindedLinkDataFromKey(lastSelectedLinks[k]);
                                 bindeddata.$3bindedSelectionLayerSVGElement
                                     .classed("selected", true) //選択
                                     .attr("data-selected", "true");
@@ -4945,7 +4993,7 @@
         }
         
         editSVGNodes();
-        dataSelectionManager.clearDataSelections(); //node選択履歴をクリア
+        dataSelectionManager.clearSelections(); //node選択履歴をクリア
         dataSelectionManager.pushDataSelection(bindedData); //node選択履歴に追加
         propertyEditorsManager.focus(bindedData);
     }
