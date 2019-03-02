@@ -86,7 +86,6 @@
     var nowEditng = false;　      //Property Edit Console が起動中かどうか
     var editingNodeKeys = []; //Property Edit Console の 編集対象ノードのkey
     var editingLinkKeys = []; //Property Edit Console の 編集対象Linkのkey
-    var lastSelectedData = null;　//最後に選択状態にしたNode    
     var pointingIndexOfHistory = -1;      //historyのどのindexが選択されているか
     
     var $3motherElement; //全てのもと
@@ -115,6 +114,8 @@
     var sourceHilighted = false;
     var targetHilighted = false;
     var highlightingStartPointKey = null;
+
+    var dataSelectionManager = new clsfnc_dataSelectionManager();
 
     //Node初期化用Objを作る
     function makeSetDafaultObj(includeIndividualpart){
@@ -774,7 +775,7 @@
                     .attr("data-selected", "false"); //選択解除
             }
 
-            lastSelectedData = null;
+            dataSelectionManager.clearDataSelections(); //node選択履歴をクリア
         }
     });
 
@@ -987,7 +988,7 @@
         }else{ // 編集中でない場合
 
             deleteSVGNodes(); //選択状態のNode(s)を削除
-            lastSelectedData = null;
+            dataSelectionManager.clearDataSelections(); //node選択履歴をクリア
             disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
         }
     });
@@ -1046,9 +1047,10 @@
         //編集中の場合はハジく
         if(nowEditng){return;}
 
+        var latestSelectedData = dataSelectionManager.getLatestSelectedData();
         //最終選択 node がある状態で、1回目のコールの場合
-        if(lastSelectedData !== null && highlightingStartPointKey === null){
-            highlightingStartPointKey = lastSelectedData.key;
+        if(typeof latestSelectedData !== 'undefined' && highlightingStartPointKey === null){
+            highlightingStartPointKey = latestSelectedData.key;
         }
 
         //最終選択 node がある状態で開始されなかった場合
@@ -1504,6 +1506,8 @@
                                     .classed("selected", false)
                                     .attr("data-selected", "false"); //選択解除
                             }
+
+                            dataSelectionManager.clearDataSelections(); //node選択履歴をクリア
                         }
                 
                         var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
@@ -1513,14 +1517,16 @@
                             d.$3bindedSelectionLayerSVGElement
                                 .classed("selected", false)
                                 .attr("data-selected", "false"); //選択解除
-                            lastSelectedData = null; //最終選択Nodeをnullにする(すべてのNodeが非選択になる為)
+                            
+                            //node選択履歴を1つ削除(.clearDataSelections()をコールしてもOK)
+                            dataSelectionManager.popDataSelection();
                 
                         }else{ //非選択状態の場合
                             d.$3bindedSelectionLayerSVGElement
                                 .classed("selected", true)
                                 .attr("data-selected", "true"); //選択
                             
-                            lastSelectedData = d; //最終選択Nodeの記憶
+                            dataSelectionManager.pushDataSelection(d); //node選択履歴に1つ追加
                         }
                 
                     });
@@ -1819,7 +1825,9 @@
                                     .classed("selected", true)
                                     .attr("data-selected", "true"); //選択
                             }
-                            lastSelectedData = null;
+
+                            //todo handling
+                            dataSelectionManager.clearDataSelections(); //node選択履歴をクリア
                         });
 
                         d.$3bindedSVGLinkElement.on('dblclick', function(d){
@@ -1855,7 +1863,9 @@
                                         .attr("data-selected", "true"); //選択解除
                                 }
                             }
-                            lastSelectedData = null;
+
+                            //todo handling
+                            dataSelectionManager.clearDataSelections(); //node選択履歴をクリア
                             
                             editSVGNodes();
                         });
@@ -4386,8 +4396,12 @@
                 .removeClass(className_nodeIsSelected); //history選択状態を解除
             thisElem.classList.add(className_nodeIsSelected); //mouseenterしたhistoryを選択
             
-            replayHistory(pointingIndexOfHistory, specifiedIndex); //mouseenterしたhistoryをPreview
-            
+            var replayReport = replayHistory(pointingIndexOfHistory, specifiedIndex); //mouseenterしたhistoryをPreview
+
+            if(typeof replayReport != 'undefined'){
+                dataSelectionManager.recoverDataSelection(replayReport);
+            }
+
             if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
                 checkAdjustPropertyEditConsole();//property editor内の値をロールバックしたNode状態に合わせる
             }
@@ -4419,7 +4433,11 @@
                     .eq(0)
                     .addClass(className_nodeIsSelected); //history[]内の選択indexで選択
 
-                replayHistory(previewedIndex, pointingIndexOfHistory); //history[]内の選択indexへもどす
+                var replayReport = replayHistory(previewedIndex, pointingIndexOfHistory); //history[]内の選択indexへもどす
+
+                if(typeof replayReport != 'undefined'){
+                    dataSelectionManager.recoverDataSelection(replayReport);
+                }
                 
                 if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
                     checkAdjustPropertyEditConsole();//property editor内の値をロールバックしたNode状態に合わせる
@@ -4448,29 +4466,44 @@
 
     function replayHistory(startIndex, endIndex){
 
+        var replayReport = {};
+        replayReport.reportArr = [];
+        
         //increment / decrement 判定
         if(startIndex == endIndex){ //Replay不要の場合
-            return //nothing to do
+            return; //何も返さない
 
         }else if(startIndex < endIndex){ // 旧 → 新 へのReplay
+            replayReport.type = 'replay';
+            
             for(var i = (startIndex + 1); i <= endIndex ; i++){
-                replayTransaction(transactionHistory[i]);
+                var tmpObj = {};
+                tmpObj.indexOfTransaction = i;
+                tmpObj.report = replayTransaction(transactionHistory[i]);
+                replayReport.reportArr.push(tmpObj);
             }
 
         }else{ // 新 → 旧 へのReplay
+            replayReport.type = 'rollback';
+
             for(var i = startIndex; i > endIndex ; i--){
-                rollbackTransaction(transactionHistory[i]);
+                var tmpObj = {};
+                tmpObj.indexOfTransaction = i;
+                tmpObj.report = rollbackTransaction(transactionHistory[i]);
+                replayReport.reportArr.push(tmpObj);
             }
 
         }
+
+        return replayReport;
     }
 
     function rollbackTransaction(transaction){
-        rollbackOrReplayTransaction(transaction, "PrevObj");
+        return rollbackOrReplayTransaction(transaction, "PrevObj");
     }
 
     function replayTransaction(transaction){
-        rollbackOrReplayTransaction(transaction, "RenderedObj");
+        return rollbackOrReplayTransaction(transaction, "RenderedObj");
     }
 
     function rollbackOrReplayTransaction(transaction, toApplyObjName){
@@ -4522,6 +4555,8 @@
             console.error("Cannot apply history. Check following report.");
             console.error(rollbackRenderringReport);
         }
+
+        return rollbackRenderringReport;
 
         function call_deleteNodes(){
             //削除対象key収集ループ
@@ -4632,6 +4667,79 @@
     }
 
     //-----------------------------------------------------------------------------------</history関係>
+
+    function clsfnc_dataSelectionManager(){
+
+        //datas[].key 用 stack
+        var lastSelectedDatas = [];
+
+        //CLEAR
+        this.clearDataSelections = function(){
+            lastSelectedDatas = [];
+        }
+
+        //PUSH
+        this.pushDataSelection = function(d){
+            console.log(lastSelectedDatas);
+            lastSelectedDatas.push(d.key);
+        }
+
+        //POP last data
+        this.popDataSelection = function(){
+            if(lastSelectedDatas.length > 0){
+                lastSelectedDatas.splice(lastSelectedDatas.length-1, 1);
+            }
+        }
+
+        //history 操作による Node(s) 復活で、
+        //selection 状態も復活させる
+        this.recoverDataSelection = function(recoveringReport){
+
+            if(typeof recoveringReport != 'object'){
+                console.warn("recoveringReport is not a object.");
+                return;
+            }
+
+            // transaction の 旧 → 新 への Replay でない場合はハジく
+            if(recoveringReport.type != 'replay'){
+                return;
+            }
+
+            for(var i = 0 ; i < recoveringReport.reportArr.length ; i++){
+
+                var oneTransactionReport = recoveringReport.reportArr[i].report;
+
+                if(oneTransactionReport.type == 'append'){ // node の復活イベントのみ対象にする
+
+                    //復活したNode が select 履歴に存在するか検索するループ
+                    for(var j = 0 ; j < oneTransactionReport.reportsArr.datas.length ; j++){
+                        for(var k = 0 ; k < lastSelectedDatas.length ; k++){
+        
+                            if(oneTransactionReport.reportsArr.datas[j].key == lastSelectedDatas[k]){
+                                var bindeddata = getBindedDataFromKey(lastSelectedDatas[k]);
+                                bindeddata.$3bindedSelectionLayerSVGElement
+                                    .classed("selected", true) //選択
+                                    .attr("data-selected", "true");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        //最後に選択した有効な data を返す
+        //見つからなかった場合は、 'undefined' のままを返す
+        this.getLatestSelectedData = function(){
+            var latestSelectedData;
+            for(var i = lastSelectedDatas.length-1; i >= 0 ; i--){
+                latestSelectedData = getBindedDataFromKey(lastSelectedDatas[i]);
+                if(typeof latestSelectedData != 'undefined'){
+                    break;
+                }
+            }
+            return latestSelectedData;
+        }
+    }
 
     //
     //<text>要素の占有領域サイズに合わせて<rect>を再調整する
@@ -4810,10 +4918,7 @@
         //External Componentが未loadの場合はハジく
         if(!(checkSucceededLoadOf_ExternalComponent())){return;}
                         
-        if(nowEditng){ // 編集中の場合
-                    // -> 発生し得ないルート
-                    //    (直前に呼ばれる単一選択イベントによって、編集中が解除される為)
-
+        if(nowEditng){
             exitEditing(); //編集モードの終了
         
         }
@@ -4840,8 +4945,9 @@
         }
         
         editSVGNodes();
-        lastSelectedData = bindedData; //最終選択Nodeの記憶
-        propertyEditorsManager.focus(lastSelectedData);
+        dataSelectionManager.clearDataSelections(); //node選択履歴をクリア
+        dataSelectionManager.pushDataSelection(bindedData); //node選択履歴に追加
+        propertyEditorsManager.focus(bindedData);
     }
 
     function call_editSVGNodes(checkContext){
@@ -4860,8 +4966,10 @@
             
             editSVGNodes(); //note 選択状態になっているNodeかLinkが1つ以上あるかどうかは、この関数内で確認する
 
-            if(lastSelectedData !== null){ //選択対象Nodeが存在する場合
-                propertyEditorsManager.focus(lastSelectedData);
+            var latestSelectedData = dataSelectionManager.getLatestSelectedData();
+
+            if(typeof latestSelectedData !== 'undefined'){ //選択対象Nodeが存在する場合
+                propertyEditorsManager.focus(latestSelectedData);
             }
         }
     }
@@ -6704,6 +6812,9 @@
     }
 
     //key重複チェック
+    //
+    //todo transaction history によるnode復活があっても競合しないようにする
+    //
     function makeUniqueKey(baseKeyName, bindedDataGetter){
         
         var incrementedIntNum;
