@@ -999,22 +999,25 @@
         }
     });
 
-    //todo arrow key による node 選択
-
+    //arrow key による node 選択イベント
     Mousetrap.bind(keySettings.selectNodeRight, function(e, combo){
-        console.log(">");
+        // console.log(">");
+        call_getColsestData("right_an90");
     });
 
     Mousetrap.bind(keySettings.selectNodeLeft, function(e, combo){
-        console.log("<");
+        // console.log("<");
+        call_getColsestData("left_an90");
     });
 
     Mousetrap.bind(keySettings.selectNodeAbove, function(e, combo){
-        console.log("^");
+        // console.log("^");
+        call_getColsestData("above_an90");
     });
 
     Mousetrap.bind(keySettings.selectNodeBelow, function(e, combo){
-        console.log("v");
+        // console.log("v");
+        call_getColsestData("below_an90");
     });
 
     // Node, Link に対する Source, Target highlighting イベント
@@ -1133,8 +1136,263 @@
             }
         }
     }
-    
 
+    function call_getColsestData(direction, highlintingOnly){
+
+        //編集中の場合はハジく
+        if(nowEditng){return;}
+
+        var latestSelectedData = dataSelectionManager.getLatestSelectedData();
+
+        //最終選択 node が存在しない場合はハジく
+        if(typeof latestSelectedData == 'undefined'){return;}
+
+        var closestData;
+
+        switch(direction){
+            
+            case 'right_an90':
+            {
+                var checkerObjArr = [
+                    {
+                        type:"quadratic",
+                        coef:{
+                            a:(-1),
+                            b:(latestSelectedData.coordinate.y - ((-1)*latestSelectedData.coordinate.x))
+                        },
+                        direction:"y_higher"
+                    },
+                    {
+                        type:"quadratic",
+                        coef:{
+                            a:(1),
+                            b:(latestSelectedData.coordinate.y - ((1)*latestSelectedData.coordinate.x))
+                        },
+                        direction:"y_lower"
+                    }
+                ];
+
+                closestData = getColsestData(checkerObjArr, latestSelectedData);
+            }
+            break;
+
+            case 'left_an90':
+            {
+                var checkerObjArr = [
+                    {
+                        type:"quadratic",
+                        coef:{
+                            a:(-1),
+                            b:(latestSelectedData.coordinate.y - ((-1)*latestSelectedData.coordinate.x))
+                        },
+                        direction:"y_lower"
+                    },
+                    {
+                        type:"quadratic",
+                        coef:{
+                            a:(1),
+                            b:(latestSelectedData.coordinate.y - ((1)*latestSelectedData.coordinate.x))
+                        },
+                        direction:"y_higher"
+                    }
+                ];
+
+                closestData = getColsestData(checkerObjArr, latestSelectedData);
+            }
+            break;
+            
+            case 'above_an90':
+            {
+                var checkerObjArr = [
+                    {
+                        type:"quadratic",
+                        coef:{
+                            a:(-1),
+                            b:(latestSelectedData.coordinate.y - ((-1)*latestSelectedData.coordinate.x))
+                        },
+                        direction:"y_lower"
+                    },
+                    {
+                        type:"quadratic",
+                        coef:{
+                            a:(1),
+                            b:(latestSelectedData.coordinate.y - ((1)*latestSelectedData.coordinate.x))
+                        },
+                        direction:"y_lower"
+                    }
+                ];
+
+                closestData = getColsestData(checkerObjArr, latestSelectedData);
+            }
+            break;
+
+            case 'below_an90':
+            {
+                var checkerObjArr = [
+                    {
+                        type:"quadratic",
+                        coef:{
+                            a:(-1),
+                            b:(latestSelectedData.coordinate.y - ((-1)*latestSelectedData.coordinate.x))
+                        },
+                        direction:"y_higher"
+                    },
+                    {
+                        type:"quadratic",
+                        coef:{
+                            a:(1),
+                            b:(latestSelectedData.coordinate.y - ((1)*latestSelectedData.coordinate.x))
+                        },
+                        direction:"y_higher"
+                    }
+                ];
+
+                closestData = getColsestData(checkerObjArr, latestSelectedData);
+            }
+            break;
+
+            default: //コーディングミスの場合
+            {
+                console.error("Unknown direction:\`" + direction + "\` specified.");
+            }
+            break;
+        }
+
+        if(typeof closestData != 'undefined'){
+            
+            //node すべてを選択解除する
+            for(var i = 0 ; i < dataset.datas.length ; i++){
+                dataset.datas[i].$3bindedSelectionLayerSVGElement
+                    .classed("selected", false)
+                    .attr("data-selected", "false"); //選択解除
+            }
+
+            //Linkすべてを選択解除する
+            for(var i = 0 ; i < dataset.links.length ; i++){
+                dataset.links[i].$3bindedSelectionLayerSVGElement
+                    .classed("selected", false)
+                    .attr("data-selected", "false"); //選択解除
+            }
+
+            //見つかった node を選択する
+            closestData.$3bindedSelectionLayerSVGElement
+                .classed("selected", true)
+                .attr("data-selected", "true"); //選択
+
+            dataSelectionManager.clearSelections(); //node選択履歴をクリア
+            dataSelectionManager.pushDataSelection(closestData); //見つかった node を追加
+        }
+    }
+
+    function getColsestData(checkerObjArr, fromThisBindedData){
+
+        var closestData;
+        var closestDistance = 0;
+
+        for(var i = 0 ; i < dataset.datas.length ; i++){
+
+            var tmpData = dataset.datas[i];
+
+            if(tmpData.key != fromThisBindedData.key){
+                var checkResult = arrangementCheck(checkerObjArr, tmpData.coordinate);
+
+                if(checkResult){ //指定範囲に収まっている場合
+
+                    //node 間距離を求める
+                    var tmpDistance = Math.sqrt(
+                        Math.pow(Math.abs(tmpData.coordinate.y - fromThisBindedData.coordinate.y), 2) + 
+                        Math.pow(Math.abs(tmpData.coordinate.x - fromThisBindedData.coordinate.x), 2)
+                    );
+
+                    if(typeof closestData == 'undefined'){ //1つめにみつかった data の場合
+                        closestData = tmpData;
+                        closestDistance = tmpDistance;
+                    
+                    }else{ //2つめ以降にみつかった data の場合
+                        
+                        if(tmpDistance < closestDistance){ // 以前みつかった data より、より近い data の場合
+                            closestData = tmpData;
+                            closestDistance = tmpDistance;
+                        }
+                    }
+                }
+            }
+        }
+
+        return closestData;
+    }
+
+    function arrangementCheck(checkerObjArr, checkThisCoordinate){
+
+        var allTrue = true;
+
+        //引数チェック
+        if(checkerObjArr.length == 0 ){ // コーディングミスの場合
+            console.error("Unknown checkerObjArr[] is vacant.");
+            return false;
+        }
+
+        for(var i = 0 ; i < checkerObjArr.length ; i++){
+
+            var checkerObj = checkerObjArr[i];
+
+            switch(checkerObj.type){
+
+                case 'quadratic': //2次関数指定の場合
+                {
+                    switch(checkerObj.direction){
+                        case 'y_higher':
+                        {
+                            var y_onQuadratic = checkerObj.coef.a * checkThisCoordinate.x + checkerObj.coef.b; //2次関数上のy
+                            checkerObj.result = (checkThisCoordinate.y > y_onQuadratic); //個別判定結果を保存
+                            if(!checkerObj.result){allTrue = false;} //判定falseの場合だけ、`false` で上書き
+                        }
+                        break;
+
+                        case 'y_lower':
+                        {
+                            var y_onQuadratic = checkerObj.coef.a * checkThisCoordinate.x + checkerObj.coef.b; //2次関数上のy
+                            checkerObj.result = (checkThisCoordinate.y < y_onQuadratic); //個別判定結果を保存
+                            if(!checkerObj.result){allTrue = false;} //判定falseの場合だけ、`false` で上書き
+                        }
+                        break;
+
+                        case 'x_higher':
+                        {
+                            var x_onQuadratic = (checkThisCoordinate.y - checkerObj.coef.b) / checkerObj.coef.a; //2次関数上のx
+                            checkerObj.result = (checkThisCoordinate.x > x_onQuadratic); //個別判定結果を保存
+                            if(!checkerObj.result){allTrue = false;} //判定falseの場合だけ、`false` で上書き
+                        }
+                        break;
+
+                        case 'x_lower':
+                        {
+                            var x_onQuadratic = (checkThisCoordinate.y - checkerObj.coef.b) / checkerObj.coef.a; //2次関数上のx
+                            checkerObj.result = (checkThisCoordinate.x < x_onQuadratic); //個別判定結果を保存
+                            if(!checkerObj.result){allTrue = false;} //判定falseの場合だけ、`false` で上書き
+                        }
+                        break;
+
+                        default: //コーディングミスの場合
+                        {
+                            console.error("Unknown checkerObj.direction:\`" + checkerObj.direction + "\` specified.");
+                        }
+                        break;
+                    }
+                }
+                break;
+
+                default: //コーディングミスの場合
+                {
+                    console.error("Unknown checkerObj.type:\`" + checkerObj.type + "\` specified.");
+                }
+                break;
+            }
+        }
+
+        return allTrue;
+    }
+    
     //
     //ページ移動前確認(外部コンポーネントload後にaddEventする)
     //
