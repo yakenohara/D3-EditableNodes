@@ -868,7 +868,7 @@
                 transformObj.scale = lastTransFormObj_d3style.k;
             }
 
-            if(x == 0 && y == 0){ // application keyによる起動の場合
+            if(x == 0 && y == 0){ // application keyによる起動の場合 //todo ie11以外 で applicatoin key が拾えない
                 x = boundingClientRect.left + ($3motherElement.node().offsetWidth / 2); // 画面中央にメニューを表示する
                 y = boundingClientRect.top + ($3motherElement.node().offsetHeight / 2);
             }
@@ -5894,6 +5894,8 @@
 
                 //追加した data の画面範囲内チェック
                 var viewPortObj = getCoordinatesOfViewPort();
+
+                //todo force simulation によって画面外にはみ出るかもしれない分を考慮
                 var checkerObjArr = [
                     {
                         type:"point",
@@ -5919,8 +5921,40 @@
                 var pointIsInRange = arrangementCheck(checkerObjArr, appendedData.coordinate);
 
                 if(!pointIsInRange){ //画面範囲外の場合
-                    console.log("out range");
-                    //todo 追加した appendedData が表示領域外の場合に、領域内に収まるように panning する
+                    
+                    //view port の中心座標
+                    var cxOfViewPort = (viewPortObj.aboveLeft.x + viewPortObj.belowRight.x) / 2;
+                    var cyOfViewPort = (viewPortObj.aboveLeft.y + viewPortObj.belowRight.y) / 2;
+
+                    //view port の中心座標と appendedData の座標間距離
+                    var distanceFromCenter = Math.sqrt(
+                        Math.pow(Math.abs(appendedData.coordinate.x - cxOfViewPort), 2) +
+                        Math.pow(Math.abs(appendedData.coordinate.y - cyOfViewPort), 2)
+                    );
+
+                    //view port の中心座標と appendedData の座標によるラジアン角
+                    var thetaOfAllowedDistance = Math.atan2(
+                        appendedData.coordinate.y - cyOfViewPort,
+                        appendedData.coordinate.x - cxOfViewPort
+                    )
+
+                    // viewPort に内接する円の、半径 70% の距離
+                    var allowedDistance = Math.min(
+                        Math.abs(viewPortObj.aboveLeft.x - viewPortObj.belowRight.x),
+                        Math.abs(viewPortObj.aboveLeft.y - viewPortObj.belowRight.y)
+                    ) / 2 * 0.7 ;
+
+                    //view port の中心座標から allowedDistance の半径で描く円と、
+                    //view port の中心座標と appendedData の座標を結ぶ直線の交点座標
+                    var xPointOfInterSection = cxOfViewPort + Math.cos(thetaOfAllowedDistance) * allowedDistance;
+                    var yPointOfInterSection = cyOfViewPort + Math.sin(thetaOfAllowedDistance) * allowedDistance;
+
+                    //view port の中心座標から allowedDistance の半径で描く円内に
+                    //appendedData が収まるように panning
+                    pan(
+                        cxOfViewPort + appendedData.coordinate.x - xPointOfInterSection,
+                        cyOfViewPort + appendedData.coordinate.y - yPointOfInterSection
+                    );
                 }
                 
                 disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
