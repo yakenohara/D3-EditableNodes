@@ -1376,6 +1376,46 @@
 
             switch(checkerObj.type){
 
+                case 'point':
+                {
+                    switch(checkerObj.direction){
+                        case 'y_higher':
+                        {
+                            checkerObj.result = (checkThisCoordinate.y > checkerObj.coordinate.y); //個別判定結果を保存
+                            if(!checkerObj.result){allTrue = false;} //判定falseの場合だけ、`false` で上書き
+                        }
+                        break;
+
+                        case 'y_lower':
+                        {
+                            checkerObj.result = (checkThisCoordinate.y < checkerObj.coordinate.y); //個別判定結果を保存
+                            if(!checkerObj.result){allTrue = false;} //判定falseの場合だけ、`false` で上書き
+                        }
+                        break;
+
+                        case 'x_higher':
+                        {
+                            checkerObj.result = (checkThisCoordinate.x > checkerObj.coordinate.x); //個別判定結果を保存
+                            if(!checkerObj.result){allTrue = false;} //判定falseの場合だけ、`false` で上書き
+                        }
+                        break;
+
+                        case 'x_lower':
+                        {
+                            checkerObj.result = (checkThisCoordinate.x < checkerObj.coordinate.x); //個別判定結果を保存
+                            if(!checkerObj.result){allTrue = false;} //判定falseの場合だけ、`false` で上書き
+                        }
+                        break;
+
+                        default: //コーディングミスの場合
+                        {
+                            console.error("Unknown checkerObj.direction:\`" + checkerObj.direction + "\` specified.");
+                        }
+                        break;
+                    }
+                }
+                break;
+
                 case 'quadratic': //2次関数指定の場合
                 {
                     switch(checkerObj.direction){
@@ -5851,8 +5891,37 @@
                 appendHistory(appendingTotalReport);
                 var appendedData =  getBindedDataFromKey(appendingTotalReport.reportsArr.datas[0].key);
                 call_editSVGNode(appendedData);
-                
-                //todo 追加した appendedData が表示領域外の場合に、領域内に収まるように panning する
+
+                //追加した data の画面範囲内チェック
+                var viewPortObj = getCoordinatesOfViewPort();
+                var checkerObjArr = [
+                    {
+                        type:"point",
+                        coordinate:viewPortObj.aboveLeft,
+                        direction:"y_higher"
+                    },
+                    {
+                        type:"point",
+                        coordinate:viewPortObj.aboveLeft,
+                        direction:"x_higher"
+                    },
+                    {
+                        type:"point",
+                        coordinate:viewPortObj.belowRight,
+                        direction:"y_lower"
+                    },
+                    {
+                        type:"point",
+                        coordinate:viewPortObj.belowRight,
+                        direction:"x_lower"
+                    }
+                ];
+                var pointIsInRange = arrangementCheck(checkerObjArr, appendedData.coordinate);
+
+                if(!pointIsInRange){ //画面範囲外の場合
+                    console.log("out range");
+                    //todo 追加した appendedData が表示領域外の場合に、領域内に収まるように panning する
+                }
                 
                 disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
             });
@@ -7013,6 +7082,42 @@
         }
 
         return transformObj;
+    }
+
+    //画面表示領域の四角の座標を、svg 空間内座標に換算して返す
+    function getCoordinatesOfViewPort(){
+
+        var transformObj = {
+            translates: {x:0, y:0},
+            scale: 1
+        };
+
+        if(lastTransFormObj_d3style !== null){
+            transformObj.translates.x = lastTransFormObj_d3style.x;
+            transformObj.translates.y = lastTransFormObj_d3style.y;
+            transformObj.scale = lastTransFormObj_d3style.k;
+        }
+        
+        var viewPortObj = {
+            aboveLeft:{
+                x: (0 - transformObj.translates.x) / transformObj.scale,
+                y: (0 - transformObj.translates.y) / transformObj.scale
+            },
+            aboveRight:{},
+            belowLeft:{},
+            belowRight:{
+                x: ($3motherElement.node().offsetWidth - transformObj.translates.x) / transformObj.scale,
+                y: ($3motherElement.node().offsetHeight - transformObj.translates.y) / transformObj.scale
+            },
+        }
+
+        viewPortObj.aboveRight.x = viewPortObj.belowRight.x;
+        viewPortObj.aboveRight.y = viewPortObj.aboveLeft.y;
+
+        viewPortObj.belowLeft.x = viewPortObj.aboveLeft.x;
+        viewPortObj.belowLeft.y = viewPortObj.belowRight.y;
+
+        return viewPortObj;
     }
 
     //
