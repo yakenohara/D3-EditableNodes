@@ -5926,12 +5926,6 @@
                     var cxOfViewPort = (viewPortObj.aboveLeft.x + viewPortObj.belowRight.x) / 2;
                     var cyOfViewPort = (viewPortObj.aboveLeft.y + viewPortObj.belowRight.y) / 2;
 
-                    //view port の中心座標と appendedData の座標間距離
-                    var distanceFromCenter = Math.sqrt(
-                        Math.pow(Math.abs(appendedData.coordinate.x - cxOfViewPort), 2) +
-                        Math.pow(Math.abs(appendedData.coordinate.y - cyOfViewPort), 2)
-                    );
-
                     //view port の中心座標と appendedData の座標によるラジアン角
                     var thetaOfAllowedDistance = Math.atan2(
                         appendedData.coordinate.y - cyOfViewPort,
