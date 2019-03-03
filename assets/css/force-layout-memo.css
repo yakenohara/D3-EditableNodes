@@ -27,7 +27,8 @@
     stroke: rgb(145, 87, 87);
 }
 
-#force-layout-memo .selectionLayers .selectionLayer.selected{
+#force-layout-memo .selectionLayers .selectionLayer.selected,
+#force-layout-memo .selectionLayers .selectionLayer.selected.highlight{
     fill: rgba(40, 207, 96, 0.644);
     stroke: rgba(40, 207, 96, 0.644);
 }

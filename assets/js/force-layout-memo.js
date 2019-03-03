@@ -1137,7 +1137,7 @@
         }
     }
 
-    function call_getColsestData(direction, highlintingOnly){
+    function call_getColsestData(direction){
 
         //編集中の場合はハジく
         if(nowEditng){return;}
@@ -1146,6 +1146,10 @@
 
         //最終選択 node が存在しない場合はハジく
         if(typeof latestSelectedData == 'undefined'){return;}
+
+        //source or target highlighting 中かどうか判定
+        var highlintingOnly = false;
+        if( highlightingStartPointKey !== null ) {highlintingOnly = true;}
 
         var closestData;
 
@@ -1172,7 +1176,7 @@
                     }
                 ];
 
-                closestData = getColsestData(checkerObjArr, latestSelectedData);
+                closestData = getColsestData(checkerObjArr, latestSelectedData, highlintingOnly);
             }
             break;
 
@@ -1197,7 +1201,7 @@
                     }
                 ];
 
-                closestData = getColsestData(checkerObjArr, latestSelectedData);
+                closestData = getColsestData(checkerObjArr, latestSelectedData, highlintingOnly);
             }
             break;
             
@@ -1222,7 +1226,7 @@
                     }
                 ];
 
-                closestData = getColsestData(checkerObjArr, latestSelectedData);
+                closestData = getColsestData(checkerObjArr, latestSelectedData, highlintingOnly);
             }
             break;
 
@@ -1247,7 +1251,7 @@
                     }
                 ];
 
-                closestData = getColsestData(checkerObjArr, latestSelectedData);
+                closestData = getColsestData(checkerObjArr, latestSelectedData, highlintingOnly);
             }
             break;
 
@@ -1284,7 +1288,7 @@
         }
     }
 
-    function getColsestData(checkerObjArr, fromThisBindedData){
+    function getColsestData(checkerObjArr, fromThisBindedData, highlintingOnly){
 
         var closestData;
         var closestDistance = 0;
@@ -1292,8 +1296,21 @@
         for(var i = 0 ; i < dataset.datas.length ; i++){
 
             var tmpData = dataset.datas[i];
+            var haveTocheck;
 
-            if(tmpData.key != fromThisBindedData.key){
+            if(tmpData.key == fromThisBindedData.key){ //検索起点 data の場合
+                haveTocheck = false;
+
+            }else if(highlintingOnly && (!tmpData.$3bindedSelectionLayerSVGElement.classed("highlight"))){
+                //highlightOnly 指定なのに、"highlight" されていない node の場合
+                haveTocheck = false;
+
+            }else{
+                haveTocheck = true;
+            }
+
+            if(haveTocheck){
+
                 var checkResult = arrangementCheck(checkerObjArr, tmpData.coordinate);
 
                 if(checkResult){ //指定範囲に収まっている場合
