@@ -929,8 +929,7 @@
         }
     });
 
-    // SVG領域の Zoom・Pan イベント
-    $3SVGDrawingAreaElement.call(d3.zoom()
+    var zoom = d3.zoom()
         .on("zoom", function(){
             lastTransFormObj_d3style = d3.event.transform; //最終状態を保存(Node Append/復活時に利用する)
 
@@ -947,8 +946,30 @@
             if(nowEditng){
                 adjustPropertyEditConsole(true); //Node個別編集機能のみadjustする(heavyすぎる為)
             }
-        }))
+        });
+
+    // SVG領域の Zoom・Pan イベント
+    $3SVGDrawingAreaElement.call(zoom)
         .on("dblclick.zoom", null); // <- dblclickによるNode編集イベントとの競合を回避する
+
+    // 指定座標に向けて panning する
+    function pan(x, y){
+
+        var scale = (lastTransFormObj_d3style !== null ? lastTransFormObj_d3style.k : 1);
+
+        $3SVGDrawingAreaElement.transition()
+            .duration(200)
+            .call(zoom.transform, d3.zoomIdentity
+                
+                .translate( //指定座標が画面中央に来るようにする
+                    ($3motherElement.node().offsetWidth / 2) / scale - x,
+                    ($3motherElement.node().offsetHeight / 2) / scale - y
+                )
+                .scale( //表示中の scale のままにする
+                    scale
+                )
+            );
+    }
 
     // right click context menu の mouse enter event
     $(document.body).on("contextmenu:focus", ".context-menu-item", 
@@ -5830,6 +5851,8 @@
                 appendHistory(appendingTotalReport);
                 var appendedData =  getBindedDataFromKey(appendingTotalReport.reportsArr.datas[0].key);
                 call_editSVGNode(appendedData);
+                
+                //todo 追加した appendedData が表示領域外の場合に、領域内に収まるように panning する
                 
                 disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
             });
