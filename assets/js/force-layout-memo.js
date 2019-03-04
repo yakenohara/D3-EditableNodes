@@ -16,6 +16,8 @@
         highlightNodesSource: "s", //Highlight source node(s)
         highlightNodesTarget: "t", //Highlight target node(s)
         highlightNodesSourceAndTarget: "l",  //Highlight source and target node(s)
+        brushSelecting: "b", // selecting node(s) by brush
+
     };
 
     //外部コンポーネントパス
@@ -108,9 +110,10 @@
         rightClick:{x:0, y:0}
     }
 
-    // Bit  0 (0000 0001) : keySettings.highlightNodesSource キー押下がキープされている
-    // Bit  1 (0000 0010) : keySettings.highlightNodesTarget キー押下がキープされている
-    // Bit  2 (0000 0100) : keySettings.highlightNodesSourceAndTarget キー押下がキープされている
+    //各Bit と 対応するキー(Bitが立っている間は、そのキー押下がキープされている事を表す)
+    // Bit  0 (0000 0001) : keySettings.highlightNodesSource
+    // Bit  1 (0000 0010) : keySettings.highlightNodesTarget
+    // Bit  2 (0000 0100) : keySettings.highlightNodesSourceAndTarget
     var binCode_KeyPressing = 0;
     var sourceHilighted = false;
     var targetHilighted = false;
@@ -930,6 +933,7 @@
         }
     });
 
+    // SVG領域の Zoom・Pan イベント
     var zoom = d3.zoom()
         .on("zoom", function(){
             lastTransFormObj_d3style = d3.event.transform; //最終状態を保存(Node Append/復活時に利用する)
@@ -949,10 +953,18 @@
             }
         });
 
-    // SVG領域の Zoom・Pan イベント
-    $3SVGDrawingAreaElement.call(zoom)
-        .on("dblclick.zoom", null); // <- dblclickによるNode編集イベントとの競合を回避する
+    // SVG領域の Zoom・Pan 機能を適用
+    startZoom();
+    function startZoom(){
+        $3SVGDrawingAreaElement.call(zoom)
+            .on("dblclick.zoom", null); // <- dblclickによるNode編集イベントとの競合を回避する
+    }
 
+    //Zoom・Pan 機能を取り除く
+    function removeZoom(){
+        $3SVGDrawingAreaElement.on(".zoom", null);
+    }
+    
     // 指定座標に向けて panning する
     function pan(x, y){
     	
@@ -1076,6 +1088,14 @@
     Mousetrap.bind(keySettings.highlightNodesSourceAndTarget, function(e, combo){
         binCode_KeyPressing &= (~4);
         call_removeHighlight();
+    }, 'keyup');
+
+    Mousetrap.bind(keySettings.brushSelecting, function(e, combo){
+        startBrush();
+    }, 'keydown');
+
+    Mousetrap.bind(keySettings.brushSelecting, function(e, combo){
+        removeBrush();
     }, 'keyup');
 
     function call_appendHighlight(){
@@ -1631,7 +1651,198 @@
 
         return allTrue;
     }
+
+    var $3NodeSelectingBrushGroup = null;
+    var unbindingBrushMove = false; //.call(brush.move, null);の処理中
+    var brush = d3.brush()
+        .on("start", function(){
+
+            //.call(brush.move, null); 起因のコールの場合はハジく
+            if(unbindingBrushMove){return;}
+            
+            //brush 開始時の selection 状態を保存
+            $3svgNodes.each(saveSelection);
+            $3svgLinks.each(saveSelection);
+
+            function saveSelection(d ,i){
+
+                var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
+
+                // brush 開始時の選択状態を保存
+                if(isSelected){
+                    d.$3bindedSelectionLayerSVGElement
+                        .attr("data-selected_when_brush_started", "true");
+                }else{
+                    d.$3bindedSelectionLayerSVGElement
+                        .attr("data-selected_when_brush_started", "false");
+                }
+            }
+        })
+        .on("brush", function(){
+
+            //.call(brush.move, null); 起因のコールの場合は、
+            //d3.event.selection は null になってしまうため、ハジく
+            if(unbindingBrushMove){return;}
+
+            // console.log(
+            //     "aboveLeft  x [0][0]:" + d3.event.selection[0][0] + ", " + 
+            //     "aboveLeft  y [0][1]:" + d3.event.selection[0][1] + ", " + 
+            //     "belowRight x [1][0]:" + d3.event.selection[1][0] + ", " + 
+            //     "belowRight y [1][1]:" + d3.event.selection[1][1]
+            // );
+
+            //brush で囲った矩形エリアの SVG 空間内座標取得
+            var transformObj = {
+                translates: {x:0, y:0},
+                scale: 1
+            };
     
+            if(lastTransFormObj_d3style !== null){
+                transformObj.translates.x = lastTransFormObj_d3style.x;
+                transformObj.translates.y = lastTransFormObj_d3style.y;
+                transformObj.scale = lastTransFormObj_d3style.k;
+            }
+
+            var aboveLeftX = (d3.event.selection[0][0] - transformObj.translates.x) / transformObj.scale;
+            var aboveLeftY =  (d3.event.selection[0][1] - transformObj.translates.y) / transformObj.scale;
+
+            var belowRightX =  (d3.event.selection[1][0] - transformObj.translates.x) / transformObj.scale;
+            var belowRightY =  (d3.event.selection[1][1] - transformObj.translates.y) / transformObj.scale;
+            
+            $3svgNodes.each(function(d ,i){
+
+                var isSelected = (d.$3bindedSelectionLayerSVGElement
+                    .attr("data-selected_when_brush_started").toLowerCase() == 'true');
+
+                if(aboveLeftX <= d.coordinate.x &&
+                    aboveLeftY <= d.coordinate.y &&
+                    d.coordinate.x <= belowRightX &&
+                    d.coordinate.y <= belowRightY){ //座標が brush area の範囲内の場合
+
+                    if(isSelected){ //brush 開始時に選択済みだった場合
+                        d.$3bindedSelectionLayerSVGElement
+                            .classed("selected", false)
+                            .attr("data-selected", "false"); //非選択
+
+                    }else{ //brush 開始時は未選択だった場合
+
+                        d.$3bindedSelectionLayerSVGElement
+                            .classed("selected", true)
+                            .attr("data-selected", "true"); //選択
+                    }
+                
+                }else{
+
+                    if(isSelected){ //brush 開始時に選択済みだった場合
+                        d.$3bindedSelectionLayerSVGElement
+                            .classed("selected", true)
+                            .attr("data-selected", "true"); //選択
+
+                    }else{ //brush 開始時は未選択だった場合
+
+                        d.$3bindedSelectionLayerSVGElement
+                            .classed("selected", false)
+                            .attr("data-selected", "false"); //非選択
+                    }
+                }
+            });
+
+            $3svgLinks.each(function(d ,i){
+
+                var isSelected = (d.$3bindedSelectionLayerSVGElement
+                    .attr("data-selected_when_brush_started").toLowerCase() == 'true');
+
+                if((aboveLeftX <= d.coordinate.x1 &&
+                    aboveLeftY <= d.coordinate.y1 &&
+                    d.coordinate.x1 <= belowRightX &&
+                    d.coordinate.y1 <= belowRightY) && //1つめの座標が brush area の範囲内の場合
+                    
+                    (aboveLeftX <= d.coordinate.x2 &&
+                        aboveLeftY <= d.coordinate.y2 &&
+                        d.coordinate.x2 <= belowRightX &&
+                        d.coordinate.y2 <= belowRightY)){ //2つめの座標が brush area の範囲内の場合
+
+                    if(isSelected){ //brush 開始時に選択済みだった場合
+                        d.$3bindedSelectionLayerSVGElement
+                            .classed("selected", false)
+                            .attr("data-selected", "false"); //非選択
+
+                    }else{ //brush 開始時は未選択だった場合
+
+                        d.$3bindedSelectionLayerSVGElement
+                            .classed("selected", true)
+                            .attr("data-selected", "true"); //選択
+                    }
+                
+                }else{
+
+                    if(isSelected){ //brush 開始時に選択済みだった場合
+                        d.$3bindedSelectionLayerSVGElement
+                            .classed("selected", true)
+                            .attr("data-selected", "true"); //選択
+
+                    }else{ //brush 開始時は未選択だった場合
+
+                        d.$3bindedSelectionLayerSVGElement
+                            .classed("selected", false)
+                            .attr("data-selected", "false"); //非選択
+                    }
+                }
+            });
+
+            //todo selection managerの管理
+
+            
+        })
+        .on("end", function(){ //選択終了イベント
+            
+            if(!unbindingBrushMove){ //Avoid infinite loop
+                
+                if($3NodeSelectingBrushGroup !== null){ // removeBrush(); していない場合
+
+                    unbindingBrushMove = true;
+                    // ↓ この処理内で、.on("??" に登録した関数(この関数自身)がコールされてしまう ↓
+                    $3NodeSelectingBrushGroup.call(brush.move, null); //Brush 選択範囲表示のクリア
+                    unbindingBrushMove = false;
+                }
+
+                // .on("start", で設定した data-selected_when_brush_started 属性のクリア
+                $3svgNodes.each(removeSavedSelection);
+                $3svgLinks.each(removeSavedSelection);
+
+                function removeSavedSelection(d,i){
+                    d.$3bindedSelectionLayerSVGElement.attr("data-selected_when_brush_started", null);
+                }
+            }
+        })
+    ;
+
+    function startBrush(){
+
+        //編集中の場合はハジく
+        if(nowEditng){return;}
+        
+        if($3NodeSelectingBrushGroup === null){ // 2回連続で startBrush(); されないようにする
+            
+            removeZoom(); //mouse drag による panning イベントと競合するので、rush選択中は停止する
+
+            $3NodeSelectingBrushGroup = $3selectionLayersGroup.append("g");
+            $3NodeSelectingBrushGroup.call(brush);
+        }
+    }
+
+    function removeBrush(){
+
+        if($3NodeSelectingBrushGroup !== null){
+            
+            startZoom(); //startBrush() 時に停止させた zoom・pan 機能の復活
+
+            $3NodeSelectingBrushGroup.on(".brush", null);
+            $3selectionLayersGroup.node().removeChild($3NodeSelectingBrushGroup.node());
+            $3NodeSelectingBrushGroup = null;
+        }
+    }
+
     //
     //ページ移動前確認(外部コンポーネントload後にaddEventする)
     //
@@ -1647,33 +1858,6 @@
         
 
     //--------------------------------------------------------------------</UI TRAP>
-    
-    // <TBD 複数Nodeのブラシ選択>--------------------------------------------------------------------------------
-    // Node 内/外 に対する Click event を無視する方法が不明
-
-    //Node選択用Brushの作成
-    // var isFirstEndOfBrush = true;
-    // var $3NodeSelectingBrush = d3.brush()
-    //     .on("end", function(){ //選択終了イベント
-    //         if(isFirstEndOfBrush){ //Avoid infinite loop
-    //             isFirstEndOfBrush = false;
-    //             clearNodeSelectingBrush();
-    //             isFirstEndOfBrush = true;
-    //         }
-    //     })
-    //     .filter(function(){
-    //         // Click event(Drag evet でない)場合に無視したい
-    //         return !event.button;
-    //     });
-        
-    // var $3NodeSelectingBrushGroup = $3selectionLayersGroup.append("g")
-    //     .call($3NodeSelectingBrush);
-
-    // function clearNodeSelectingBrush(){
-    //     $3NodeSelectingBrushGroup.call($3NodeSelectingBrush.move, null); //Brush 選択範囲のクリア
-    // }
-
-    // -------------------------------------------------------------------------------</TBD 複数Nodeのブラシ選択>
     
     function appendNodes(appendThisObjArr){
 
