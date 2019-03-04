@@ -1283,7 +1283,7 @@
             break;
         }
 
-        if(typeof closestData != 'undefined'){
+        if(typeof closestData != 'undefined'){ //data が見つかった場合
             
             //node すべてを選択解除する
             for(var i = 0 ; i < dataset.datas.length ; i++){
@@ -1306,6 +1306,11 @@
 
             dataSelectionManager.clearSelections(); //node選択履歴をクリア
             dataSelectionManager.pushDataSelection(closestData); //見つかった node を追加
+
+            viewPortCheck(closestData); //画面範囲内チェック
+        
+        }else{　//data が見つからなかった場合
+            viewPortCheck(latestSelectedData); //検索起点の data の画面範囲内チェックのみ行う
         }
     }
 
@@ -1358,6 +1363,118 @@
         }
 
         return closestData;
+    }
+
+    //data が画面範囲内に入っているかチェックする
+    // 入っていない場合は、入るように panning する
+    function viewPortCheck(checkThisData){
+
+        var viewPortObj = getCoordinatesOfViewPort(); //画面表示領域座標を取得
+
+        //画面表示領域座標を 30% 縮めた座標を取得
+        var percentageOfAllowed = 0.7;
+        var halfPercentageOfNotAllowed = (1-percentageOfAllowed)/2;
+        var widthOfViewPort = viewPortObj.belowRight.x - viewPortObj.aboveLeft.x;
+        var heightOfViewPort = viewPortObj.belowRight.y - viewPortObj.aboveLeft.y;
+        var allowedAreaObj = {
+            aboveLeft:{
+                x: viewPortObj.aboveLeft.x + widthOfViewPort * halfPercentageOfNotAllowed,
+                y: viewPortObj.aboveLeft.y + heightOfViewPort * halfPercentageOfNotAllowed
+            },
+            aboveRight:{
+                x: viewPortObj.aboveLeft.x + widthOfViewPort * (1-halfPercentageOfNotAllowed),
+                y: viewPortObj.aboveLeft.y + heightOfViewPort * halfPercentageOfNotAllowed
+            },
+            belowLeft:{
+                x: viewPortObj.aboveLeft.x + widthOfViewPort * halfPercentageOfNotAllowed,
+                y: viewPortObj.aboveLeft.y + heightOfViewPort * (1-halfPercentageOfNotAllowed)
+            },
+            belowRight:{
+                x: viewPortObj.aboveLeft.x + widthOfViewPort * (1-halfPercentageOfNotAllowed),
+                y: viewPortObj.aboveLeft.y + heightOfViewPort * (1-halfPercentageOfNotAllowed)
+            }
+        }
+
+        //checkThisDataが 画面表示領域座標を 30% 縮めた範囲内に入っているかどうか確認
+        var checkerObjArr = [
+            {
+                type:"point",
+                coordinate:allowedAreaObj.aboveLeft,
+                direction:"y_higher"
+            },
+            {
+                type:"point",
+                coordinate:allowedAreaObj.aboveLeft,
+                direction:"x_higher"
+            },
+            {
+                type:"point",
+                coordinate:allowedAreaObj.belowRight,
+                direction:"y_lower"
+            },
+            {
+                type:"point",
+                coordinate:allowedAreaObj.belowRight,
+                direction:"x_lower"
+            }
+        ];
+        var pointIsInRange = arrangementCheck(checkerObjArr, checkThisData.coordinate);
+
+        if(!pointIsInRange){ //画面範囲外の場合
+
+            var panMoveY = 0;
+            var panMoveX = 0;
+
+            for(var i = 0 ; i < checkerObjArr.length ; i++){
+
+                if(!checkerObjArr[i].result){ //判定NGの場合
+
+                    switch(checkerObjArr[i].direction){
+
+                        case 'y_higher':
+                        {
+                            panMoveY += checkThisData.coordinate.y - allowedAreaObj.aboveLeft.y;
+                        }
+                        break;
+
+                        case 'y_lower':
+                        {
+                            panMoveY += checkThisData.coordinate.y - allowedAreaObj.belowRight.y;
+                        }
+                        break;
+
+                        case 'x_higher':
+                        {
+                            panMoveX += checkThisData.coordinate.x - allowedAreaObj.aboveLeft.x;
+                        }
+                        break;
+
+                        case 'x_lower':
+                        {
+                            panMoveX += checkThisData.coordinate.x - allowedAreaObj.belowRight.x;
+                        }
+                        break;
+
+                        default: //コーディングミスの場合
+                        {
+                            console.error("Unknown checkerObj.direction:\`" + checkerObj.direction + "\` specified.");
+                        }
+                        break;
+                    }
+
+                }
+            }
+            
+            //view port の中心座標
+            var cxOfViewPort = (viewPortObj.aboveLeft.x + viewPortObj.belowRight.x) / 2;
+            var cyOfViewPort = (viewPortObj.aboveLeft.y + viewPortObj.belowRight.y) / 2;
+
+            //checkThisData が収まるように panning
+            pan(
+                cxOfViewPort + panMoveX,
+                cyOfViewPort + panMoveY
+            );
+        }
     }
 
     function arrangementCheck(checkerObjArr, checkThisCoordinate){
@@ -5893,113 +6010,7 @@
                 call_editSVGNode(appendedData);
 
                 //追加した data の画面範囲内チェック
-                
-                var viewPortObj = getCoordinatesOfViewPort(); //画面表示領域座標を取得
-
-                //画面表示領域座標を 30% 縮めた座標を取得
-                var percentageOfAllowed = 0.7;
-                var halfPercentageOfNotAllowed = (1-percentageOfAllowed)/2;
-                var widthOfViewPort = viewPortObj.belowRight.x - viewPortObj.aboveLeft.x;
-                var heightOfViewPort = viewPortObj.belowRight.y - viewPortObj.aboveLeft.y;
-                var allowedAreaObj = {
-                    aboveLeft:{
-                        x: viewPortObj.aboveLeft.x + widthOfViewPort * halfPercentageOfNotAllowed,
-                        y: viewPortObj.aboveLeft.y + heightOfViewPort * halfPercentageOfNotAllowed
-                    },
-                    aboveRight:{
-                        x: viewPortObj.aboveLeft.x + widthOfViewPort * (1-halfPercentageOfNotAllowed),
-                        y: viewPortObj.aboveLeft.y + heightOfViewPort * halfPercentageOfNotAllowed
-                    },
-                    belowLeft:{
-                        x: viewPortObj.aboveLeft.x + widthOfViewPort * halfPercentageOfNotAllowed,
-                        y: viewPortObj.aboveLeft.y + heightOfViewPort * (1-halfPercentageOfNotAllowed)
-                    },
-                    belowRight:{
-                        x: viewPortObj.aboveLeft.x + widthOfViewPort * (1-halfPercentageOfNotAllowed),
-                        y: viewPortObj.aboveLeft.y + heightOfViewPort * (1-halfPercentageOfNotAllowed)
-                    }
-                }
-
-                //appendedDataが 画面表示領域座標を 30% 縮めた範囲内に入っているかどうか確認
-                var checkerObjArr = [
-                    {
-                        type:"point",
-                        coordinate:allowedAreaObj.aboveLeft,
-                        direction:"y_higher"
-                    },
-                    {
-                        type:"point",
-                        coordinate:allowedAreaObj.aboveLeft,
-                        direction:"x_higher"
-                    },
-                    {
-                        type:"point",
-                        coordinate:allowedAreaObj.belowRight,
-                        direction:"y_lower"
-                    },
-                    {
-                        type:"point",
-                        coordinate:allowedAreaObj.belowRight,
-                        direction:"x_lower"
-                    }
-                ];
-                var pointIsInRange = arrangementCheck(checkerObjArr, appendedData.coordinate);
-
-                if(!pointIsInRange){ //画面範囲外の場合
-
-                    var panMoveY = 0;
-                    var panMoveX = 0;
-
-                    for(var i = 0 ; i < checkerObjArr.length ; i++){
-
-                        if(!checkerObjArr[i].result){ //判定NGの場合
-
-                            switch(checkerObjArr[i].direction){
-
-                                case 'y_higher':
-                                {
-                                    panMoveY += appendedData.coordinate.y - allowedAreaObj.aboveLeft.y;
-                                }
-                                break;
-
-                                case 'y_lower':
-                                {
-                                    panMoveY += appendedData.coordinate.y - allowedAreaObj.belowRight.y;
-                                }
-                                break;
-
-                                case 'x_higher':
-                                {
-                                    panMoveX += appendedData.coordinate.x - allowedAreaObj.aboveLeft.x;
-                                }
-                                break;
-
-                                case 'x_lower':
-                                {
-                                    panMoveX += appendedData.coordinate.x - allowedAreaObj.belowRight.x;
-                                }
-                                break;
-
-                                default: //コーディングミスの場合
-                                {
-                                    console.error("Unknown checkerObj.direction:\`" + checkerObj.direction + "\` specified.");
-                                }
-                                break;
-                            }
-
-                        }
-                    }
-                    
-                    //view port の中心座標
-                    var cxOfViewPort = (viewPortObj.aboveLeft.x + viewPortObj.belowRight.x) / 2;
-                    var cyOfViewPort = (viewPortObj.aboveLeft.y + viewPortObj.belowRight.y) / 2;
-
-                    //appendedData が収まるように panning
-                    pan(
-                        cxOfViewPort + panMoveX,
-                        cyOfViewPort + panMoveY
-                    );
-                }
+                viewPortCheck(appendedData);
                 
                 disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
             });
