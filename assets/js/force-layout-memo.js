@@ -954,16 +954,16 @@
 
     // 指定座標に向けて panning する
     function pan(x, y){
-
-        var scale = (lastTransFormObj_d3style !== null ? lastTransFormObj_d3style.k : 1);
+    	
+    	var scale = (lastTransFormObj_d3style !== null ? lastTransFormObj_d3style.k : 1);
 
         $3SVGDrawingAreaElement.transition()
             .duration(200)
             .call(zoom.transform, d3.zoomIdentity
                 
                 .translate( //指定座標が画面中央に来るようにする
-                    ($3motherElement.node().offsetWidth / 2) / scale - x,
-                    ($3motherElement.node().offsetHeight / 2) / scale - y
+                    (($3motherElement.node().offsetWidth / 2) / scale - x) * scale,
+                    (($3motherElement.node().offsetHeight / 2) / scale - y) * scale
                 )
                 .scale( //表示中の scale のままにする
                     scale
@@ -5893,61 +5893,111 @@
                 call_editSVGNode(appendedData);
 
                 //追加した data の画面範囲内チェック
-                var viewPortObj = getCoordinatesOfViewPort();
+                
+                var viewPortObj = getCoordinatesOfViewPort(); //画面表示領域座標を取得
 
-                //todo force simulation によって画面外にはみ出るかもしれない分を考慮
+                //画面表示領域座標を 30% 縮めた座標を取得
+                var percentageOfAllowed = 0.7;
+                var halfPercentageOfNotAllowed = (1-percentageOfAllowed)/2;
+                var widthOfViewPort = viewPortObj.belowRight.x - viewPortObj.aboveLeft.x;
+                var heightOfViewPort = viewPortObj.belowRight.y - viewPortObj.aboveLeft.y;
+                var allowedAreaObj = {
+                    aboveLeft:{
+                        x: viewPortObj.aboveLeft.x + widthOfViewPort * halfPercentageOfNotAllowed,
+                        y: viewPortObj.aboveLeft.y + heightOfViewPort * halfPercentageOfNotAllowed
+                    },
+                    aboveRight:{
+                        x: viewPortObj.aboveLeft.x + widthOfViewPort * (1-halfPercentageOfNotAllowed),
+                        y: viewPortObj.aboveLeft.y + heightOfViewPort * halfPercentageOfNotAllowed
+                    },
+                    belowLeft:{
+                        x: viewPortObj.aboveLeft.x + widthOfViewPort * halfPercentageOfNotAllowed,
+                        y: viewPortObj.aboveLeft.y + heightOfViewPort * (1-halfPercentageOfNotAllowed)
+                    },
+                    belowRight:{
+                        x: viewPortObj.aboveLeft.x + widthOfViewPort * (1-halfPercentageOfNotAllowed),
+                        y: viewPortObj.aboveLeft.y + heightOfViewPort * (1-halfPercentageOfNotAllowed)
+                    }
+                }
+
+                //appendedDataが 画面表示領域座標を 30% 縮めた範囲内に入っているかどうか確認
                 var checkerObjArr = [
                     {
                         type:"point",
-                        coordinate:viewPortObj.aboveLeft,
+                        coordinate:allowedAreaObj.aboveLeft,
                         direction:"y_higher"
                     },
                     {
                         type:"point",
-                        coordinate:viewPortObj.aboveLeft,
+                        coordinate:allowedAreaObj.aboveLeft,
                         direction:"x_higher"
                     },
                     {
                         type:"point",
-                        coordinate:viewPortObj.belowRight,
+                        coordinate:allowedAreaObj.belowRight,
                         direction:"y_lower"
                     },
                     {
                         type:"point",
-                        coordinate:viewPortObj.belowRight,
+                        coordinate:allowedAreaObj.belowRight,
                         direction:"x_lower"
                     }
                 ];
                 var pointIsInRange = arrangementCheck(checkerObjArr, appendedData.coordinate);
 
                 if(!pointIsInRange){ //画面範囲外の場合
+
+                    var panMoveY = 0;
+                    var panMoveX = 0;
+
+                    for(var i = 0 ; i < checkerObjArr.length ; i++){
+
+                        if(!checkerObjArr[i].result){ //判定NGの場合
+
+                            switch(checkerObjArr[i].direction){
+
+                                case 'y_higher':
+                                {
+                                    panMoveY += appendedData.coordinate.y - allowedAreaObj.aboveLeft.y;
+                                }
+                                break;
+
+                                case 'y_lower':
+                                {
+                                    panMoveY += appendedData.coordinate.y - allowedAreaObj.belowRight.y;
+                                }
+                                break;
+
+                                case 'x_higher':
+                                {
+                                    panMoveX += appendedData.coordinate.x - allowedAreaObj.aboveLeft.x;
+                                }
+                                break;
+
+                                case 'x_lower':
+                                {
+                                    panMoveX += appendedData.coordinate.x - allowedAreaObj.belowRight.x;
+                                }
+                                break;
+
+                                default: //コーディングミスの場合
+                                {
+                                    console.error("Unknown checkerObj.direction:\`" + checkerObj.direction + "\` specified.");
+                                }
+                                break;
+                            }
+
+                        }
+                    }
                     
                     //view port の中心座標
                     var cxOfViewPort = (viewPortObj.aboveLeft.x + viewPortObj.belowRight.x) / 2;
                     var cyOfViewPort = (viewPortObj.aboveLeft.y + viewPortObj.belowRight.y) / 2;
 
-                    //view port の中心座標と appendedData の座標によるラジアン角
-                    var thetaOfAllowedDistance = Math.atan2(
-                        appendedData.coordinate.y - cyOfViewPort,
-                        appendedData.coordinate.x - cxOfViewPort
-                    )
-
-                    // viewPort に内接する円の、半径 70% の距離
-                    var allowedDistance = Math.min(
-                        Math.abs(viewPortObj.aboveLeft.x - viewPortObj.belowRight.x),
-                        Math.abs(viewPortObj.aboveLeft.y - viewPortObj.belowRight.y)
-                    ) / 2 * 0.7 ;
-
-                    //view port の中心座標から allowedDistance の半径で描く円と、
-                    //view port の中心座標と appendedData の座標を結ぶ直線の交点座標
-                    var xPointOfInterSection = cxOfViewPort + Math.cos(thetaOfAllowedDistance) * allowedDistance;
-                    var yPointOfInterSection = cyOfViewPort + Math.sin(thetaOfAllowedDistance) * allowedDistance;
-
-                    //view port の中心座標から allowedDistance の半径で描く円内に
                     //appendedData が収まるように panning
                     pan(
-                        cxOfViewPort + appendedData.coordinate.x - xPointOfInterSection,
-                        cyOfViewPort + appendedData.coordinate.y - yPointOfInterSection
+                        cxOfViewPort + panMoveX,
+                        cyOfViewPort + panMoveY
                     );
                 }
                 
@@ -7136,7 +7186,7 @@
             belowRight:{
                 x: ($3motherElement.node().offsetWidth - transformObj.translates.x) / transformObj.scale,
                 y: ($3motherElement.node().offsetHeight - transformObj.translates.y) / transformObj.scale
-            },
+            }
         }
 
         viewPortObj.aboveRight.x = viewPortObj.belowRight.x;
