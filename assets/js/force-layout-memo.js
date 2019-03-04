@@ -5,6 +5,7 @@
     //キー操作設定 `Mousetrap` event
     var keySettings = { 
         editSVGNodes: "f2", //Node編集モードの開始
+        escapeEditor: "esc", // Property Editor の終了
         submitEditingTextTypeSVGNode: "enter", //Node編集状態の確定
         insertLF: "alt+enter", //textTypeのNode編集時に改行を挿入する
         deleteNodes: "del", //Nodeの削除
@@ -12,9 +13,9 @@
         selectNodeLeft: "left",
         selectNodeAbove: "up",
         selectNodeBelow: "down",
-        highlightNodesSource: "s",
-        highlightNodesTarget: "t",
-        highlightNodesSourceAndTarget: "l",
+        highlightNodesSource: "s", //Highlight source node(s)
+        highlightNodesTarget: "t", //Highlight target node(s)
+        highlightNodesSourceAndTarget: "l",  //Highlight source and target node(s)
     };
 
     //外部コンポーネントパス
@@ -974,7 +975,7 @@
     // right click context menu の mouse enter event
     $(document.body).on("contextmenu:focus", ".context-menu-item", 
         function(e){
-            //console.log("focus:", this); 
+            //console.log("focus:", this);
         }
     );
 
@@ -985,22 +986,27 @@
     //すべてのitemに対してcallされる
     $(document.body).on("contextmenu:blur", ".context-menu-item",
         function(e){ 
-            //console.log("blur:", this);    
+            //console.log("blur:", this);
         }
     );
 
     //note
-    // Mousetrap() に引数を渡さない
-    // (= Mousetrap(domElement).bind(~)の形式にしない)理由は、
-    // 引数に指定する Dom Element が、キーボード入力を受け付けるタイプの Dom Element
-    // (e.g. <textarea>, <input> 要素)ではない場合に、
+    // Mousetrap() に引数を渡さない(= Mousetrap(domElement).bind(~)の形式にしない)理由は、
+    // 引数に指定する Dom Element が、キーボード入力を受け付けるタイプのではない場合
+    // (e.g. <textarea>, <input> 要素)、
     // Mousetrap がイベントを取得できないから。(特にie以外のブラウザ)
     
-
     // Nodeに対する複数編集イベント
     Mousetrap.bind(keySettings.editSVGNodes, function(e){
         call_editSVGNodes(true);
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+    // Node編集機能の終了
+    Mousetrap.bind(keySettings.escapeEditor, function(e, combo){
+        if(nowEditng){ // 編集中の場合
+            exitEditing(); //編集モードの終了
+        }
     });
 
     // Nodeに対する削除イベント
@@ -1165,9 +1171,29 @@
 
         var latestSelectedData = dataSelectionManager.getLatestSelectedData();
 
-        //最終選択 node が存在しない場合はハジく
-        if(typeof latestSelectedData == 'undefined'){return;}
+        //最終選択 node が存在しない場合画面中央を検索起点に指定
+        if(typeof latestSelectedData == 'undefined'){
+            
+            var transformObj = {
+                translates: {x:0, y:0},
+                scale: 1
+            };
 
+            if(lastTransFormObj_d3style !== null){
+                transformObj.translates.x = lastTransFormObj_d3style.x;
+                transformObj.translates.y = lastTransFormObj_d3style.y;
+                transformObj.scale = lastTransFormObj_d3style.k;
+            }
+
+            latestSelectedData = {
+                coordinate:{
+                    x: (($3motherElement.node().offsetWidth / 2) - transformObj.translates.x) / transformObj.scale,
+                    y: (($3motherElement.node().offsetHeight / 2) - transformObj.translates.y) / transformObj.scale
+                }
+            };
+            direction = 'whole';
+        }
+        
         //source or target highlighting 中かどうか判定
         var highlintingOnly = false;
         if( highlightingStartPointKey !== null ) {highlintingOnly = true;}
@@ -1175,6 +1201,12 @@
         var closestData;
 
         switch(direction){
+
+            case 'whole': //全方向指定の場合
+            {
+                closestData = getColsestData(latestSelectedData, highlintingOnly);
+            }
+            break;
             
             case 'right_an90':
             {
@@ -1197,7 +1229,7 @@
                     }
                 ];
 
-                closestData = getColsestData(checkerObjArr, latestSelectedData, highlintingOnly);
+                closestData = getColsestData(latestSelectedData, highlintingOnly, checkerObjArr);
             }
             break;
 
@@ -1222,7 +1254,7 @@
                     }
                 ];
 
-                closestData = getColsestData(checkerObjArr, latestSelectedData, highlintingOnly);
+                closestData = getColsestData(latestSelectedData, highlintingOnly, checkerObjArr);
             }
             break;
             
@@ -1247,7 +1279,7 @@
                     }
                 ];
 
-                closestData = getColsestData(checkerObjArr, latestSelectedData, highlintingOnly);
+                closestData = getColsestData(latestSelectedData, highlintingOnly, checkerObjArr);
             }
             break;
 
@@ -1272,7 +1304,7 @@
                     }
                 ];
 
-                closestData = getColsestData(checkerObjArr, latestSelectedData, highlintingOnly);
+                closestData = getColsestData(latestSelectedData, highlintingOnly, checkerObjArr);
             }
             break;
 
@@ -1314,7 +1346,10 @@
         }
     }
 
-    function getColsestData(checkerObjArr, fromThisBindedData, highlintingOnly){
+    // BindedData に一番近い位置にある data を返す
+    // BindedData ではなく座標指定のみする場合は、
+    // {coordinate:{x:?, y:?}}形式の Obj を指定する
+    function getColsestData(fromThisBindedData, highlintingOnly, checkerObjArr){
 
         var closestData;
         var closestDistance = 0;
@@ -1324,7 +1359,9 @@
             var tmpData = dataset.datas[i];
             var haveTocheck;
 
-            if(tmpData.key == fromThisBindedData.key){ //検索起点 data の場合
+            if(typeof fromThisBindedData.key == 'string' && // key定義がある(=bindedData)の場合
+                tmpData.key == fromThisBindedData.key){     // 検索起点 data の場合
+                    
                 haveTocheck = false;
 
             }else if(highlintingOnly && (!tmpData.$3bindedSelectionLayerSVGElement.classed("highlight"))){
@@ -1337,7 +1374,14 @@
 
             if(haveTocheck){
 
-                var checkResult = arrangementCheck(checkerObjArr, tmpData.coordinate);
+                var checkResult;
+
+                if(typeof checkerObjArr != 'undefined'){ //範囲チェック指定アリの場合
+                    checkResult = arrangementCheck(checkerObjArr, tmpData.coordinate);
+                
+                }else{ //範囲チェック指定ナシの場合
+                    checkResult = true; //指定範囲OKとする
+                }
 
                 if(checkResult){ //指定範囲に収まっている場合
 
