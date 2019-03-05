@@ -1711,8 +1711,11 @@
             
             $3svgNodes.each(function(d ,i){
 
-                var isSelected = (d.$3bindedSelectionLayerSVGElement
+                var isSelected = (d.$3bindedSelectionLayerSVGElement //brush 開始時の選択状態を取得
                     .attr("data-selected_when_brush_started").toLowerCase() == 'true');
+
+                var isSelectedBefore = (d.$3bindedSelectionLayerSVGElement //前回の .on("brush" 時の選択状態を取得
+                        .attr("data-selected").toLowerCase() == 'true');
 
                 if(aboveLeftX <= d.coordinate.x &&
                     aboveLeftY <= d.coordinate.y &&
@@ -1720,37 +1723,58 @@
                     d.coordinate.y <= belowRightY){ //座標が brush area の範囲内の場合
 
                     if(isSelected){ //brush 開始時に選択済みだった場合
-                        d.$3bindedSelectionLayerSVGElement
-                            .classed("selected", false)
-                            .attr("data-selected", "false"); //非選択
+
+                        if(isSelectedBefore){ // 前回の .on("brush" で非選択状態にしていない場合
+                            d.$3bindedSelectionLayerSVGElement
+                                .classed("selected", false)
+                                .attr("data-selected", "false"); //非選択
+
+                            dataSelectionManager.popDataSelection(d); //node選択履歴から削除
+                        }
 
                     }else{ //brush 開始時は未選択だった場合
 
-                        d.$3bindedSelectionLayerSVGElement
-                            .classed("selected", true)
-                            .attr("data-selected", "true"); //選択
+                        if(!isSelectedBefore){ // 前回の .on("brush" で選択状態にしていない場合
+                            d.$3bindedSelectionLayerSVGElement
+                                .classed("selected", true)
+                                .attr("data-selected", "true"); //選択
+
+                            dataSelectionManager.pushDataSelection(d); //node選択履歴に追加
+                        }
                     }
                 
-                }else{
+                }else{ //座標が brush area の範囲外の場合
 
                     if(isSelected){ //brush 開始時に選択済みだった場合
-                        d.$3bindedSelectionLayerSVGElement
-                            .classed("selected", true)
-                            .attr("data-selected", "true"); //選択
+
+                        if(!isSelectedBefore){ // 前回の .on("brush" で選択状態にしていない場合
+                            d.$3bindedSelectionLayerSVGElement
+                                .classed("selected", true)
+                                .attr("data-selected", "true"); //選択
+
+                            dataSelectionManager.pushDataSelection(d); //node選択履歴に追加
+                        }
 
                     }else{ //brush 開始時は未選択だった場合
 
-                        d.$3bindedSelectionLayerSVGElement
-                            .classed("selected", false)
-                            .attr("data-selected", "false"); //非選択
+                        if(isSelectedBefore){ // 前回の .on("brush" で非選択状態にしていない場合
+                            d.$3bindedSelectionLayerSVGElement
+                                .classed("selected", false)
+                                .attr("data-selected", "false"); //非選択
+
+                            dataSelectionManager.popDataSelection(d); //node選択履歴から削除
+                        }
                     }
                 }
             });
 
             $3svgLinks.each(function(d ,i){
 
-                var isSelected = (d.$3bindedSelectionLayerSVGElement
+                var isSelected = (d.$3bindedSelectionLayerSVGElement //brush 開始時の選択状態を取得
                     .attr("data-selected_when_brush_started").toLowerCase() == 'true');
+
+                var isSelectedBefore = (d.$3bindedSelectionLayerSVGElement //前回の .on("brush" 時の選択状態を取得
+                    .attr("data-selected").toLowerCase() == 'true');
 
                 if((aboveLeftX <= d.coordinate.x1 &&
                     aboveLeftY <= d.coordinate.y1 &&
@@ -1763,36 +1787,50 @@
                         d.coordinate.y2 <= belowRightY)){ //2つめの座標が brush area の範囲内の場合
 
                     if(isSelected){ //brush 開始時に選択済みだった場合
-                        d.$3bindedSelectionLayerSVGElement
-                            .classed("selected", false)
-                            .attr("data-selected", "false"); //非選択
+
+                        if(isSelectedBefore){ // 前回の .on("brush" で非選択状態にしていない場合
+                            d.$3bindedSelectionLayerSVGElement
+                                .classed("selected", false)
+                                .attr("data-selected", "false"); //非選択
+
+                            dataSelectionManager.popLinkSelection(d); //node選択履歴から削除
+                        }
 
                     }else{ //brush 開始時は未選択だった場合
 
-                        d.$3bindedSelectionLayerSVGElement
-                            .classed("selected", true)
-                            .attr("data-selected", "true"); //選択
+                        if(!isSelectedBefore){ // 前回の .on("brush" で選択状態にしていない場合
+                            d.$3bindedSelectionLayerSVGElement
+                                .classed("selected", true)
+                                .attr("data-selected", "true"); //選択
+
+                            dataSelectionManager.pushLinkSelection(d); //node選択履歴に追加
+                        }
                     }
                 
-                }else{
+                }else{ //座標が brush area の範囲外の場合
 
                     if(isSelected){ //brush 開始時に選択済みだった場合
-                        d.$3bindedSelectionLayerSVGElement
-                            .classed("selected", true)
-                            .attr("data-selected", "true"); //選択
+
+                        if(!isSelectedBefore){ // 前回の .on("brush" で選択状態にしていない場合
+                            d.$3bindedSelectionLayerSVGElement
+                                .classed("selected", true)
+                                .attr("data-selected", "true"); //選択
+
+                            dataSelectionManager.pushLinkSelection(d); //node選択履歴に追加
+                        }
 
                     }else{ //brush 開始時は未選択だった場合
 
-                        d.$3bindedSelectionLayerSVGElement
-                            .classed("selected", false)
-                            .attr("data-selected", "false"); //非選択
+                        if(isSelectedBefore){ // 前回の .on("brush" で非選択状態にしていない場合
+                            d.$3bindedSelectionLayerSVGElement
+                                .classed("selected", false)
+                                .attr("data-selected", "false"); //非選択
+
+                            dataSelectionManager.popLinkSelection(d); //node選択履歴から削除
+                        }
                     }
                 }
-            });
-
-            //todo selection managerの管理
-
-            
+            });            
         })
         .on("end", function(){ //選択終了イベント
             
@@ -2223,8 +2261,8 @@
                                 .classed("selected", false)
                                 .attr("data-selected", "false"); //選択解除
                             
-                            //node選択履歴を1つ削除(.clearSelections()をコールしていたとしてももOK)
-                            dataSelectionManager.popDataSelection();
+                            //node選択履歴から削除(.clearSelections()をコールしていたとしてもOK)
+                            dataSelectionManager.popDataSelection(d);
                 
                         }else{ //非選択状態の場合
                             d.$3bindedSelectionLayerSVGElement
@@ -2527,8 +2565,8 @@
                                     .classed("selected", false)
                                     .attr("data-selected", "false"); //選択解除
 
-                                //link選択履歴を1つ削除(.clearSelections()をコールしていたとしてももOK)
-                                dataSelectionManager.popLinkSelection(); 
+                                //link選択履歴から削除(.clearSelections()をコールしていたとしてもOK)
+                                dataSelectionManager.popLinkSelection(d); 
                     
                             }else{ //非選択状態の場合
                                 d.$3bindedSelectionLayerSVGElement
@@ -5395,15 +5433,25 @@
             lastSelectedLinks.push(d.key);
         }
 
-        //POP last data
-        this.popDataSelection = function(){
+        //POP
+        this.popDataSelection = function(d){
             if(lastSelectedDatas.length > 0){
-                lastSelectedDatas.splice(lastSelectedDatas.length-1, 1);
+                for(var i = lastSelectedDatas.length-1 ; i >=0 ; i--){
+                    if(d.key == lastSelectedDatas[i]){
+                        lastSelectedDatas.splice(i, 1);
+                        break;
+                    }
+                }
             }
         }
-        this.popLinkSelection = function(){
+        this.popLinkSelection = function(d){
             if(lastSelectedLinks.length > 0){
-                lastSelectedLinks.splice(lastSelectedLinks.length-1, 1);
+                for(var i = lastSelectedLinks.length-1 ; i >=0 ; i--){
+                    if(d.key == lastSelectedLinks[i]){
+                        lastSelectedLinks.splice(i, 1);
+                        break;
+                    }
+                }
             }
         }
 
