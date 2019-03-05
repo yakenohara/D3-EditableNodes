@@ -77,6 +77,8 @@
         preferredFormat: "rgb",
     }
 
+    var linkDistance = 100; //linkの長さ
+
     /* ---------------------------------------------------------------------------------------------</Hard cords> */
     
     //todo localize
@@ -2950,7 +2952,7 @@
             //
             // default:30
             //
-            .distance(100)
+            .distance(linkDistance)
 
             //
             //link.strength([strength])
@@ -6258,13 +6260,32 @@
 
                 var uniqueDataKeyName = makeUniqueKey(bindedData.key, getBindedDataFromKey);
                 var uniqueLinkKeyName = makeUniqueKey(bindedData.key, getBindedLinkDataFromKey);
+
+                var dropToHereDY = linkDistance*0.6;
+                var dropToHereX = bindedData.coordinate.x;
+                var dropToHereY = bindedData.coordinate.y + dropToHereDY;
+
+                //x座標が近すぎると横方向に散らばらないので、回避する
+                for(var i = 0 ; i < dataset.datas.length ; i++){
+
+                    var oneData = dataset.datas[i];
+                    
+                    if( (Math.abs(dropToHereX - oneData.coordinate.x) < 1) &&     //x座標が近すぎる
+                        ((dropToHereY - dropToHereDY) < oneData.coordinate.y) &&  //y座標が (-linkDistance) < (linkDistance*2)
+                        (oneData.coordinate.y < (dropToHereY + dropToHereDY*2))){ 
+
+                        dropToHereX += 1;
+                        break;
+                    }
+                }
+
                 var appendingTotalReport = appendNodes({
                     datas:[
                         {
                             key:uniqueDataKeyName,
                             coordinate:{
-                                x:bindedData.coordinate.x,
-                                y:bindedData.coordinate.y + 60 //仮の処理
+                                x:dropToHereX,
+                                y:dropToHereY
                             },
                             type:"text",
                             text: {
@@ -6281,6 +6302,7 @@
                         }
                     ]
                 });
+                
                 appendHistory(appendingTotalReport);
                 var appendedData =  getBindedDataFromKey(appendingTotalReport.reportsArr.datas[0].key);
                 call_editSVGNode(appendedData);
