@@ -27,6 +27,9 @@
     stroke: rgb(145, 87, 87);
 }
 
+/* todo */
+/* node, link を複数選択している状態でlighlight すると、highlight が有効にならない */
+
 #force-layout-memo .selectionLayers .selectionLayer.selected,
 #force-layout-memo .selectionLayers .selectionLayer.selected.highlight{
     fill: rgba(40, 207, 96, 0.644);

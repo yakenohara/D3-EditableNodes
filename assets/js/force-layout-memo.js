@@ -17,7 +17,7 @@
         highlightNodesTarget: "t", //Highlight target node(s)
         highlightNodesSourceAndTarget: "l",  //Highlight source and target node(s)
         brushSelecting: "b", // selecting node(s) by brush
-
+        connectDatas: "c" //conect nodes
     };
 
     //外部コンポーネントパス
@@ -958,6 +958,8 @@
     // SVG領域の Zoom・Pan 機能を適用
     startZoom();
     function startZoom(){
+        
+        $3SVGDrawingAreaElement.on(".zoom", null); //登録済みのzoomがあったら、削除する
         $3SVGDrawingAreaElement.call(zoom)
             .on("dblclick.zoom", null); // <- dblclickによるNode編集イベントとの競合を回避する
     }
@@ -1061,6 +1063,9 @@
         call_getColsestData("below_an90");
     });
 
+    //todo
+    //highlight, brush, connect を同時押しされた時のハンドリング
+
     // Node, Link に対する Source, Target highlighting イベント
     Mousetrap.bind(keySettings.highlightNodesSource, function(e, combo){
         binCode_KeyPressing |= 1;
@@ -1098,6 +1103,14 @@
 
     Mousetrap.bind(keySettings.brushSelecting, function(e, combo){
         removeBrush();
+    }, 'keyup');
+
+    Mousetrap.bind(keySettings.connectDatas, function(e, combo){
+        startConnect();
+    }, 'keydown');
+
+    Mousetrap.bind(keySettings.connectDatas, function(e, combo){
+        removeConnect();
     }, 'keyup');
 
     function call_appendHighlight(){
@@ -1880,6 +1893,38 @@
             $3NodeSelectingBrushGroup.on(".brush", null);
             $3selectionLayersGroup.node().removeChild($3NodeSelectingBrushGroup.node());
             $3NodeSelectingBrushGroup = null;
+        }
+    }
+
+    var connectStarted = false;
+    function startConnect(){
+
+        //編集中の場合はハジく
+        if(nowEditng){return;}
+        
+        if(!connectStarted){ // 2回連続で処理しないようにする
+            
+            console.log("connect start");
+
+            removeZoom(); //mouse drag による panning イベントと競合するので、rush選択中は停止する
+
+            //todo node の drag イベントの unbind
+
+            connectStarted = true;
+        }
+    }
+
+    function removeConnect(){
+
+        if(connectStarted){ // 2回連続で処理しないようにする
+            
+            console.log("connect end");
+
+            startZoom(); //startBrush() 時に停止させた zoom・pan 機能の復活
+            
+            //todo node の drag イベントの bind
+
+            connectStarted = false;
         }
     }
 
