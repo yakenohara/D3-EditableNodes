@@ -109,7 +109,8 @@
     var $3selectionLayersGroup;
     var lastTransFormObj_d3style = null; //最後に zoom・pan を行った時の d3.event.transform object
     var lastCoordinate = {
-        rightClick:{x:0, y:0}
+        rightClick:{x:0, y:0},
+        mouse:{x:0, y:0}
     }
 
     //各Bit と 対応するキー(Bitが立っている間は、そのキー押下がキープされている事を表す)
@@ -950,6 +951,11 @@
                 d.$3bindedSelectionLayerSVGElement.attr("transform", lastTransFormObj_d3style);
             });
 
+            if(connectStarted){ // link 追加モードの場合は、preview 表示中のlinkも更新する
+                targetDrawerObj.$3bindedSVGLinkElement.attr("transform", lastTransFormObj_d3style);
+                targetDrawerObj.$3bindedSelectionLayerSVGElement.attr("transform", lastTransFormObj_d3style);
+            }
+
             if(nowEditng){
                 adjustPropertyEditConsole(true); //Node個別編集機能のみadjustする(heavyすぎる為)
             }
@@ -1106,7 +1112,7 @@
     }, 'keyup');
 
     Mousetrap.bind(keySettings.connectDatas, function(e, combo){
-        startConnect();
+        checkStartConnect();
     }, 'keydown');
 
     Mousetrap.bind(keySettings.connectDatas, function(e, combo){
@@ -1884,6 +1890,27 @@
         }
     }
 
+    //mouse座標をSVG空間座標に変換して保存する
+    $SVGDrawingAreaElement.get(0).addEventListener("mousemove",function(e){
+        
+        var boundingClientRect = $SVGDrawingAreaElement.get(0).getBoundingClientRect();
+
+        var transformObj = {
+            translates: {x:0, y:0},
+            scale: 1
+        };
+
+        if(lastTransFormObj_d3style !== null){
+            transformObj.translates.x = lastTransFormObj_d3style.x;
+            transformObj.translates.y = lastTransFormObj_d3style.y;
+            transformObj.scale = lastTransFormObj_d3style.k;
+        }
+
+        lastCoordinate.mouse.x = ((e.clientX - boundingClientRect.left) - transformObj.translates.x) / transformObj.scale;
+        lastCoordinate.mouse.y = ((e.clientY - boundingClientRect.top) - transformObj.translates.y) / transformObj.scale;
+
+    });
+
     function removeBrush(){
 
         if($3NodeSelectingBrushGroup !== null){
@@ -1897,18 +1924,230 @@
     }
 
     var connectStarted = false;
-    function startConnect(){
+    var targetDrawerObj = {};
+
+    function checkStartConnect(){
 
         //編集中の場合はハジく
         if(nowEditng){return;}
         
         if(!connectStarted){ // 2回連続で処理しないようにする
+
+            $3svgNodes.each(function(d, i){
+                d.$3bindedSVGElement.on('click', null); // click イベントのunbind
+                d.$3bindedSVGElement.on('click', nodeConnected); // node の link 結合イベントを登録
+            });
+
+            $3svgLinks.each(function(d, i){
+                // d.$3bindedSVGElement.on('click', null); // click イベントのunbind
+            });
+
+            startConnect();
+        }
+    }
+
+    function updateCoordinatesOfTargetDrawerObj(e){
+         //SVG レンダリング
+        renderSVGLink(targetDrawerObj, {
+            coordinate:{
+                x2:lastCoordinate.mouse.x,
+                y2:lastCoordinate.mouse.y
+            }
+        });
+    }
+
+    //
+    // SVGノードの単一選択イベント
+    //
+    // note doubleclick時に2回呼ばれて不要なTogglingが発生するが、
+    //      .on('dblclick', function()~ によって強制的に選択状態にされる
+    //
+    function nodeClicked(d){
+
+        //External Componentが未loadの場合はハジく
+        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
+
+        exitEditing(); //編集モードの終了
+
+        if(!(d3.event.ctrlKey)){ //ctrl key 押下でない場合
+
+            //別ノードすべてを選択解除する
+            for(var i = 0 ; i < dataset.datas.length ; i++){
+                if(dataset.datas[i].key != d.key){ //自分のノードでない場合
+                    dataset.datas[i].$3bindedSelectionLayerSVGElement
+                        .classed("selected", false)
+                        .attr("data-selected", "false"); //選択解除
+                }
+            }
+
+            //Linkすべてを選択解除する
+            for(var i = 0 ; i < dataset.links.length ; i++){
+                dataset.links[i].$3bindedSelectionLayerSVGElement
+                    .classed("selected", false)
+                    .attr("data-selected", "false"); //選択解除
+            }
+
+            dataSelectionManager.clearSelections(); //node選択履歴をクリア
+        }
+
+        var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
+
+        //選択状態を切り替える
+        if(isSelected){ //選択状態の場合
+            d.$3bindedSelectionLayerSVGElement
+                .classed("selected", false)
+                .attr("data-selected", "false"); //選択解除
             
-            console.log("connect start");
+            //node選択履歴から削除(.clearSelections()をコールしていたとしてもOK)
+            dataSelectionManager.popDataSelection(d);
 
-            removeZoom(); //mouse drag による panning イベントと競合するので、rush選択中は停止する
+        }else{ //非選択状態の場合
+            d.$3bindedSelectionLayerSVGElement
+                .classed("selected", true)
+                .attr("data-selected", "true"); //選択
+            
+            dataSelectionManager.pushDataSelection(d); //node選択履歴に1つ追加
+        }
+    }
 
-            //todo node の drag イベントの unbind
+    function linkClicked(d){
+
+        //External Componentが未loadの場合はハジく
+        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
+        
+        exitEditing(); //編集モードの終了
+
+        if(!(d3.event.ctrlKey)){ //ctrl key 押下でない場合
+
+            //別ノードすべてを選択解除する
+            for(var i = 0 ; i < dataset.datas.length ; i++){
+                dataset.datas[i].$3bindedSelectionLayerSVGElement
+                    .classed("selected", false)
+                    .attr("data-selected", "false"); //選択解除
+            }
+
+            //別ノードすべてを選択解除する(links[])
+            for(var i = 0 ; i < dataset.links.length ; i++){
+                if(dataset.links[i].key != d.key){ //自分のノードでない場合
+                    dataset.links[i].$3bindedSelectionLayerSVGElement
+                        .classed("selected", false)
+                        .attr("data-selected", "false"); //選択解除
+                }
+            }
+
+            dataSelectionManager.clearSelections(); //node選択履歴をクリア
+        }
+
+        var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
+
+        //選択状態を切り替える
+        if(isSelected){ //選択状態の場合
+            d.$3bindedSelectionLayerSVGElement
+                .classed("selected", false)
+                .attr("data-selected", "false"); //選択解除
+
+            //link選択履歴から削除(.clearSelections()をコールしていたとしてもOK)
+            dataSelectionManager.popLinkSelection(d); 
+
+        }else{ //非選択状態の場合
+            d.$3bindedSelectionLayerSVGElement
+                .classed("selected", true)
+                .attr("data-selected", "true"); //選択
+
+            dataSelectionManager.pushLinkSelection(d); //link選択履歴に1つ追加
+        }
+    }
+
+    // node同士 の link 結合イベント
+    function nodeConnected(d){
+
+        if(d.key != targetDrawerObj.source){ //source, target は別 node の場合
+
+            var uniqueKey;
+            if(dataset.links.length == 0){
+                uniqueKey = "0";
+            }else{
+                uniqueKey = dataset.links[dataset.links.length-1].key;
+                uniqueKey = makeUniqueKey(uniqueKey, getBindedLinkDataFromKey);
+            }
+
+            var appendingArr = {
+                links:[
+                    {
+                        key:uniqueKey,
+                        type:targetDrawerObj.type,
+                        source:targetDrawerObj.source,
+                        target:d.key
+                    }
+                ]
+            };
+            
+            $SVGDrawingAreaElement.get(0).removeEventListener("mousemove",updateCoordinatesOfTargetDrawerObj);
+            targetDrawerObj.$3bindedSVGLinkElement.remove();
+            targetDrawerObj.$3bindedSelectionLayerSVGElement.remove();
+
+            var appendingTotalReport = appendNodes(appendingArr);
+            appendHistory(appendingTotalReport);
+
+            //nodeすべてを選択解除する
+            for(var i = 0 ; i < dataset.datas.length ; i++){
+                dataset.datas[i].$3bindedSelectionLayerSVGElement
+                    .classed("selected", false)
+                    .attr("data-selected", "false"); //選択解除
+            }
+
+            //Linkすべてを選択解除する
+            for(var i = 0 ; i < dataset.links.length ; i++){
+                dataset.links[i].$3bindedSelectionLayerSVGElement
+                    .classed("selected", false)
+                    .attr("data-selected", "false"); //選択解除
+            }
+
+            dataSelectionManager.clearSelections(); //選択履歴をクリア
+
+            d.$3bindedSelectionLayerSVGElement
+                .classed("selected", true)
+                .attr("data-selected", "true"); //選択
+                
+            dataSelectionManager.pushDataSelection(d); //node選択履歴に1つ追加
+
+            startConnect();
+        }
+    }
+
+    function startConnect(){
+
+        var latestSelectedData = dataSelectionManager.getLatestSelectedData();
+
+        if(typeof latestSelectedData !== 'undefined'){ //選択対象Nodeが存在する場合
+
+            targetDrawerObj = {
+                type:defaultLinkhape,
+                coordinate:{
+                    x1:latestSelectedData.coordinate.x,
+                    y1:latestSelectedData.coordinate.y,
+                    x2:lastCoordinate.mouse.x,
+                    y2:lastCoordinate.mouse.y
+                },
+                source:latestSelectedData.key
+            };
+            
+            targetDrawerObj.$3bindedSVGLinkElement = $3svgLinksGroup.append("g")
+                .classed("link", true)
+                .style("pointer-events", "none")
+                .attr("transform", lastTransFormObj_d3style)
+            ;
+
+            targetDrawerObj.$3bindedSelectionLayerSVGElement = $3selectionLayersGroup.append("g")
+                .classed("selectionLayer",true)
+                .style("pointer-events", "none")
+                .attr("transform", lastTransFormObj_d3style)
+                .attr("data-selected", "false")
+            ;
+
+            renderSVGLink(targetDrawerObj, targetDrawerObj); //SVG レンダリング
+
+            $SVGDrawingAreaElement.get(0).addEventListener("mousemove",updateCoordinatesOfTargetDrawerObj);
 
             connectStarted = true;
         }
@@ -1918,11 +2157,20 @@
 
         if(connectStarted){ // 2回連続で処理しないようにする
             
-            console.log("connect end");
+            $SVGDrawingAreaElement.get(0).removeEventListener("mousemove",updateCoordinatesOfTargetDrawerObj);
+            // targetDrawerObj.remove();
+            targetDrawerObj.$3bindedSVGLinkElement.remove();
+            targetDrawerObj.$3bindedSelectionLayerSVGElement.remove();
 
-            startZoom(); //startBrush() 時に停止させた zoom・pan 機能の復活
-            
-            //todo node の drag イベントの bind
+            // click イベントの復活
+            $3svgNodes.each(function(d, i){
+                d.$3bindedSVGElement.on('click', null); // click イベントのunbind
+                d.$3bindedSVGElement.on('click', nodeClicked);  // SVGノードの単一選択イベントを登録
+            });
+
+            $3svgLinks.each(function(d, i){
+                // d.$3bindedSVGElement.on('click', linkClicked);  // SVGノードの単一選択イベントを登録
+            });
 
             connectStarted = false;
         }
@@ -2266,60 +2514,7 @@
                         
                     });
 
-                    //
-                    // SVGノードの単一選択イベント 
-                    //
-                    // note doubleclick時に2回呼ばれて不要なTogglingが発生するが、
-                    //      .on('dblclick', function()~ によって強制的に選択状態にされる
-                    //
-                    d.$3bindedSVGElement.on('click', function(d){
-
-                        //External Componentが未loadの場合はハジく
-                        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
-                        
-                        exitEditing(); //編集モードの終了
-                
-                        if(!(d3.event.ctrlKey)){ //ctrl key 押下でない場合
-                
-                            //別ノードすべてを選択解除する
-                            for(var i = 0 ; i < dataset.datas.length ; i++){
-                                if(dataset.datas[i].key != d.key){ //自分のノードでない場合
-                                    dataset.datas[i].$3bindedSelectionLayerSVGElement
-                                        .classed("selected", false)
-                                        .attr("data-selected", "false"); //選択解除
-                                }
-                            }
-
-                            //Linkすべてを選択解除する
-                            for(var i = 0 ; i < dataset.links.length ; i++){
-                                dataset.links[i].$3bindedSelectionLayerSVGElement
-                                    .classed("selected", false)
-                                    .attr("data-selected", "false"); //選択解除
-                            }
-
-                            dataSelectionManager.clearSelections(); //node選択履歴をクリア
-                        }
-                
-                        var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
-                
-                        //選択状態を切り替える
-                        if(isSelected){ //選択状態の場合
-                            d.$3bindedSelectionLayerSVGElement
-                                .classed("selected", false)
-                                .attr("data-selected", "false"); //選択解除
-                            
-                            //node選択履歴から削除(.clearSelections()をコールしていたとしてもOK)
-                            dataSelectionManager.popDataSelection(d);
-                
-                        }else{ //非選択状態の場合
-                            d.$3bindedSelectionLayerSVGElement
-                                .classed("selected", true)
-                                .attr("data-selected", "true"); //選択
-                            
-                            dataSelectionManager.pushDataSelection(d); //node選択履歴に1つ追加
-                        }
-                
-                    });
+                    d.$3bindedSVGElement.on('click', nodeClicked); // SVGノードの単一選択イベントを登録
 
                     // Nodeに対する単一編集イベント
                     d.$3bindedSVGElement.on('dblclick', function(d){
@@ -2576,53 +2771,7 @@
                             
                         });
 
-                        d.$3bindedSVGLinkElement.on('click', function(d){
-
-                            //External Componentが未loadの場合はハジく
-                            if(!(checkSucceededLoadOf_ExternalComponent())){return;}
-                            
-                            exitEditing(); //編集モードの終了
-                    
-                            if(!(d3.event.ctrlKey)){ //ctrl key 押下でない場合
-                    
-                                //別ノードすべてを選択解除する
-                                for(var i = 0 ; i < dataset.datas.length ; i++){
-                                    dataset.datas[i].$3bindedSelectionLayerSVGElement
-                                        .classed("selected", false)
-                                        .attr("data-selected", "false"); //選択解除
-                                }
-
-                                //別ノードすべてを選択解除する(links[])
-                                for(var i = 0 ; i < dataset.links.length ; i++){
-                                    if(dataset.links[i].key != d.key){ //自分のノードでない場合
-                                        dataset.links[i].$3bindedSelectionLayerSVGElement
-                                            .classed("selected", false)
-                                            .attr("data-selected", "false"); //選択解除
-                                    }
-                                }
-
-                                dataSelectionManager.clearSelections(); //node選択履歴をクリア
-                            }
-                    
-                            var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
-                    
-                            //選択状態を切り替える
-                            if(isSelected){ //選択状態の場合
-                                d.$3bindedSelectionLayerSVGElement
-                                    .classed("selected", false)
-                                    .attr("data-selected", "false"); //選択解除
-
-                                //link選択履歴から削除(.clearSelections()をコールしていたとしてもOK)
-                                dataSelectionManager.popLinkSelection(d); 
-                    
-                            }else{ //非選択状態の場合
-                                d.$3bindedSelectionLayerSVGElement
-                                    .classed("selected", true)
-                                    .attr("data-selected", "true"); //選択
-
-                                dataSelectionManager.pushLinkSelection(d); //link選択履歴に1つ追加
-                            }
-                        });
+                        d.$3bindedSVGLinkElement.on('click', linkClicked);
 
                         d.$3bindedSVGLinkElement.on('dblclick', function(d){
 
@@ -2928,6 +3077,17 @@
                         }
                     }
                     renderSVGNode(d, renderByThisObj);
+
+                    if(connectStarted && // link 追加モードの場合は、preview 表示中のlinkも更新する
+                        targetDrawerObj.source == d.key){
+
+                        renderSVGLink(targetDrawerObj, {
+                            coordinate:{
+                                x1:d.x,
+                                y1:d.y
+                            }
+                        });
+                    }
                 });
 
                 $3svgLinks.each(function(d, i){
