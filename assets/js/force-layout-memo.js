@@ -786,7 +786,7 @@
                     if(dataset.datas.length == 0){
                         uniqueDataKeyName = '0';
                     }else{
-                        uniqueDataKeyName = makeUniqueKey(dataset.datas[(dataset.datas.length-1)].key, getBindedDataFromKey);
+                        uniqueDataKeyName = makeUniqueKey(dataset.datas[(dataset.datas.length-1)].key, isReservedDataKey);
                     }
                     var appendingTotalReport = appendNodes({
                         datas:[
@@ -1942,12 +1942,14 @@
 
         if(d.key != targetDrawerObj.source){ //source, target は別 node の場合
 
+            //todo x座標が近すぎると横方向に散らばらないので、回避する
+
             var uniqueKey;
             if(dataset.links.length == 0){
                 uniqueKey = "0";
             }else{
                 uniqueKey = dataset.links[dataset.links.length-1].key;
-                uniqueKey = makeUniqueKey(uniqueKey, getBindedLinkDataFromKey);
+                uniqueKey = makeUniqueKey(uniqueKey, isReservedLinkKey);
             }
 
             var appendingArr = {
@@ -2280,9 +2282,9 @@
                 mergeObj(appendThisObjArr.datas[i], toAppendObj, false);
 
                 //key重複チェック
-                if(typeof (getBindedDataFromKey(toAppendObj.key)) != 'undefined'){ //重複があった場合
+                if(typeof getBindedDataFromKey(toAppendObj.key) != 'undefined'){ //todo transaction history を含めて重複確認をする
                             
-                    var uniqueKeyName = makeUniqueKey(toAppendObj.key, getBindedDataFromKey);
+                    var uniqueKeyName = makeUniqueKey(toAppendObj.key, isReservedDataKey);
 
                     console.warn("datas[" + i + "\].key:\`" + appendThisObjArr.datas[i].key  + "\` is already used. " +
                                  "Unique key:\`" + uniqueKeyName + "\` will apply.");
@@ -2552,9 +2554,9 @@
                     if(sourceKeyIsExist && targetKeyIsExist){
 
                         //key重複チェック
-                        if(typeof (getBindedLinkDataFromKey(toAppendObj.key)) != 'undefined'){ //重複があった場合
+                        if(typeof getBindedLinkDataFromKey(toAppendObj.key) != 'undefined'){ //todo transaction history を含めて重複確認をする
                             
-                            var uniqueKeyName = makeUniqueKey(toAppendObj.key, getBindedLinkDataFromKey);
+                            var uniqueKeyName = makeUniqueKey(toAppendObj.key, isReservedLinkKey);
 
                             console.warn("links[" + i + "\].key:\`" + appendThisObjArr.links[i].key  + "\` is already used. " +
                                          "Unique key:\`" + uniqueKeyName + "\` will apply.");
@@ -2904,7 +2906,7 @@
         simulation = d3.forceSimulation()
             .force("link", d3.forceLink())
             .force("charge", d3.forceManyBody())
-            ;
+        ;
 
         simulation.nodes(dataset.datas)
             .on("tick", function(){
@@ -2948,9 +2950,9 @@
             });
 
         simulation.force("link")
+            .id(function(d) { return d.key; }) // <- .links([links]) をコールする前に設定する
             .links(dataset.links)
-            .id(function(d) { return d.key; })
-            ;
+        ;
 
         /* <Coefficient settings for force simulation>--------------------------------------- */
 
@@ -6326,8 +6328,15 @@
 
                 exitEditing(); //編集モードの終了
 
-                var uniqueDataKeyName = makeUniqueKey(bindedData.key, getBindedDataFromKey);
-                var uniqueLinkKeyName = makeUniqueKey(bindedData.key, getBindedLinkDataFromKey);
+                var uniqueDataKeyName = makeUniqueKey(bindedData.key, isReservedDataKey);
+
+                var uniqueLinkKeyName;
+                if(dataset.links.length == 0){
+                    uniqueLinkKeyName = "0";
+                }else{
+                    uniqueLinkKeyName = dataset.links[dataset.links.length-1].key;
+                    uniqueLinkKeyName = makeUniqueKey(uniqueLinkKeyName, isReservedLinkKey);
+                }
 
                 var dropToHereDY = linkDistance*0.6;
                 var dropToHereX = bindedData.coordinate.x;
@@ -7721,7 +7730,7 @@
     //
     //todo transaction history によるnode復活があっても競合しないようにする
     //
-    function makeUniqueKey(baseKeyName, bindedDataGetter){
+    function makeUniqueKey(baseKeyName, reservedChecker){
         
         var incrementedIntNum;
         var stringInFront;
@@ -7749,7 +7758,7 @@
         while(true){
             var tryThisKeyName = stringInFront + intNumPart.toString();
             
-            if(typeof (bindedDataGetter(tryThisKeyName)) == 'undefined'){ //重複がなかった場合
+            if(!(reservedChecker(tryThisKeyName)) ){ //重複がなかった場合
                 uniqueKey = tryThisKeyName;
                 break;
             }
@@ -7764,6 +7773,56 @@
         }
 
         return uniqueKey;
+    }
+
+    //指定key が dataset.datas[]内か、
+    //transactionHistory[]内に無いかどうか確認する
+    function isReservedDataKey(checkThisKey){
+
+        if(typeof getBindedDataFromKey(checkThisKey) == 'undefined'){  //dataset.datas[]内では未使用の場合
+
+            //history 内に使用した key はないかどうか確認
+            for(var i = 0 ; i < transactionHistory.length ; i++){
+                if(transactionHistory[i].type == 'append' ||
+                    transactionHistory[i].type == 'delete'){
+
+                    var reports = transactionHistory[i].reportsArr.datas;
+
+                    for(var j = 0 ; j < reports.length ; j++){
+                        if(reports[j].key == checkThisKey){ //key が使用済みの場合
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    //指定key が dataset.datas[]内か、
+    //transactionHistory[]内に無いかどうか確認する
+    function isReservedLinkKey(checkThisKey){
+
+        if(typeof getBindedLinkDataFromKey(checkThisKey) == 'undefined'){  //dataset.datas[]内では未使用の場合
+
+            //history 内に使用した key はないかどうか確認
+            for(var i = 0 ; i < transactionHistory.length ; i++){
+                if(transactionHistory[i].type == 'append' ||
+                    transactionHistory[i].type == 'delete'){
+
+                    var reports = transactionHistory[i].reportsArr.links;
+
+                    for(var j = 0 ; j < reports.length ; j++){
+                        if(reports[j].key == checkThisKey){ //key が使用済みの場合
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return false;
     }
 
     //
