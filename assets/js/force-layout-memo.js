@@ -829,7 +829,7 @@
                 items:{
                     export_all:{
                         name: "Export All (A)",
-                        accesskey: 'a',
+                        accesskey: 'a',//todo <- "Add (A)"が優先されてしまう
                         callback: function(itemKey, opt){
                             //DL確認画面終了後にhide出来ないことがあるので、先にhideする
                             opt.$menu.trigger("contextmenu:hide");
@@ -864,11 +864,6 @@
                 transformObj.translates.x = lastTransFormObj_d3style.x;
                 transformObj.translates.y = lastTransFormObj_d3style.y;
                 transformObj.scale = lastTransFormObj_d3style.k;
-            }
-
-            if(x == 0 && y == 0){ // application keyによる起動の場合 //todo ie11以外 で applicatoin key が拾えない
-                x = boundingClientRect.left + ($3motherElement.node().offsetWidth / 2); // 画面中央にメニューを表示する
-                y = boundingClientRect.top + ($3motherElement.node().offsetHeight / 2);
             }
 
             //右クリック位置の保存
@@ -1002,6 +997,88 @@
             //console.log("blur:", this);
         }
     );
+
+    document.onkeydown = function(e){
+        // console.log(e);
+
+        switch(e.keyCode){
+
+            case 93: //application key
+            {
+                applicationKeyDwon(e);
+            }
+            break;
+
+            default:
+            break;
+        }
+    }
+
+    var returnThisOnContextMenu = true;
+    document.oncontextmenu = function(){
+        var tmp = returnThisOnContextMenu;
+        returnThisOnContextMenu = true;
+        return tmp;
+    }
+
+    function applicationKeyDwon(e){
+
+        //編集中の場合はハジく
+        if(nowEditng){return;}
+
+        var showContextMenuHere = {
+            x:0,
+            y:0
+        }
+
+        var boundingClientRect = $SVGDrawingAreaElement.get(0).getBoundingClientRect();
+        var latestSelectedData = dataSelectionManager.getLatestSelectedData();
+        if(typeof latestSelectedData !== 'undefined'){ //選択対象Nodeが存在する場合
+
+            var transformObj = {
+                translates: {x:0, y:0},
+                scale: 1
+            };
+
+            if(lastTransFormObj_d3style !== null){
+                transformObj.translates.x = lastTransFormObj_d3style.x;
+                transformObj.translates.y = lastTransFormObj_d3style.y;
+                transformObj.scale = lastTransFormObj_d3style.k;
+            }
+
+            showContextMenuHere.x = 
+                latestSelectedData.coordinate.x * transformObj.scale +
+                transformObj.translates.x +
+                boundingClientRect.left
+            ;
+
+            showContextMenuHere.y =
+                latestSelectedData.coordinate.y * transformObj.scale +
+                transformObj.translates.y +
+                boundingClientRect.top
+            ;
+            
+        
+        }else{
+            // 画面中央にメニューを表示する
+            showContextMenuHere.x =
+                boundingClientRect.left + ($3motherElement.node().offsetWidth / 2)
+            ;
+
+            showContextMenuHere.y =
+                boundingClientRect.top + ($3motherElement.node().offsetHeight / 2)
+            ;
+        }
+
+        $("." + clsNameForCntxtMenu).contextMenu(showContextMenuHere); //contextMenu の表示
+        
+
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+
+        //document.oncontextmenuイベントで、
+        //ブラウザデフォルトメニューを表示させない
+        returnThisOnContextMenu = false;
+    }
 
     //note
     // Mousetrap() に引数を渡さない(= Mousetrap(domElement).bind(~)の形式にしない)理由は、
