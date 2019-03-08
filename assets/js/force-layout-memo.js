@@ -1947,7 +1947,16 @@
 
         if(d.key != targetDrawerObj.source){ //source, target は別 node の場合
 
-            //todo x座標が近すぎると横方向に散らばらないので、回避する
+            // x座標 が近すぎる node が 3 つ以上並んだ状態で両端の node を結合すると、
+            // 間にはさまれた node が横方向に散らばらないので、回避する
+            var sourceNode = getBindedDataFromKey(targetDrawerObj.source);
+            if(Math.abs(sourceNode.coordinate.x - d.coordinate.x) < 1){//結合する node 同士の x座標が近すぎる場合
+                renderSVGNode(d, {
+                    coordinate:{
+                        dx: 1 // 1px 右にズラす
+                    }
+                }); // rendering repot は保存しない
+            }
 
             var uniqueKey;
             if(dataset.links.length == 0){
