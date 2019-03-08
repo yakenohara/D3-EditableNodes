@@ -2283,7 +2283,7 @@
             for(var i = 0 ; i < appendingSafeObjArr.datas.length ; i++){
 
                 //dataset.datas[] 内とのkey重複チェック
-                if(isReservedDataKey(appendingSafeObjArr.datas[i].key)){ //todo transaction history を含めて重複確認をする
+                if(isReservedDataKey(appendingSafeObjArr.datas[i].key)){
 
                     // Unique な key を生成
                     var uniqueKeyName = makeUniqueKey(appendingSafeObjArr.datas[i].key, function(tryThisKeyName){
@@ -7814,10 +7814,7 @@
         
     }
 
-    //key重複チェック
-    //
-    //todo transaction history によるnode復活があっても競合しないようにする
-    //
+    //Unique な key を生成する
     function makeUniqueKey(baseKeyName, reservedChecker){
         
         var incrementedIntNum;
