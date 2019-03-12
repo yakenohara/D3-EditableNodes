@@ -17,7 +17,8 @@
         highlightNodesTarget: "t", //Highlight target node(s)
         highlightNodesSourceAndTarget: "l",  //Highlight source and target node(s)
         brushSelecting: "b", // selecting node(s) by brush
-        connectDatas: "c" //conect nodes
+        connectDatas: "c", //conect nodes
+        undo: "ctrl+z" //undo
     };
 
     //外部コンポーネントパス
@@ -89,6 +90,7 @@
     transactionHistory = [];  //history
 
     var nowEditng = false;　      //Property Edit Console が起動中かどうか
+    var nowTyping = false;        //<textarea>に focus が当たっている間 true にする()
     var editingNodeKeys = []; //Property Edit Console の 編集対象ノードのkey
     var editingLinkKeys = []; //Property Edit Console の 編集対象Linkのkey
     var pointingIndexOfHistory = -1;      //historyのどのindexが選択されているか
@@ -1186,6 +1188,17 @@
     Mousetrap.bind(keySettings.connectDatas, function(e, combo){
         removeConnect();
     }, 'keyup');
+
+    Mousetrap.bind(keySettings.undo, function(e, combo){
+        
+        if(nowTyping){return;} //<textarea>の編集中はハジく
+
+        //todo history control
+
+        console.log(combo);
+
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
 
     function call_appendHighlight(){
         
@@ -6459,6 +6472,7 @@
 
             //<textarea>内のキータイプイベント
             $3textareaElem.node().oninput = function(){
+                console.log("oninput");
                 if(keyDownInvoked){
                     //SVGNodeへの反映&<textarea>調整
                     renderAndMergeBufTotalReport($3textareaElem.node().value);
@@ -6491,8 +6505,15 @@
                 disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
             });
 
+            $3textareaElem.node().onfocus = function(){
+                // console.log("onfocus");
+                nowTyping = true;
+            }
+
             //<textarea>内からフォーカスが外れたイベント
             $3textareaElem.node().onblur = function(){
+                // console.log("onblur");
+                nowTyping = false;
                 comfirmBufTotalReport(); //Bufferの確定
             }
 
@@ -7353,6 +7374,8 @@
 
     //
     // 各Property Editor で Default に戻すボタンの Behavor
+    // todo tabキーによってdefault ボタンにfocusし、スペースキーを押すと、
+    // TypeError: can't convert null to object になる
     //
     function propertyEditorBehavor_setAsDefault($buttunElem, arrNameShouldBeStored, structureArr, callbackBeforePreview, callbackWhenEventDone){
         
