@@ -1194,8 +1194,8 @@
         if(nowTyping){return;} //<textarea>の編集中はハジく
 
         //todo history control
-
-        $transactionHistoryElement.animate({scrollTop:0});
+        historyManager.testFunc();       
+        
 
         console.log(combo);
 
@@ -5323,11 +5323,16 @@
 
         var pointingIndexOfHistory = -1;      //historyのどのindexが選択されているか
 
+        var animating = false; //アニメーション中判定用フラグ
+
         var previewing = false;
         var clicked = false;
-        var previewedIndex;
+        var previewedIndex = -1; //preview している history の index no(-1 はpreview していない事を表す)
 
         this.appendHistory = function(transactionObj){
+
+            var clicked_ = false;
+            var mouseEnterd = false;
 
             //historyの挿入チェック
             if((pointingIndexOfHistory + 1) < transactionHistory.length){ //historyの途中に挿入する場合
@@ -5361,7 +5366,16 @@
             if(maxHeight != 'none'){ //maxHeightが定義されている
                 maxHeight = parseFloat(maxHeight);
                 if(maxHeight < $transactionHistoryElement.get(0).scrollHeight){ //historyがmax-heightより大きい
-                    $transactionHistoryElement.animate({scrollTop:$transactionHistoryElement.get(0).scrollHeight}); //最下部にスクロール
+                    animating = true; //アニメーションフラグON
+                    $transactionHistoryElement.animate(
+                        {
+                            scrollTop:$transactionHistoryElement.get(0).scrollHeight
+                        },{
+                            complete:function(){
+                                animating = false;  //アニメーションフラグOFF
+                            }
+                        }
+                    ); //最下部にスクロール
                 }
             }
             
@@ -5370,22 +5384,50 @@
     
             //transactionに対するMouseEnterイベント
             $historyMessageElem.mouseenter(function(){
-                startPreview(this);
+                mouseEnterd = true;
+                
+            });
+
+            $historyMessageElem.mousemove(function(){
+                if(mouseEnterd && (!animating)){
+                    clicked_ = false;
+                    startPreview(this);
+                    mouseEnterd = false;
+                }
             });
     
             //transactionに対するクリックイベント
             $historyMessageElem.on("click",function(){
-                confirmPreview(this);
+                if(!clicked_){ //1回目のクリックの場合
+                    confirmPreview();
+                }
+                clicked_ = true;
             });
     
             //transactionに対するMouseLeaveイベント
             $historyMessageElem.mouseleave(function(){
-                endPreview(this);
+                if(!clicked_){ //クリックされていない場合
+                    cancelPreview();
+                }
+                clicked_ = false;
             });
         }
 
         this.applyPrevioursObj = function(renderingObj){
-            return rollbackOrReplayTransaction(transaction, "PrevObj");
+            return rollbackOrReplayTransaction(renderingObj, "PrevObj");
+        }
+
+        this.testFunc = function(){
+            animating = true;
+            $transactionHistoryElement.animate(
+                {
+                    scrollTop:0
+                },{
+                    complete:function(){
+                        animating = false;  //アニメーションフラグOFF
+                    }
+                }
+            );
         }
 
         function startPreview(specifiedElem){
@@ -5412,39 +5454,35 @@
             }
 
             previewedIndex = specifiedIndex;
-            
-            clicked = false;
         }
 
-        function confirmPreview(specifiedElem){
-            if(!clicked){ //1回目のクリックの場合
-                var historyIndex = parseInt($(specifiedElem).attr("data-history_index"));
-                
-                clicked = true;
-                pointingIndexOfHistory = historyIndex; //history[]内の選択indexを変更
-            }
+        function confirmPreview(){
+
+            pointingIndexOfHistory = previewedIndex;
+            previewedIndex = -1; //preview mode の終了
         }
 
-        function endPreview(specifiedElem){
+        function cancelPreview(){
             
-            if(!clicked){ //クリックされていない場合
-                specifiedElem.classList.remove(className_nodeIsSelected); //history選択状態を解除
-                $transactionHistoryElement.children('.transaction[data-history_index="' + pointingIndexOfHistory.toString() + '"]')
-                    .eq(0)
-                    .addClass(className_nodeIsSelected); //history[]内の選択indexで選択
+            $transactionHistoryElement.children('.transaction[data-history_index="' + previewedIndex.toString() + '"]')
+                .eq(0)
+                .removeClass(className_nodeIsSelected); //preview している history の選択状態を解除
 
-                var replayReport = replayHistory(previewedIndex, pointingIndexOfHistory); //history[]内の選択indexへもどす
+            $transactionHistoryElement.children('.transaction[data-history_index="' + pointingIndexOfHistory.toString() + '"]')
+                .eq(0)
+                .addClass(className_nodeIsSelected); //history[]内の選択indexで選択
 
-                if(typeof replayReport != 'undefined'){
-                    dataSelectionManager.recoverDataSelection(replayReport);
-                }
-                
-                if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
-                    checkAdjustPropertyEditConsole();//property editor内の値をロールバックしたNode状態に合わせる
-                }
+            var replayReport = replayHistory(previewedIndex, pointingIndexOfHistory); //history[]内の選択indexへもどす
+
+            if(typeof replayReport != 'undefined'){
+                dataSelectionManager.recoverDataSelection(replayReport);
             }
             
-            clicked = false;
+            if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
+                checkAdjustPropertyEditConsole();//property editor内の値をロールバックしたNode状態に合わせる
+            }
+            
+            previewedIndex = -1; //preview mode の終了
         }
 
         function deleteHistory(fromThisIndex){
@@ -5873,6 +5911,7 @@
 
     function exitEditing(){
 
+        nowTyping = false;
         propertyEditorsManager.exit(); // Node個別編集用 PropertyEditor を終了
         
         //Node選択状態の表示化ループ
