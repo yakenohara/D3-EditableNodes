@@ -5469,7 +5469,7 @@
 
             //todo 選択した history が表示範囲外にある場合に、
             // 表示範囲内に入るように animate する
-            
+
             // animating = true;
             // $transactionHistoryElement.animate(
             //     {
@@ -5481,9 +5481,8 @@
             //     }
             // );
 
-            pointingIndexOfHistory = moveTo;
+            pointingIndexOfHistory = moveTo; //選択 index の更新
 
-            
         }
 
         function startPreview(specifiedElem){
