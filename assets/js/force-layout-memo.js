@@ -93,7 +93,6 @@
     var nowTyping = false;        //<textarea>に focus が当たっている間 true にする()
     var editingNodeKeys = []; //Property Edit Console の 編集対象ノードのkey
     var editingLinkKeys = []; //Property Edit Console の 編集対象Linkのkey
-    var pointingIndexOfHistory = -1;      //historyのどのindexが選択されているか
     
     var $3motherElement; //全てのもと
     var $3propertyEditConsoleElement;        //Property Edit Console (D3.js selection)
@@ -101,7 +100,7 @@
     var $propertyEditConsoleElement_node;    //(For Node) Property Edit Console (jQuery selection)
     var $propertyEditConsoleElement_link;    //(For Link) Property Edit Console (jQuery selection)
     var $3transactionHistoryElement;         //Transaction History (D3.js selection)
-    var $transactionHistoryElement;          //Transaction History (jQuery selection)
+    $transactionHistoryElement = null;          //Transaction History (jQuery selection) //todo localize
     var $3SVGDrawingAreaElement;             //描画用SVG領域 (D3.js selection)
     var $SVGDrawingAreaElement;              //描画用SVG領域 (jQuery selection)
     var $3svgNodesGroup;
@@ -125,6 +124,7 @@
     var highlightingStartPointKey = null;
 
     var dataSelectionManager = new clsfnc_dataSelectionManager();
+    var historyManager = new clsfnc_historyManager();
 
     //Node初期化用Objを作る
     function makeSetDafaultObj(includeIndividualpart){
@@ -737,7 +737,7 @@
                         
                         }else{
                             var appendingTotalReport = appendNodes(appendingSafeObjArr);
-                            appendHistory(appendingTotalReport);
+                            historyManager.appendHistory(appendingTotalReport);
                         }
                         
 
@@ -810,7 +810,7 @@
                             }
                         ]
                     });
-                    appendHistory(appendingTotalReport);
+                    historyManager.appendHistory(appendingTotalReport);
 
                     var bindedData =  getBindedDataFromKey(appendingTotalReport.reportsArr.datas[0].key);
                     call_editSVGNode(bindedData);
@@ -1194,6 +1194,8 @@
         if(nowTyping){return;} //<textarea>の編集中はハジく
 
         //todo history control
+
+        $transactionHistoryElement.animate({scrollTop:0});
 
         console.log(combo);
 
@@ -2072,7 +2074,7 @@
             targetDrawerObj.$3bindedSelectionLayerSVGElement.remove();
 
             var appendingTotalReport = appendNodes(appendingArr);
-            appendHistory(appendingTotalReport);
+            historyManager.appendHistory(appendingTotalReport);
 
             dataSelectionManager.clearSelections(); //選択履歴をクリア
             dataSelectionManager.pushDataSelection(d); //node選択履歴に1つ追加
@@ -2747,7 +2749,7 @@
                             }
 
                             if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
-                                appendHistory(bufTotalReport);
+                                historyManager.appendHistory(bufTotalReport);
                             }
                         })
                     );
@@ -2906,7 +2908,7 @@
 
         if((toDeleteKeyArr.datas.length > 0) || (toDeleteKeyArr.links.length > 0)){ //削除対象Nodeが存在する場合
             var deletingTotalReport = deleteNodes(toDeleteKeyArr, true); //source か target で紐づけられた link も削除する
-            appendHistory(deletingTotalReport);
+            historyManager.appendHistory(deletingTotalReport);
         }
     }
 
@@ -5317,57 +5319,78 @@
         
     }
 
-    //<history関係>------------------------------------------------------------------------------------
+    function clsfnc_historyManager(){
 
-    function appendHistory(transactionObj){
+        var pointingIndexOfHistory = -1;      //historyのどのindexが選択されているか
 
+        var previewing = false;
         var clicked = false;
         var previewedIndex;
 
-        //historyの挿入チェック
-        if((pointingIndexOfHistory + 1) < transactionHistory.length){ //historyの途中に挿入する場合
-            deleteHistory(pointingIndexOfHistory + 1); //不要なhistoryを破棄
-        }
+        this.appendHistory = function(transactionObj){
 
-        //現在の選択状態を解除
-        $transactionHistoryElement.children('.transaction[data-history_index="' + pointingIndexOfHistory.toString() + '"]')
-            .eq(0)
-            .removeClass(className_nodeIsSelected);
-
-        //オブジェクトコピー
-        var toSaveTransactionObj = {};
-        mergeObj(transactionObj, toSaveTransactionObj, true);
-
-        transactionHistory.push(toSaveTransactionObj); //Append History
-        pointingIndexOfHistory++;
-
-        var $3historyMessageElem = $3transactionHistoryElement.append("div")
-            .classed("transaction", true)
-            .classed(className_nodeIsSelected, true)
-            .style("display", "none") // <- 表示用アニメーションの為に、一旦非表示にする
-            .attr("data-history_index", pointingIndexOfHistory.toString());
-
-        $3historyMessageElem.append("small")
-            .style("font-size", "small")
-            .text(toSaveTransactionObj.message);
-        
-        $($3historyMessageElem.node()).slideDown(100); // <- 表示用アニメーション
-        var maxHeight = window.getComputedStyle($transactionHistoryElement.get(0)).maxHeight;
-        if(maxHeight != 'none'){ //maxHeightが定義されている
-            maxHeight = parseFloat(maxHeight);
-            if(maxHeight < $transactionHistoryElement.get(0).scrollHeight){ //historyがmax-heightより大きい
-                $transactionHistoryElement.animate({scrollTop:$transactionHistoryElement.get(0).scrollHeight}); //最下部にスクロール
+            //historyの挿入チェック
+            if((pointingIndexOfHistory + 1) < transactionHistory.length){ //historyの途中に挿入する場合
+                deleteHistory(pointingIndexOfHistory + 1); //不要なhistoryを破棄
             }
-        }
-        
-
-        var $historyMessageElem  = $($3historyMessageElem.node());
-
-        //transactionに対するMouseEnterイベント
-        $historyMessageElem.mouseenter(function(){
+    
+            //現在の選択状態を解除
+            $transactionHistoryElement.children('.transaction[data-history_index="' + pointingIndexOfHistory.toString() + '"]')
+                .eq(0)
+                .removeClass(className_nodeIsSelected);
+    
+            //オブジェクトコピー
+            var toSaveTransactionObj = {};
+            mergeObj(transactionObj, toSaveTransactionObj, true);
+    
+            transactionHistory.push(toSaveTransactionObj); //Append History
+            pointingIndexOfHistory++;
+    
+            var $3historyMessageElem = $3transactionHistoryElement.append("div")
+                .classed("transaction", true)
+                .classed(className_nodeIsSelected, true)
+                .style("display", "none") // <- 表示用アニメーションの為に、一旦非表示にする
+                .attr("data-history_index", pointingIndexOfHistory.toString());
+    
+            $3historyMessageElem.append("small")
+                .style("font-size", "small")
+                .text(toSaveTransactionObj.message);
             
-            var thisElem = this;
-            var specifiedIndex = parseInt($(thisElem).attr("data-history_index"));
+            $($3historyMessageElem.node()).slideDown(100); // <- 表示用アニメーション
+            var maxHeight = window.getComputedStyle($transactionHistoryElement.get(0)).maxHeight;
+            if(maxHeight != 'none'){ //maxHeightが定義されている
+                maxHeight = parseFloat(maxHeight);
+                if(maxHeight < $transactionHistoryElement.get(0).scrollHeight){ //historyがmax-heightより大きい
+                    $transactionHistoryElement.animate({scrollTop:$transactionHistoryElement.get(0).scrollHeight}); //最下部にスクロール
+                }
+            }
+            
+    
+            var $historyMessageElem  = $($3historyMessageElem.node());
+    
+            //transactionに対するMouseEnterイベント
+            $historyMessageElem.mouseenter(function(){
+                startPreview(this);
+            });
+    
+            //transactionに対するクリックイベント
+            $historyMessageElem.on("click",function(){
+                confirmPreview(this);
+            });
+    
+            //transactionに対するMouseLeaveイベント
+            $historyMessageElem.mouseleave(function(){
+                endPreview(this);
+            });
+        }
+
+        this.applyPrevioursObj = function(renderingObj){
+            return rollbackOrReplayTransaction(transaction, "PrevObj");
+        }
+
+        function startPreview(specifiedElem){
+                
+            var specifiedIndex = parseInt($(specifiedElem).attr("data-history_index"));
 
             if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
                 propertyEditorsManager.confirm(); //property editor内の値をロールバックしたNode状態に合わせる
@@ -5376,7 +5399,7 @@
             $transactionHistoryElement.children('.transaction[data-history_index="' + pointingIndexOfHistory.toString() + '"]')
                 .eq(0)
                 .removeClass(className_nodeIsSelected); //history選択状態を解除
-            thisElem.classList.add(className_nodeIsSelected); //mouseenterしたhistoryを選択
+                specifiedElem.classList.add(className_nodeIsSelected); //mouseenterしたhistoryを選択
             
             var replayReport = replayHistory(pointingIndexOfHistory, specifiedIndex); //mouseenterしたhistoryをPreview
 
@@ -5391,26 +5414,21 @@
             previewedIndex = specifiedIndex;
             
             clicked = false;
-        });
+        }
 
-        //transactionに対するクリックイベント
-        $historyMessageElem.on("click",function(){
+        function confirmPreview(specifiedElem){
             if(!clicked){ //1回目のクリックの場合
-                var thisElem = this;
-                var historyIndex = parseInt($(thisElem).attr("data-history_index"));
+                var historyIndex = parseInt($(specifiedElem).attr("data-history_index"));
                 
                 clicked = true;
                 pointingIndexOfHistory = historyIndex; //history[]内の選択indexを変更
             }
+        }
 
-        });
-
-        //transactionに対するMouseLeaveイベント
-        $historyMessageElem.mouseleave(function(){
-            var thisElem = this;
+        function endPreview(specifiedElem){
             
             if(!clicked){ //クリックされていない場合
-                thisElem.classList.remove(className_nodeIsSelected); //history選択状態を解除
+                specifiedElem.classList.remove(className_nodeIsSelected); //history選択状態を解除
                 $transactionHistoryElement.children('.transaction[data-history_index="' + pointingIndexOfHistory.toString() + '"]')
                     .eq(0)
                     .addClass(className_nodeIsSelected); //history[]内の選択indexで選択
@@ -5427,229 +5445,219 @@
             }
             
             clicked = false;
-        });
-    }
+        }
 
-    function deleteHistory(fromThisIndex){
-        //history[]から historyIndex+1 以降を削除
-        transactionHistory.splice(fromThisIndex, transactionHistory.length - fromThisIndex);
+        function deleteHistory(fromThisIndex){
+            //history[]から historyIndex+1 以降を削除
+            transactionHistory.splice(fromThisIndex, transactionHistory.length - fromThisIndex);
+    
+            //history表示の削除ループ
+            var siblings = $3transactionHistoryElement.node().children;
+            for(var i = siblings.length - 1 ; i >= 0 ; i--){ //最終indexからデクリメントで網羅
+                var historyIndex = parseInt($(siblings[i]).attr("data-history_index"));
+                if(historyIndex >= fromThisIndex){ //選択したtransactionより後のhistoryだった場合
+                    $(siblings[i]).remove(); //history表示の削除
+                }else{
+                    break;
+                }
+            }
+        }
 
-        //history表示の削除ループ
-        var siblings = $3transactionHistoryElement.node().children;
-        for(var i = siblings.length - 1 ; i >= 0 ; i--){ //最終indexからデクリメントで網羅
-            var historyIndex = parseInt($(siblings[i]).attr("data-history_index"));
-            if(historyIndex >= fromThisIndex){ //選択したtransactionより後のhistoryだった場合
-                $(siblings[i]).remove(); //history表示の削除
-            }else{
+        function replayHistory(startIndex, endIndex){
+
+            var replayReport = {};
+            replayReport.reportArr = [];
+            
+            //increment / decrement 判定
+            if(startIndex == endIndex){ //Replay不要の場合
+                return; //何も返さない
+    
+            }else if(startIndex < endIndex){ // 旧 → 新 へのReplay
+                replayReport.type = 'replay';
+                
+                for(var i = (startIndex + 1); i <= endIndex ; i++){
+                    var tmpObj = {};
+                    tmpObj.indexOfTransaction = i;
+                    tmpObj.report = rollbackOrReplayTransaction(transactionHistory[i], "RenderedObj");
+                    replayReport.reportArr.push(tmpObj);
+                }
+    
+            }else{ // 新 → 旧 へのReplay
+                replayReport.type = 'rollback';
+    
+                for(var i = startIndex; i > endIndex ; i--){
+                    var tmpObj = {};
+                    tmpObj.indexOfTransaction = i;
+                    tmpObj.report = rollbackOrReplayTransaction(transactionHistory[i], "PrevObj");
+                    replayReport.reportArr.push(tmpObj);
+                }
+    
+            }
+    
+            return replayReport;
+        }
+
+        function rollbackOrReplayTransaction(transaction, toApplyObjName){
+    
+            var rollbackRenderringReport;
+            
+            //引数チェック
+            if(transaction.reportsArr.datas.length == 0 && transaction.reportsArr.links.length == 0){ //トランザクションレポートが存在しない
+                console.warn("Specified trunsaction not contains SVG rendering report.");
+                return;
+            }
+    
+            switch(transaction.type){
+                case 'append':
+                {
+                    if(toApplyObjName == 'PrevObj'){ //Node追加前の状態に戻す場合 -> Nodeを削除する
+                        call_deleteNodes();
+                    }else{ //Nodeを追加し直す場合
+                        call_appendNodes();
+                    }
+                }
+                break;
+    
+                case 'delete':
+                {
+                    if(toApplyObjName == 'PrevObj'){ //Node削除前の状態に戻す場合 -> 削除したNodeを復活させる
+                        call_appendNodes();
+    
+                    }else{ //Nodeを削除し直す場合
+                        call_deleteNodes();
+                    }
+                }
+                break;
+    
+                case 'change':
+                {
+                    call_changeNodes();
+                }
+                break;
+    
+                default:
+                {
+                    console.warn("Unknown transaction type specified.");
+                }
                 break;
             }
-        }
-    }
-
-    function replayHistory(startIndex, endIndex){
-
-        var replayReport = {};
-        replayReport.reportArr = [];
-        
-        //increment / decrement 判定
-        if(startIndex == endIndex){ //Replay不要の場合
-            return; //何も返さない
-
-        }else if(startIndex < endIndex){ // 旧 → 新 へのReplay
-            replayReport.type = 'replay';
-            
-            for(var i = (startIndex + 1); i <= endIndex ; i++){
-                var tmpObj = {};
-                tmpObj.indexOfTransaction = i;
-                tmpObj.report = replayTransaction(transactionHistory[i]);
-                replayReport.reportArr.push(tmpObj);
+    
+            if( (typeof rollbackRenderringReport == 'object') && (!rollbackRenderringReport.allOK)){ //ロールバックに失敗した場合
+                console.error("Cannot apply history. Check following report.");
+                console.error(rollbackRenderringReport);
             }
-
-        }else{ // 新 → 旧 へのReplay
-            replayReport.type = 'rollback';
-
-            for(var i = startIndex; i > endIndex ; i--){
-                var tmpObj = {};
-                tmpObj.indexOfTransaction = i;
-                tmpObj.report = rollbackTransaction(transactionHistory[i]);
-                replayReport.reportArr.push(tmpObj);
-            }
-
-        }
-
-        return replayReport;
-    }
-
-    function rollbackTransaction(transaction){
-        return rollbackOrReplayTransaction(transaction, "PrevObj");
-    }
-
-    function replayTransaction(transaction){
-        return rollbackOrReplayTransaction(transaction, "RenderedObj");
-    }
-
-    function rollbackOrReplayTransaction(transaction, toApplyObjName){
-
-        var rollbackRenderringReport;
-        
-        //引数チェック
-        if(transaction.reportsArr.datas.length == 0 && transaction.reportsArr.links.length == 0){ //トランザクションレポートが存在しない
-            console.warn("Specified trunsaction not contains SVG rendering report.");
-            return;
-        }
-
-        switch(transaction.type){
-            case 'append':
-            {
-                if(toApplyObjName == 'PrevObj'){ //Node追加前の状態に戻す場合 -> Nodeを削除する
-                    call_deleteNodes();
-                }else{ //Nodeを追加し直す場合
-                    call_appendNodes();
+    
+            return rollbackRenderringReport;
+    
+            function call_deleteNodes(){
+                //削除対象key収集ループ
+                var toDeleteKeyArr = {};
+                toDeleteKeyArr.datas = [];
+                toDeleteKeyArr.links = [];
+    
+                //transaction.reportsArr.datas[]の網羅ループ
+                for(var i = 0 ; i < transaction.reportsArr.datas.length ; i++){
+                    var reportObj = transaction.reportsArr.datas[i];
+                    toDeleteKeyArr.datas.push(reportObj.key); //削除指定keyArrayに追加
                 }
-            }
-            break;
-
-            case 'delete':
-            {
-                if(toApplyObjName == 'PrevObj'){ //Node削除前の状態に戻す場合 -> 削除したNodeを復活させる
-                    call_appendNodes();
-
-                }else{ //Nodeを削除し直す場合
-                    call_deleteNodes();
+    
+                //transaction.reportsArr.links[]の網羅ループ
+                for(var i = 0 ; i < transaction.reportsArr.links.length ; i++){
+                    var reportObj = transaction.reportsArr.links[i];
+                    toDeleteKeyArr.links.push(reportObj.key); //削除指定keyArrayに追加
                 }
+    
+                rollbackRenderringReport = deleteNodes(toDeleteKeyArr, false); //Node(s), Link(s)削除
             }
-            break;
-
-            case 'change':
-            {
-                call_changeNodes();
-            }
-            break;
-
-            default:
-            {
-                console.warn("Unknown transaction type specified.");
-            }
-            break;
-        }
-
-        if( (typeof rollbackRenderringReport == 'object') && (!rollbackRenderringReport.allOK)){ //ロールバックに失敗した場合
-            console.error("Cannot apply history. Check following report.");
-            console.error(rollbackRenderringReport);
-        }
-
-        return rollbackRenderringReport;
-
-        function call_deleteNodes(){
-            //削除対象key収集ループ
-            var toDeleteKeyArr = {};
-            toDeleteKeyArr.datas = [];
-            toDeleteKeyArr.links = [];
-
-            //transaction.reportsArr.datas[]の網羅ループ
-            for(var i = 0 ; i < transaction.reportsArr.datas.length ; i++){
-                var reportObj = transaction.reportsArr.datas[i];
-                toDeleteKeyArr.datas.push(reportObj.key); //削除指定keyArrayに追加
-            }
-
-            //transaction.reportsArr.links[]の網羅ループ
-            for(var i = 0 ; i < transaction.reportsArr.links.length ; i++){
-                var reportObj = transaction.reportsArr.links[i];
-                toDeleteKeyArr.links.push(reportObj.key); //削除指定keyArrayに追加
-            }
-
-            rollbackRenderringReport = deleteNodes(toDeleteKeyArr, false); //Node(s), Link(s)削除
-        }
-
-        function call_appendNodes(){
-            //追加NodeArray生成ループ
-            var toAppendObjArr = {};
-            toAppendObjArr.datas = [];
-            toAppendObjArr.links = [];
-
-            //transaction.reportsArr.datas[]の網羅ループ
-            for(var i = 0 ; i < transaction.reportsArr.datas.length ; i++){
-                var reportObj = transaction.reportsArr.datas[i];
-                var toAppendObj = {};
-                mergeObj(reportObj[toApplyObjName], toAppendObj, false); //オブジェクトコピー
-                toAppendObj.key = reportObj.key; //キー番号をhistoryから復活させる
-                toAppendObjArr.datas.push(toAppendObj);
-            }
-
-            //transaction.reportsArr.links[]の網羅ループ
-            for(var i = 0 ; i < transaction.reportsArr.links.length ; i++){
-                var reportObj = transaction.reportsArr.links[i];
-                var toAppendObj = {};
-                mergeObj(reportObj[toApplyObjName], toAppendObj, false); //オブジェクトコピー
-                toAppendObj.key = reportObj.key; //キー番号をhistoryから復活させる
-                toAppendObjArr.links.push(toAppendObj);
-            }
-            
-            rollbackRenderringReport = appendNodes(toAppendObjArr); //Nodes(s), Link(s)復活
-        }
-
-        function call_changeNodes(){
-            rollbackRenderringReport = {};
-            rollbackRenderringReport.type = 'change';
-            rollbackRenderringReport.allOK = true;
-            rollbackRenderringReport.allNG = true;
-            rollbackRenderringReport.reportsArr = {};
-            rollbackRenderringReport.reportsArr.datas = [];
-            rollbackRenderringReport.reportsArr.links = [];
-
-            //レンダリングレポート網羅ループ
-            for(var i = 0 ; i < transaction.reportsArr.datas.length ; i++){
-                var reportObj = transaction.reportsArr.datas[i];
-                var bindedData = getBindedDataFromKey(reportObj.key);
-
-                if(typeof bindedData == 'undefined'){ //対象のノードデータが存在しない場合
-                    console.error("\`key:" + reportObj.key + "\` not found in D3.js binded data array.");
-
-                }else{ //対象のノードデータが存在する場合
-                    
-                    var singleReport = renderSVGNode(bindedData, reportObj[toApplyObjName]);
-
-                    if(!singleReport.allOK){ //失敗が発生した場合
-                        rollbackRenderringReport.allOK = false;
-                    }
-
-                    if(!singleReport.allNG){ //成功が1つ以上ある場合
-                        rollbackRenderringReport.allNG = false;
-                    }
-
-                    rollbackRenderringReport.reportsArr.datas.push(singleReport);
+    
+            function call_appendNodes(){
+                //追加NodeArray生成ループ
+                var toAppendObjArr = {};
+                toAppendObjArr.datas = [];
+                toAppendObjArr.links = [];
+    
+                //transaction.reportsArr.datas[]の網羅ループ
+                for(var i = 0 ; i < transaction.reportsArr.datas.length ; i++){
+                    var reportObj = transaction.reportsArr.datas[i];
+                    var toAppendObj = {};
+                    mergeObj(reportObj[toApplyObjName], toAppendObj, false); //オブジェクトコピー
+                    toAppendObj.key = reportObj.key; //キー番号をhistoryから復活させる
+                    toAppendObjArr.datas.push(toAppendObj);
                 }
-            }
-
-            //レンダリングレポート網羅ループ
-            for(var i = 0 ; i < transaction.reportsArr.links.length ; i++){
-                var reportObj = transaction.reportsArr.links[i];
-                var bindedData = getBindedLinkDataFromKey(reportObj.key);
-
-                if(typeof bindedData == 'undefined'){ //対象のノードデータが存在しない場合
-                    console.error("\`key:" + reportObj.key + "\` not found in D3.js binded link array.");
-
-                }else{ //対象のノードデータが存在する場合
-                    
-                    var singleReport = renderSVGLink(bindedData, reportObj[toApplyObjName]);
-
-                    if(!singleReport.allOK){ //失敗が発生した場合
-                        rollbackRenderringReport.allOK = false;
-                    }
-
-                    if(!singleReport.allNG){ //成功が1つ以上ある場合
-                        rollbackRenderringReport.allNG = false;
-                    }
-
-                    rollbackRenderringReport.reportsArr.links.push(singleReport);
+    
+                //transaction.reportsArr.links[]の網羅ループ
+                for(var i = 0 ; i < transaction.reportsArr.links.length ; i++){
+                    var reportObj = transaction.reportsArr.links[i];
+                    var toAppendObj = {};
+                    mergeObj(reportObj[toApplyObjName], toAppendObj, false); //オブジェクトコピー
+                    toAppendObj.key = reportObj.key; //キー番号をhistoryから復活させる
+                    toAppendObjArr.links.push(toAppendObj);
                 }
+                
+                rollbackRenderringReport = appendNodes(toAppendObjArr); //Nodes(s), Link(s)復活
             }
-            startForce(); //force simulation
+    
+            function call_changeNodes(){
+                rollbackRenderringReport = {};
+                rollbackRenderringReport.type = 'change';
+                rollbackRenderringReport.allOK = true;
+                rollbackRenderringReport.allNG = true;
+                rollbackRenderringReport.reportsArr = {};
+                rollbackRenderringReport.reportsArr.datas = [];
+                rollbackRenderringReport.reportsArr.links = [];
+    
+                //レンダリングレポート網羅ループ
+                for(var i = 0 ; i < transaction.reportsArr.datas.length ; i++){
+                    var reportObj = transaction.reportsArr.datas[i];
+                    var bindedData = getBindedDataFromKey(reportObj.key);
+    
+                    if(typeof bindedData == 'undefined'){ //対象のノードデータが存在しない場合
+                        console.error("\`key:" + reportObj.key + "\` not found in D3.js binded data array.");
+    
+                    }else{ //対象のノードデータが存在する場合
+                        
+                        var singleReport = renderSVGNode(bindedData, reportObj[toApplyObjName]);
+    
+                        if(!singleReport.allOK){ //失敗が発生した場合
+                            rollbackRenderringReport.allOK = false;
+                        }
+    
+                        if(!singleReport.allNG){ //成功が1つ以上ある場合
+                            rollbackRenderringReport.allNG = false;
+                        }
+    
+                        rollbackRenderringReport.reportsArr.datas.push(singleReport);
+                    }
+                }
+    
+                //レンダリングレポート網羅ループ
+                for(var i = 0 ; i < transaction.reportsArr.links.length ; i++){
+                    var reportObj = transaction.reportsArr.links[i];
+                    var bindedData = getBindedLinkDataFromKey(reportObj.key);
+    
+                    if(typeof bindedData == 'undefined'){ //対象のノードデータが存在しない場合
+                        console.error("\`key:" + reportObj.key + "\` not found in D3.js binded link array.");
+    
+                    }else{ //対象のノードデータが存在する場合
+                        
+                        var singleReport = renderSVGLink(bindedData, reportObj[toApplyObjName]);
+    
+                        if(!singleReport.allOK){ //失敗が発生した場合
+                            rollbackRenderringReport.allOK = false;
+                        }
+    
+                        if(!singleReport.allNG){ //成功が1つ以上ある場合
+                            rollbackRenderringReport.allNG = false;
+                        }
+    
+                        rollbackRenderringReport.reportsArr.links.push(singleReport);
+                    }
+                }
+                startForce(); //force simulation
+            }
         }
     }
-
-    //-----------------------------------------------------------------------------------</history関係>
-
+    
     function clsfnc_dataSelectionManager(){
 
         var lastSelectedDatas = []; //datas[].key 用 stack
@@ -6575,7 +6583,7 @@
                     ]
                 });
                 
-                appendHistory(appendingTotalReport);
+                historyManager.appendHistory(appendingTotalReport);
                 var appendedData =  getBindedDataFromKey(appendingTotalReport.reportsArr.datas[0].key);
                 call_editSVGNode(appendedData);
 
@@ -6615,7 +6623,7 @@
         //編集をcancelする
         this.cancel = function(){
             if(!bufTotalReport.allNG){ //成功したRenderingReportが存在する場合
-                rollbackTransaction(bufTotalReport); //元に戻す
+                historyManager.applyPrevioursObj(bufTotalReport); //元に戻す
                 adjustEditors();
                 clearBufTotalReport(); //バッファ初期化
             }
@@ -6662,7 +6670,7 @@
         //バッファに積んだ Rendering Report を 確定させる
         function comfirmBufTotalReport(){
             if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
-                appendHistory(bufTotalReport);
+                historyManager.appendHistory(bufTotalReport);
                 clearBufTotalReport();
             }
         }
@@ -6774,7 +6782,7 @@
         //編集をcancelする
         this.cancel = function(){
             if(!bufTotalReport.allNG){ //成功したRenderingReportが存在する場合
-                rollbackTransaction(bufTotalReport); //元に戻す
+                historyManager.applyPrevioursObj(bufTotalReport); //元に戻す
                 callbackWhenEventDone();
                 initializeBufTotalReport(); //バッファ初期化
                 $expMsgElem.text(initExpMessage);
@@ -6802,7 +6810,7 @@
         //バッファに積んだ Rendering Report を 確定させる
         function confirmBufTotalReport(){
             if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
-                appendHistory(bufTotalReport);
+                historyManager.appendHistory(bufTotalReport);
                 initializeBufTotalReport(); //ログ用バッファ初期化
 
             }
@@ -6917,7 +6925,7 @@
         //編集をcancelする
         this.cancel = function(){
             if(!bufTotalReport.allNG){ //成功したRenderingReportが存在する場合
-                rollbackTransaction(bufTotalReport); //元に戻す
+                historyManager.applyPrevioursObj(bufTotalReport); //元に戻す
                 callbackWhenEventDone();
                 initializeBufTotalReport(); //バッファ初期化
                 $expMsgElem.text(initExpMessage);
@@ -6945,7 +6953,7 @@
         //バッファに積んだ Rendering Report を 確定させる
         function confirmBufTotalReport(){
             if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
-                appendHistory(bufTotalReport);
+                historyManager.appendHistory(bufTotalReport);
                 initializeBufTotalReport(); //ログ用バッファ初期化
             }
             $inputElem.val(lastAppliedStr); //最後に反映したtextで<input>要素を更新
@@ -7025,7 +7033,7 @@
                 var clickedElem = this;
 
                 if(!($(clickedElem).prop("disabled")) && !clicked){ //プロパティエディタが有効 && クリックしていない場合
-                    appendHistory(bufTotalReport);
+                    historyManager.appendHistory(bufTotalReport);
                     clicked = true;
                 }
             });
@@ -7039,7 +7047,7 @@
                     
                     if(!clicked){ //クリックしなかった場合
                         
-                        rollbackTransaction(bufTotalReport); //元に戻す
+                        historyManager.applyPrevioursObj(bufTotalReport); //元に戻す
                         callbackWhenEventDone();
                         $expMsgElem.text(beforeExpMessage);
                         leavedElem.classList.remove(className_nodeIsSelected);
@@ -7324,7 +7332,7 @@
         //Buffer初期化 & 表示を元に戻す
         function clearBuf(){
             if(!bufTotalReport.allNG){ //成功したRenderingReportが存在する場合
-                rollbackTransaction(bufTotalReport); //元に戻す
+                historyManager.applyPrevioursObj(bufTotalReport); //元に戻す
                 callbackWhenEventDone();
                 initializeBufTotalReport(); //バッファ初期化
                 $expMsgElem.text(initExpMessage);
@@ -7362,7 +7370,7 @@
         //バッファに積んだ Rendering Report を 確定させる
         function confirmBufTotalReport(){
             if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
-                appendHistory(bufTotalReport);
+                historyManager.appendHistory(bufTotalReport);
                 initializeBufTotalReport(); //ログ用バッファ初期化
 
             }
@@ -7418,7 +7426,7 @@
         // Mouse Click Event
         $buttunElem.click(function(){
             if(!($buttunElem.prop("disabled")) && !clicked){ //ボタンが有効でまだclickしていない場合
-                appendHistory(bufTotalReport);
+                historyManager.appendHistory(bufTotalReport);
                 clicked = true;
             }
         });
@@ -7428,7 +7436,7 @@
             if(!($buttunElem.prop("disabled"))){ //ボタンが有効の場合
                 if(!clicked){ //クリックしなかった場合
                         
-                    rollbackTransaction(bufTotalReport); //元に戻す
+                    historyManager.applyPrevioursObj(bufTotalReport); //元に戻す
                     callbackWhenEventDone();         
                 }
                 bufTotalReport = null;
