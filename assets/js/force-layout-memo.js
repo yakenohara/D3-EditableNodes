@@ -18,7 +18,8 @@
         highlightNodesSourceAndTarget: "l",  //Highlight source and target node(s)
         brushSelecting: "b", // selecting node(s) by brush
         connectDatas: "c", //conect nodes
-        undo: "ctrl+z" //undo
+        undo: "ctrl+z", //undo
+        redo: "ctrl+y" //redo
     };
 
     //外部コンポーネントパス
@@ -1193,12 +1194,17 @@
         
         if(nowTyping){return;} //<textarea>の編集中はハジく
 
-        //todo history control
-        historyManager.traceHistory(-1);       
+        historyManager.traceHistory(-1);
         
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
 
-        console.log(combo);
+    Mousetrap.bind(keySettings.redo, function(e, combo){
+        
+        if(nowTyping){return;} //<textarea>の編集中はハジく
 
+        historyManager.traceHistory(1);
+        
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
@@ -5322,8 +5328,10 @@
     function clsfnc_historyManager(){
 
         var pointingIndexOfHistory = -1;      //historyのどのindexが選択されているか
-        var animating = false; //アニメーション中判定用フラグ
         var previewedIndex = -1; //preview している history の index no(-1 はpreview していない事を表す)
+
+        var $slideDowningElem = null;
+        var animating = false; //アニメーション中判定用フラグ
 
         var listenerInvokedOn = -1;
         var mouseEnterdTime = 0;
@@ -5352,54 +5360,27 @@
             var $3historyMessageElem = $3transactionHistoryElement.append("div")
                 .classed("transaction", true)
                 .classed(className_nodeIsSelected, true)
-                .style("display", "none") // <- 表示用アニメーションの為に、一旦非表示にする
                 .attr("data-history_index", pointingIndexOfHistory.toString());
     
             $3historyMessageElem.append("small")
                 .style("font-size", "small")
                 .text(toSaveTransactionObj.message);
             
-            $($3historyMessageElem.node()).slideDown(100); // <- 表示用アニメーション
-            var maxHeight = window.getComputedStyle($transactionHistoryElement.get(0)).maxHeight;
-            if(maxHeight != 'none'){ //maxHeightが定義されている
-                maxHeight = parseFloat(maxHeight);
-                if(maxHeight < $transactionHistoryElement.get(0).scrollHeight){ //historyがmax-heightより大きい
-                    animating = true; //アニメーションフラグON
-                    $transactionHistoryElement.animate(
-                        {
-                            scrollTop:$transactionHistoryElement.get(0).scrollHeight
-                        },{
-                            complete:function(){
-                                animating = false;  //アニメーションフラグOFF
-                            }
-                        }
-                    ); //最下部にスクロール
-                }
-            }
-            
-    
             var $historyMessageElem  = $($3historyMessageElem.node());
-    
+
             //transactionに対するMouseEnterイベント
             $historyMessageElem.mouseenter(function(){
                 var invokedElem = this;
-
-                // console.log("mouseenter:" + $(invokedElem).attr("data-history_index"));
-                
                 checkInit(invokedElem);
                 mouseEnterdTime++;
             });
 
             $historyMessageElem.mousemove(function(){
                 var invokedElem = this;
-                
-                // console.log("mousemove:" + $(this).attr("data-history_index"));
-                
                 checkInit(this);
 
-                //mouseEnterの後 かつ、 アニメーション中でないと、カウントアップしない
                 if(mouseEnterdTime > 0 && (!animating)){
-                    mouseMovedTime++;
+                    mouseMovedTime++; //mouseEnterの後 かつ、 アニメーション中でないと、カウントアップしない
                 }
                 
                 if(mouseMovedTime == 1){ //最初のmouse move event の場合
@@ -5410,9 +5391,6 @@
             //transactionに対するクリックイベント
             $historyMessageElem.on("click",function(){
                 var invokedElem = this;
-                
-                // console.log("click:" + $(invokedElem).attr("data-history_index"));
-
                 checkInit(invokedElem);
 
                 if(!animating){ //アニメーション中はカウントアップしない
@@ -5426,6 +5404,7 @@
 
                         if(invokedIndex != pointingIndexOfHistory){ //選択済みの history ではない場合
                             replayHistory(pointingIndexOfHistory, invokedIndex); //click した history に移動
+                            scrollTo(invokedElem); //選択 history を表示範囲内に表示させる
                             pointingIndexOfHistory = invokedIndex;
                         }
                     
@@ -5437,12 +5416,20 @@
     
             //transactionに対するMouseLeaveイベント
             $historyMessageElem.mouseleave(function(){
-                var invokedElem = this;
-                
-                // console.log("mouseleave:" + $(invokedElem).attr("data-history_index"));
-
                 initHistoryUI();
             });
+
+            scrollTo($3historyMessageElem.node()); //選択 history を表示範囲内に表示させる
+
+            if($slideDowningElem !== null){ //前回 slideDown が終了していない場合
+                $slideDowningElem.finish(); // アニメーションを終了させ、アニメーション終了時の状態にする
+                $slideDowningElem = null;
+            }
+            $3historyMessageElem.style("display", "none") // <- 表示用アニメーションの為に、一旦非表示にする
+            $slideDowningElem = $historyMessageElem;
+            $historyMessageElem.slideDown(100,function(){
+                $slideDowningElem = null;
+            }); // <- 表示用アニメーション
 
             function checkInit(invokedElem){
                 var invokedIndex = parseInt($(invokedElem).attr("data-history_index"));
@@ -5470,7 +5457,6 @@
             var toThisIndex;
 
             if(pointingIndexOfHistory < 0){return;} //history が 1つもない
-
             if(incrOrDecrVal == 0){return;} //0 は除外
 
             //incrOrDecrValの有効範囲内チェック
@@ -5487,47 +5473,27 @@
             }
             
             cancelPreview(); //preview している history を cancel
-
             replayHistory(pointingIndexOfHistory, toThisIndex); //mouseenterしたhistoryをPreview
-
-            //todo 選択した history が表示範囲外にある場合に、
-            // 表示範囲内に入るように animate する
-
-            // animating = true;
-            // $transactionHistoryElement.animate(
-            //     {
-            //         scrollTop:0
-            //     },{
-            //         complete:function(){
-            //             animating = false;  //アニメーションフラグOFF
-            //         }
-            //     }
-            // );
-
+            scrollTo($transactionHistoryElement.children('.transaction[data-history_index="' + toThisIndex.toString() + '"]').get(0)); //選択 history を表示範囲内に表示させる
             pointingIndexOfHistory = toThisIndex; //選択 index の更新
 
         }
 
         function startPreview(specifiedElem){
 
-            // console.log("start preview");
-
             if(previewedIndex == -1){ //previewしているhistory が存在しない場合
 
                 var specifiedIndex = parseInt($(specifiedElem).attr("data-history_index"));
 
-                if(specifiedIndex == pointingIndexOfHistory){ //すでに選択済みの history の場合
-                    return; //previrewしない
+                if(specifiedIndex != pointingIndexOfHistory){ //すでに選択済みの history の場合
+                    replayHistory(pointingIndexOfHistory, specifiedIndex); //mouseenterしたhistoryをPreview
+                    previewedIndex = specifiedIndex;
                 }
-
-                replayHistory(pointingIndexOfHistory, specifiedIndex); //mouseenterしたhistoryをPreview
-                previewedIndex = specifiedIndex;
+                scrollTo(specifiedElem); //選択 history を表示範囲内に表示させる
             }
         }
 
         function confirmPreview(){
-
-            // console.log("confirmPreview");
 
             if(previewedIndex >= 0){ //preview している history が存在する場合
                 pointingIndexOfHistory = previewedIndex;
@@ -5537,13 +5503,59 @@
 
         function cancelPreview(){
 
-            // console.log("cancelPreview");
-
             if(previewedIndex >= 0){ //preview している history が存在する場合
                 
                 replayHistory(previewedIndex, pointingIndexOfHistory); //history[]内の選択indexへもどす
                 previewedIndex = -1; //preview mode の終了
 
+            }
+        }
+
+        function scrollTo(historyElem){
+            var maxHeight = window.getComputedStyle($transactionHistoryElement.get(0)).maxHeight;
+            var $historyElem = $(historyElem);
+            if(maxHeight != 'none'){ //maxHeightが定義されている
+                maxHeight = parseFloat(maxHeight);
+
+                var positionTop = $historyElem.position().top;
+                var animateTo = -1;
+
+                if(positionTop < 0){ //上方向に表示しきれていない場合
+                    animateTo = $transactionHistoryElement.scrollTop() + positionTop;
+
+                }else{
+                    var bottomMax = maxHeight;
+                    if($transactionHistoryElement.get(0).clientWidth < $transactionHistoryElement.get(0).scrollWidth ||
+                        $transactionHistoryElement.get(0).clientWidth < historyElem.scrollWidth){ //横スクロールバーが表示されている場合
+
+                        //todo keySettings.submitEditingTextTypeSVGNode event によって
+                        //横スクロールバーが最初に表示されるhistory 追加時に、1 node(s) appended が画面内に表示されない
+
+                        console.log("overflowed");
+                        bottomMax -= getWidthOfScrollbar($3motherElement.node());
+                    }
+
+                    if(bottomMax < (positionTop + $historyElem.outerHeight(true))){ //下方向に表示しきれていない場合
+                        animateTo = $transactionHistoryElement.scrollTop() + ((positionTop + $historyElem.outerHeight(true)) - bottomMax);
+                    }
+                }                
+
+                if(animateTo != -1){
+                    if(animating){ //前回の animation が終了していない場合
+                        $transactionHistoryElement.finish(); // アニメーションを終了させ、アニメーション終了時の状態にする
+                        animating = false;  //アニメーションフラグOFF
+                    }
+                    animating = true; //アニメーションフラグON
+                    $transactionHistoryElement.animate(
+                        {
+                            scrollTop:animateTo
+                        },{
+                            complete:function(){
+                                animating = false;  //アニメーションフラグOFF
+                            }
+                        }
+                    );
+                }
             }
         }
 
@@ -5608,9 +5620,9 @@
 
             $transactionHistoryElement.children('.transaction[data-history_index="' + endIndex.toString() + '"]')
                 .eq(0)
-                .addClass(className_nodeIsSelected)
-            ; //endindex の history を選択
-
+                .addClass(className_nodeIsSelected) //endindex の history を選択
+            ;
+                
             dataSelectionManager.recoverDataSelection(replayReport); // data 増減があった場合に、node(s) / link(s) 選択状態を合わせる
             
             if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
