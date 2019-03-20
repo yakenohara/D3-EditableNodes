@@ -5322,11 +5322,7 @@
     function clsfnc_historyManager(){
 
         var pointingIndexOfHistory = -1;      //historyのどのindexが選択されているか
-
         var animating = false; //アニメーション中判定用フラグ
-
-        var previewing = false;
-        var clicked = false;
         var previewedIndex = -1; //preview している history の index no(-1 はpreview していない事を表す)
 
         this.appendHistory = function(transactionObj){
@@ -5384,11 +5380,13 @@
     
             //transactionに対するMouseEnterイベント
             $historyMessageElem.mouseenter(function(){
+                console.log("mouseenter:" + $(this).attr("data-history_index"));
                 mouseEnterd = true;
                 
             });
 
             $historyMessageElem.mousemove(function(){
+                console.log("mousemove:" + $(this).attr("data-history_index"));
                 if(mouseEnterd && (!animating)){
                     clicked_ = false;
                     startPreview(this);
@@ -5398,6 +5396,7 @@
     
             //transactionに対するクリックイベント
             $historyMessageElem.on("click",function(){
+                console.log("click:" + $(this).attr("data-history_index"));
 
                 //todo preview しないで click した場合のハンドリング
 
@@ -5409,6 +5408,7 @@
     
             //transactionに対するMouseLeaveイベント
             $historyMessageElem.mouseleave(function(){
+                console.log("mouseleave:" + $(this).attr("data-history_index"));
                 if(!clicked_){ //クリックされていない場合
                     cancelPreview();
                 }
@@ -5488,29 +5488,36 @@
         function startPreview(specifiedElem){
 
             console.log("start preview");
+
+            if(previewedIndex == -1){
+
+                var specifiedIndex = parseInt($(specifiedElem).attr("data-history_index"));
+
+                if(specifiedIndex == pointingIndexOfHistory){ //すでに選択済みの history の場合
+                    return; //previrewしない
+                }
+
+                if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
+                    propertyEditorsManager.confirm(); //property editor内の値をロールバックしたNode状態に合わせる
+                }
+
+                $transactionHistoryElement.children('.transaction[data-history_index="' + pointingIndexOfHistory.toString() + '"]')
+                    .eq(0)
+                    .removeClass(className_nodeIsSelected); //history選択状態を解除
+                    specifiedElem.classList.add(className_nodeIsSelected); //mouseenterしたhistoryを選択
                 
-            var specifiedIndex = parseInt($(specifiedElem).attr("data-history_index"));
+                var replayReport = replayHistory(pointingIndexOfHistory, specifiedIndex); //mouseenterしたhistoryをPreview
 
-            if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
-                propertyEditorsManager.confirm(); //property editor内の値をロールバックしたNode状態に合わせる
+                if(typeof replayReport != 'undefined'){
+                    dataSelectionManager.recoverDataSelection(replayReport);
+                }
+
+                if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
+                    checkAdjustPropertyEditConsole();//property editor内の値をロールバックしたNode状態に合わせる
+                }
+
+                previewedIndex = specifiedIndex;
             }
-
-            $transactionHistoryElement.children('.transaction[data-history_index="' + pointingIndexOfHistory.toString() + '"]')
-                .eq(0)
-                .removeClass(className_nodeIsSelected); //history選択状態を解除
-                specifiedElem.classList.add(className_nodeIsSelected); //mouseenterしたhistoryを選択
-            
-            var replayReport = replayHistory(pointingIndexOfHistory, specifiedIndex); //mouseenterしたhistoryをPreview
-
-            if(typeof replayReport != 'undefined'){
-                dataSelectionManager.recoverDataSelection(replayReport);
-            }
-
-            if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
-                checkAdjustPropertyEditConsole();//property editor内の値をロールバックしたNode状態に合わせる
-            }
-
-            previewedIndex = specifiedIndex;
         }
 
         function confirmPreview(){
