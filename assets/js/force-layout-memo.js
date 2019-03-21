@@ -101,7 +101,7 @@
     var $propertyEditConsoleElement_node;    //(For Node) Property Edit Console (jQuery selection)
     var $propertyEditConsoleElement_link;    //(For Link) Property Edit Console (jQuery selection)
     var $3transactionHistoryElement;         //Transaction History (D3.js selection)
-    $transactionHistoryElement = null;          //Transaction History (jQuery selection) //todo localize
+    var $transactionHistoryElement = null;          //Transaction History (jQuery selection)
     var $3SVGDrawingAreaElement;             //描画用SVG領域 (D3.js selection)
     var $SVGDrawingAreaElement;              //描画用SVG領域 (jQuery selection)
     var $3svgNodesGroup;
@@ -5482,9 +5482,7 @@
         function startPreview(specifiedElem){
 
             if(previewedIndex == -1){ //previewしているhistory が存在しない場合
-
                 var specifiedIndex = parseInt($(specifiedElem).attr("data-history_index"));
-
                 if(specifiedIndex != pointingIndexOfHistory){ //すでに選択済みの history の場合
                     replayHistory(pointingIndexOfHistory, specifiedIndex); //mouseenterしたhistoryをPreview
                     previewedIndex = specifiedIndex;
@@ -5504,13 +5502,13 @@
         function cancelPreview(){
 
             if(previewedIndex >= 0){ //preview している history が存在する場合
-                
                 replayHistory(previewedIndex, pointingIndexOfHistory); //history[]内の選択indexへもどす
                 previewedIndex = -1; //preview mode の終了
-
             }
         }
 
+        // 指定 history element が表示範囲内からはみ出ている場合、
+        // 表示範囲内に収まるように scroll する
         function scrollTo(historyElem){
             var maxHeight = window.getComputedStyle($transactionHistoryElement.get(0)).maxHeight;
             var $historyElem = $(historyElem);
@@ -5525,14 +5523,17 @@
 
                 }else{
                     var bottomMax = maxHeight;
-                    if($transactionHistoryElement.get(0).clientWidth < $transactionHistoryElement.get(0).scrollWidth ||
-                        $transactionHistoryElement.get(0).clientWidth < historyElem.scrollWidth){ //横スクロールバーが表示されている場合
+                    
+                    //note
+                    // slidedown 中の history element が存在する場合は
+                    // その存在を考慮した scrollwidth を取得するため、finish() させておく必要がある
+                    if($slideDowningElem !== null){
+                        $slideDowningElem.finish();
+                        $slideDowningElem = null;
+                    }
 
-                        //todo keySettings.submitEditingTextTypeSVGNode event によって
-                        //横スクロールバーが最初に表示されるhistory 追加時に、1 node(s) appended が画面内に表示されない
-
-                        console.log("overflowed");
-                        bottomMax -= getWidthOfScrollbar($3motherElement.node());
+                    if($transactionHistoryElement.get(0).clientWidth < $transactionHistoryElement.get(0).scrollWidth){ //横スクロールバーが表示されている場合
+                        bottomMax -= getWidthOfScrollbar($3motherElement.node()); //スクロールバーの幅分を除く
                     }
 
                     if(bottomMax < (positionTop + $historyElem.outerHeight(true))){ //下方向に表示しきれていない場合
