@@ -98,6 +98,7 @@
     var $3motherElement; //全てのもと
     var $3propertyEditConsoleElement;        //Property Edit Console (D3.js selection)
     var $propertyEditConsoleElement;         //Property Edit Console (jQuery selection)
+    var isAnimatingPropertyEditConsoleElement = false;
     var $propertyEditConsoleElement_node;    //(For Node) Property Edit Console (jQuery selection)
     var $propertyEditConsoleElement_link;    //(For Link) Property Edit Console (jQuery selection)
     var $3transactionHistoryElement;         //Transaction History (D3.js selection)
@@ -6032,7 +6033,10 @@
             }
         }
 
-        $propertyEditConsoleElement.slideUp(100); //edit consoleの終了
+        isAnimatingPropertyEditConsoleElement = true;
+        $propertyEditConsoleElement.slideUp(100,function(){ //edit consoleの終了
+            isAnimatingPropertyEditConsoleElement = false;
+        });
 
         nowEditng = false; //編集モードの終了
     }
@@ -6185,7 +6189,10 @@
         if(editingNodeKeys.length > 0 || editingLinkKeys.length > 0){ //1つ以上の Node or Link を選択している場合
             //選択 Node(s) を元に PropertyEditConsole に反映
             adjustPropertyEditConsole();
-            $propertyEditConsoleElement.slideDown(100); //PropertyEditorを表示
+            isAnimatingPropertyEditConsoleElement = true;
+            $propertyEditConsoleElement.slideDown(100, function(){ //PropertyEditorを表示
+                isAnimatingPropertyEditConsoleElement = false;
+            });
             nowEditng = true; //`編集中`状態にする
         }
     }
@@ -6617,7 +6624,6 @@
 
             //<textarea>内のキータイプイベント
             $3textareaElem.node().oninput = function(){
-                console.log("oninput");
                 if(keyDownInvoked){
                     //SVGNodeへの反映&<textarea>調整
                     renderAndMergeBufTotalReport($3textareaElem.node().value);
@@ -7119,6 +7125,8 @@
         //各Elementに対するBehavor登録
         for(var itr = 0 ; itr < elemAndValArr.length ; itr++){
 
+            //todo mouse move 1回目のみpreview start する
+
             //Mouse Enter Event
             elemAndValArr[itr].$elem.mouseenter(elemAndValArr[itr],function(event){
                     
@@ -7525,9 +7533,12 @@
     function propertyEditorBehavor_setAsDefault($buttunElem, arrNameShouldBeStored, structureArr, callbackBeforePreview, callbackWhenEventDone){
         
         var bufTotalReport = null; //Rendering Report 用バッファ
-        var clicked = false;
         var toRenderObj;
         var messageTitle = "";
+
+        var mouseEnterdTime = 0;
+        var mouseMovedTime = 0;
+        var clickedTime = 0;
         
         //toRenderObjの作成
         if(typeof structureArr == 'undefined'){ //'undefined'の場合は全て削除する
@@ -7550,35 +7561,48 @@
         // Mouse Enter Event
         $buttunElem.mouseenter(function(){
             if(!($buttunElem.prop("disabled"))){ //ボタンが有効の場合
-                clicked = false;
-                callbackBeforePreview();
-                bufTotalReport = fireEvent_PropertyEditConsole_rerender(toRenderObj); 
-                callbackWhenEventDone();
-                bufTotalReport.type = 'change';
-                bufTotalReport.message = messageTitle;
-                $buttunElem.addClass(className_nodeIsSelected);
+                mouseEnterdTime++;
+            }
+        });
+
+        // Mouse Move event
+        $buttunElem.mousemove(function(){
+            if(!($buttunElem.prop("disabled"))){ //ボタンが有効の場合
+                
+                if(mouseEnterdTime > 0 && (!isAnimatingPropertyEditConsoleElement)){
+                    mouseMovedTime++; //mouseEnterの後 かつ、 アニメーション中でないと、カウントアップしない
+                }
+
+                if(mouseMovedTime == 1){ //最初のmouse move event の場合
+                    startPreview();
+                }
             }
         });
 
         // Mouse Click Event
         $buttunElem.click(function(){
-            if(!($buttunElem.prop("disabled")) && !clicked){ //ボタンが有効でまだclickしていない場合
-                historyManager.appendHistory(bufTotalReport);
-                clicked = true;
+
+            if(!($buttunElem.prop("disabled"))){ //ボタンが有効の場合
+
+                if(!isAnimatingPropertyEditConsoleElement){ //アニメーション中はカウントアップしない
+                    clickedTime++;
+                }
+                if(clickedTime == 1){
+                    if(mouseMovedTime == 0){ //mouse move せずに click した場合
+                        startPreview();
+                    }
+                    confirmPreview();
+                }
             }
         });
 
         // Mouse Leave Event
         $buttunElem.mouseleave(function(){
             if(!($buttunElem.prop("disabled"))){ //ボタンが有効の場合
-                if(!clicked){ //クリックしなかった場合
-                        
-                    historyManager.applyPrevioursObj(bufTotalReport); //元に戻す
-                    callbackWhenEventDone();         
-                }
-                bufTotalReport = null;
-                clicked = false;
-                $buttunElem.removeClass(className_nodeIsSelected);
+                cancelPreview();
+                mouseEnterdTime = 0;
+                mouseMovedTime = 0;
+                clickedTime = 0;
             }
         });
 
@@ -7590,6 +7614,40 @@
         //ボタンを有効にする
         this.enable = function(){
             $buttunElem.prop("disabled", false);
+        }
+
+        this.cancel = function(){
+            cancelPreview();
+            // mouseEnterdTime = 0; //<- enterd time はクリアしない
+            mouseMovedTime = 0;
+            clickedTime = 0;
+        }
+
+        function startPreview(){
+            if(bufTotalReport === null){ //preview中でない場合
+                callbackBeforePreview();
+                bufTotalReport = fireEvent_PropertyEditConsole_rerender(toRenderObj); 
+                callbackWhenEventDone();
+                bufTotalReport.type = 'change';
+                bufTotalReport.message = messageTitle;
+                $buttunElem.addClass(className_nodeIsSelected);
+            }
+        }
+
+        function cancelPreview(){
+            if(bufTotalReport !== null){ //preview中の場合
+                historyManager.applyPrevioursObj(bufTotalReport); //元に戻す
+                callbackWhenEventDone();
+                bufTotalReport = null;
+            }
+            $buttunElem.removeClass(className_nodeIsSelected);
+        }
+
+        function confirmPreview(){
+            if(bufTotalReport !== null){ //preview中の場合
+                historyManager.appendHistory(bufTotalReport);
+                bufTotalReport = null;
+            }
         }
     }
 
