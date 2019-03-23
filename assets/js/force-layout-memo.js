@@ -4,10 +4,9 @@
 
     //キー操作設定 `Mousetrap` event
     var keySettings = { 
-        editSVGNodes: "f2", //Node編集モードの開始
-        escapeEditor: "esc", // Property Editor の終了
-        submitEditingTextTypeSVGNode: "enter", //Node編集状態の確定
-        insertLF: "alt+enter", //textTypeのNode編集時に改行を挿入する
+        
+        // Selecting
+
         deleteNodes: "del", //Nodeの削除
         selectNodeRight: "right",
         selectNodeLeft: "left",
@@ -19,7 +18,23 @@
         brushSelecting: "b", // selecting node(s) by brush
         connectDatas: "c", //conect nodes
         undo: "ctrl+z", //undo
-        redo: "ctrl+y" //redo
+        redo: "ctrl+y", //redo
+
+        // Editing
+
+        editSVGNodes: "f2", //Node編集モードの開始
+        escapeEditor: "esc", // Property Editor の終了
+
+        // Especially for text content
+
+        submitEditingTextTypeSVGNode: "enter", //Node編集状態の確定
+        insertLF: "alt+enter", //textTypeのNode編集時に改行を挿入する
+        textAnchor_start:     "alt+l", //text align left
+        textAnchor_middle:    "alt+c", //text align center
+        textAnchor_end:       "alt+r", //text align right
+        textFontWeight_bold:  "alt+b", //bold
+        textFontStyle_italic: "alt+i", //italic
+        
     };
 
     //外部コンポーネントパス
@@ -1235,6 +1250,31 @@
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
+    Mousetrap.bind(keySettings.textAnchor_start, function(e, combo){
+        changeStyle('start', ['text', 'text_anchor'], 'datas');
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+    Mousetrap.bind(keySettings.textAnchor_middle, function(e, combo){
+        changeStyle('middle', ['text', 'text_anchor'], 'datas');
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+    Mousetrap.bind(keySettings.textAnchor_end, function(e, combo){
+        changeStyle('end', ['text', 'text_anchor'], 'datas');
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+    Mousetrap.bind(keySettings.textFontWeight_bold, function(e, combo){
+        changeStyle('bold', ['text', 'text_font_weight'], 'datas');
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+    Mousetrap.bind(keySettings.textFontStyle_italic, function(e, combo){
+        changeStyle('italic', ['text', 'text_font_style'], 'datas');
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
     function call_appendHighlight(){
         
         if((binCode_KeyPressing & (1 | 4)) > 0){ //source highlight 指定
@@ -1768,6 +1808,52 @@
         }
 
         return allTrue;
+    }
+
+    function changeStyle(useThisVal, structureArr, datasOrLinks){
+
+        //External Componentが未loadの場合はハジく
+        if(!(checkSucceededLoadOf_ExternalComponent())){return;}
+
+        var latestSelectedData = dataSelectionManager.getLatestSelectedData();
+
+        if(typeof latestSelectedData !== 'undefined'){ //選択対象Nodeが1つ以上存在する場合
+
+            var toRenderObj = makeNestedObj(useThisVal, structureArr);
+
+            if(nowEditng){ //編集中の場合
+                propertyEditorsManager.cancel(); //previewしている editor 状態を cancel
+            }
+
+            var totalReport = fireEvent_PropertyEditConsole_rerender(toRenderObj);
+            totalReport.type = 'change';
+
+            if(!totalReport.allNG){ //1つ以上適用成功の場合
+
+                //変更があったかどうか確認するループ
+                var changed = false;
+                for(var i = 0 ; i < totalReport.reportsArr[datasOrLinks].length ; i++){
+                    var oneDataRenderingReport = totalReport.reportsArr[datasOrLinks][i];
+
+                    var prevStyle = getValFromNestObj(structureArr, oneDataRenderingReport.PrevObj);
+                    var renderedStyle = getValFromNestObj(structureArr, oneDataRenderingReport.RenderedObj);
+
+                    if(prevStyle != renderedStyle){ //変更があった場合
+                        changed = true;
+                        break;
+                    }
+                }
+
+                if(changed){ //変更があった場合
+                    totalReport.message = structureArr.join("/") + ":" + useThisVal;
+                    historyManager.appendHistory(totalReport);
+                }
+
+                if(nowEditng){ //編集中の場合
+                    adjustPropertyEditConsole();
+                }
+            }
+        }
     }
 
     var $3NodeSelectingBrushGroup = null;
@@ -3549,6 +3635,8 @@
                     $3SVGnodeElem_text.append("tspan").text("");
 
                 }else{ //空文字ではない場合
+
+                    //todo 最終行が空文字の場合に、行が重複する
 
                     var lfSeparatedStrings = renderByThisObj.text.text_content.split(/\n/); //改行コードで分割
                     
@@ -7160,8 +7248,6 @@
 
         //各Elementに対するBehavor登録
         for(var itr = 0 ; itr < elemAndValArr.length ; itr++){
-
-            //todo mouse move 1回目のみpreview start する
 
             //Mouse Enter Event
             elemAndValArr[itr].$elem.mouseenter(elemAndValArr[itr],function(event){
