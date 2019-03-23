@@ -3636,8 +3636,6 @@
 
                 }else{ //空文字ではない場合
 
-                    //todo 最終行が空文字の場合に、行が重複する
-
                     var lfSeparatedStrings = renderByThisObj.text.text_content.split(/\n/); //改行コードで分割
                     
                     //1行おきにtspan要素として追加
@@ -3649,11 +3647,11 @@
                         //背景Shape更新の為にダミー文字を追加する
                         if(i == 0 && str == ""){ //最初の行が空文字
                             str = 'l'; //ダミーとして幅の狭い一文字を設定
-                            vacantStarted = true;
+                            vacantStarted = true; // <- todo node の move event 時に意味をなさなくなる
                         }
                         if(i == (lfSeparatedStrings.length - 1) && str == ""){ //最後の行が空文字
                             str = 'l'; //ダミーとして幅の狭い一文字を設定
-                            vacantEnded = true;
+                            vacantEnded = true; // <- todo node の move event 時に意味をなさなくなる
                         }
 
                         //行に対する表示位置調整
@@ -3706,8 +3704,9 @@
                         $3SVGnodeElem_text.attr(axis, renderByThisObj.coordinate[axis]);
 
                         //<tspan>要素に対するx座標指定
-                        $3SVGnodeElem_text.selectAll("tspan")
-                            .attr(axis, renderByThisObj.coordinate[axis]);
+                        if(axis == 'x'){
+                            $3SVGnodeElem_text.selectAll("tspan").attr(axis, renderByThisObj.coordinate[axis]);
+                        }
                         
                         if(prevAxisValStr !== null){
                             prevAxisValStr = parseFloat(prevAxisValStr);
@@ -3740,8 +3739,9 @@
                         $3SVGnodeElem_text.attr(axis, toApplyAxisValStr);
     
                         //<tspan>要素に対するx座標指定
-                        $3SVGnodeElem_text.selectAll("tspan")
-                            .attr(axis, toApplyAxisValStr);
+                        if(axis == 'x'){
+                            $3SVGnodeElem_text.selectAll("tspan").attr(axis, toApplyAxisValStr);
+                        }
                         
                         //applyCoordinateしていない場合のみ、PrevObjを更新
                         if(typeof reportObj.PrevObj.coordinate[axis] == 'undefined'){
@@ -5540,7 +5540,7 @@
                 $slideDowningElem.finish(); // アニメーションを終了させ、アニメーション終了時の状態にする
                 $slideDowningElem = null;
             }
-            $3historyMessageElem.style("display", "none") // <- 表示用アニメーションの為に、一旦非表示にする
+            $3historyMessageElem.style("display", "none"); // <- 表示用アニメーションの為に、一旦非表示にする
             $slideDowningElem = $historyMessageElem;
             $historyMessageElem.slideDown(100,function(){
                 $slideDowningElem = null;
@@ -7726,8 +7726,6 @@
 
     //
     // 各Property Editor で Default に戻すボタンの Behavor
-    // todo tabキーによってdefault ボタンにfocusし、スペースキーを押すと、
-    // TypeError: can't convert null to object になる
     //
     function propertyEditorBehavor_setAsDefault($buttunElem, arrNameShouldBeStored, structureArr, callbackBeforePreview, callbackWhenEventDone){
         
