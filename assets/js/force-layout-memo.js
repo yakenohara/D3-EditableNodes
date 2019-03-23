@@ -6931,11 +6931,13 @@
                 $expMsgElem.text(initExpMessage);
                 initExpMessage = null;
             }
+            propertyEditingBehavor_setAsdefault.cancel();
         }
 
         //編集を確定する
         this.confirm = function(){
             confirmBufTotalReport();
+            propertyEditingBehavor_setAsdefault.confirm();
         }
 
         //Buffer初期化
@@ -7074,11 +7076,13 @@
                 $expMsgElem.text(initExpMessage);
                 initExpMessage = null;
             }
+            propertyEditingBehavor_setAsdefault.cancel();
         }
 
         //編集を確定する
         this.confirm = function(){
             confirmBufTotalReport();
+            propertyEditingBehavor_setAsdefault.confirm();
         }
 
         //Buffer初期化
@@ -7109,11 +7113,17 @@
     //
     function propertyEditorBehavor_radioButtons(elemAndValArr, $defaultButtonElem, $expMsgElem, arrNameShouldBeStored, structureArr, callbackBeforePreview, callbackWhenEventDone){
 
-        var clicked = false;
         var beforeExpMessage = "";
-        var beforeVal = "";
+        var beforePreviewingVal = "";
+        var $previewingElement = null;
         var bufTotalReport = null; //Rendering Report 用バッファ
         var propertyEditingBehavor_setAsdefault;
+
+        var invokedStyle = "";
+        
+        var mouseEnterdTime = 0;
+        var mouseMovedTime = 0;
+        var clickedTime = 0;
 
         //Default化ボタンの登録
         propertyEditingBehavor_setAsdefault = new propertyEditorBehavor_setAsDefault($defaultButtonElem,
@@ -7129,45 +7139,27 @@
 
             //Mouse Enter Event
             elemAndValArr[itr].$elem.mouseenter(elemAndValArr[itr],function(event){
-                    
-                var enteredElem = this;
 
-                if(!($(enteredElem).prop("disabled"))){ //プロパティエディタが有効の場合
+                if(!($(this).prop("disabled"))){ //プロパティエディタが有効の場合
 
-                    callbackBeforePreview();
+                    checkInit(event.data);
+                    mouseEnterdTime++;
+                }
+            });
 
-                    var toRenderObj = makeNestedObj(event.data.useThisVal, structureArr);
+            //Mouse Move Event
+            elemAndValArr[itr].$elem.mousemove(elemAndValArr[itr],function(event){
 
-                    clicked = false;
-                    beforeExpMessage = $expMsgElem.text();
+                if(!($(this).prop("disabled"))){ //プロパティエディタが有効の場合
 
-                    bufTotalReport = fireEvent_PropertyEditConsole_rerender(toRenderObj);
-                    callbackWhenEventDone();
+                    checkInit(event.data);
 
-                    bufTotalReport.type = 'change';
-                    bufTotalReport.message = structureArr.join("/") + ":" + event.data.useThisVal;
-    
-                    //選択状態の解除ループ
-                    beforeVal = "";
-                    for(var i = 0 ; i < elemAndValArr.length ; i++){
-                        if(elemAndValArr[i].$elem.hasClass(className_nodeIsSelected)){ //選択状態の場合
-                            beforeVal = elemAndValArr[i].useThisVal;
-                        }
-                        elemAndValArr[i].$elem.removeClass(className_nodeIsSelected); //選択解除
+                    if(mouseEnterdTime > 0 && (!isAnimatingPropertyEditConsoleElement)){
+                        mouseMovedTime++; //mouseEnterの後 かつ、 アニメーション中でないと、カウントアップしない
                     }
-                    enteredElem.classList.add(className_nodeIsSelected); //Mouse Enter された要素を選択状態にする
 
-                    if(event.data.useThisVal === null){ //削除指定の場合
-                        $expMsgElem.text("");
-
-                    }else{
-                        if(bufTotalReport.allOK){ //適用全部成功の場合
-                            $expMsgElem.text("explicit");
-                        
-                        }else{ //適用一部失敗の場合
-                            $expMsgElem.text("explicit (some part)");
-                            //note ロールバックは不要
-                        }
+                    if(mouseMovedTime == 1){ //最初のmouse move event の場合
+                        startPreview(event.data);
                     }
                 }
             });
@@ -7175,39 +7167,28 @@
             // Mouse Click Event
             elemAndValArr[itr].$elem.click(elemAndValArr[itr],function(event){
                 
-                var clickedElem = this;
+                if(!($(this).prop("disabled"))){ //プロパティエディタが有効の場合
 
-                if(!($(clickedElem).prop("disabled")) && !clicked){ //プロパティエディタが有効 && クリックしていない場合
-                    historyManager.appendHistory(bufTotalReport);
-                    clicked = true;
+                    checkInit(event.data);
+
+                    if(!isAnimatingPropertyEditConsoleElement){ //アニメーション中はカウントアップしない
+                        clickedTime++;
+                    }
+
+                    if(clickedTime == 1){
+                        if(mouseMovedTime == 0){ //mouse move せずに click した場合
+                            //todo
+                        }
+                        confirmPreview(this, event);
+                    }
                 }
             });
             
             // Mouse Leave Event
             elemAndValArr[itr].$elem.mouseleave(elemAndValArr[itr],function(event){
-                
-                var leavedElem = this;
 
-                if(!($(leavedElem).prop("disabled"))){ //プロパティエディタが有効の場合
-                    
-                    if(!clicked){ //クリックしなかった場合
-                        
-                        historyManager.applyPrevioursObj(bufTotalReport); //元に戻す
-                        callbackWhenEventDone();
-                        $expMsgElem.text(beforeExpMessage);
-                        leavedElem.classList.remove(className_nodeIsSelected);
-                        if(beforeVal != ""){
-                            var $toSelectElem = get$elemByVal(beforeVal); //property editor要素を取得
-                            if(typeof $toSelectElem != 'undefined'){ //選択対象要素がある場合
-                                $toSelectElem.addClass(className_nodeIsSelected); //選択状態にする
-                            }
-                        }                    
-                    }
-
-                    bufTotalReport = null;
-                    beforeExpMessage = "";
-                    clicked = false;
-
+                if(!($(this).prop("disabled"))){ //プロパティエディタが有効の場合
+                    initUI();
                 }
             });
         }
@@ -7267,11 +7248,113 @@
         }
 
         this.cancel = function(){
-            //nothing to do
+            cancelPreview();
+            // mouseEnterdTime = 0; //<- enterd time はクリアしない
+            mouseMovedTime = 0;
+            clickedTime = 0;
+            
+            propertyEditingBehavor_setAsdefault.cancel();
         }
 
         this.confirm = function(){
-            //nothing to do
+            confirmPreview();
+            propertyEditingBehavor_setAsdefault.confirm();
+        }
+
+        function checkInit(invokedElemAndValObj){
+            if(invokedElemAndValObj.useThisVal != invokedStyle){
+                initUI();
+                invokedStyle = invokedElemAndValObj.useThisVal;
+            }
+        }
+
+        function initUI(){
+            cancelPreview();
+            mouseEnterdTime = 0;
+            mouseMovedTime = 0;
+            clickedTime = 0;
+        }
+
+        function startPreview(elemAndValObj){
+
+            if(bufTotalReport === null){ //preview していない場合
+
+                //選択済み style の算出
+                var valAlreadySelected = "";
+                for(var i = 0 ; i < elemAndValArr.length ; i++){
+                    if(elemAndValArr[i].$elem.hasClass(className_nodeIsSelected)){ //選択状態の場合
+                        valAlreadySelected = elemAndValArr[i].useThisVal;
+                        break;
+                    }
+                }
+
+                if(valAlreadySelected != elemAndValObj.useThisVal){ //選択済み style と異なる style を指定されている場合
+                    
+                    callbackBeforePreview();
+
+                    var toRenderObj = makeNestedObj(elemAndValObj.useThisVal, structureArr);
+
+                    beforeExpMessage = $expMsgElem.text();
+                    bufTotalReport = fireEvent_PropertyEditConsole_rerender(toRenderObj);
+
+                    callbackWhenEventDone();
+
+                    bufTotalReport.type = 'change';
+                    bufTotalReport.message = structureArr.join("/") + ":" + elemAndValObj.useThisVal;
+
+                    //対応 element を選択状態にする
+                    beforePreviewingVal = valAlreadySelected; //何も選択されていなかった場合は、""が格納される
+                    $previewingElement = elemAndValObj.$elem;
+                    for(var i = 0 ; i < elemAndValArr.length ; i++){ // 対応 element 以外は非選択にする
+                        elemAndValArr[i].$elem.removeClass(className_nodeIsSelected); //選択解除
+                    }
+                    elemAndValObj.$elem.addClass(className_nodeIsSelected); //対応 element を選択状態にする
+
+                    if(elemAndValObj.useThisVal === null){ //削除指定の場合
+                        $expMsgElem.text("");
+
+                    }else{
+                        if(bufTotalReport.allOK){ //適用全部成功の場合
+                            $expMsgElem.text("explicit");
+                        
+                        }else{ //適用一部失敗の場合
+                            $expMsgElem.text("explicit (some part)");
+                            //note ロールバックは不要
+                        }
+                    }
+                }
+            }
+        }
+
+        function confirmPreview(){
+
+            if(bufTotalReport !== null){ //previewしている場合
+                historyManager.appendHistory(bufTotalReport);
+                bufTotalReport = null;
+            }
+        }
+
+        function cancelPreview(){
+            
+            if(bufTotalReport !== null){ //previewしている場合
+                
+                historyManager.applyPrevioursObj(bufTotalReport); //元に戻す
+                callbackWhenEventDone();
+                
+                $previewingElement.removeClass(className_nodeIsSelected); //選択解除
+
+                //Preview 開始前の時の選択済み要素を選択し直す
+                if(beforePreviewingVal != ""){
+                    var $toSelectElem = get$elemByVal(beforePreviewingVal); //property editor要素を取得
+                    if(typeof $toSelectElem != 'undefined'){ //選択対象要素がある場合
+                        $toSelectElem.addClass(className_nodeIsSelected); //選択状態にする
+                    }
+                }
+
+                $expMsgElem.text(beforeExpMessage);
+                
+                bufTotalReport = null;
+            }
         }
 
         function get$elemByVal(val){
@@ -7443,6 +7526,8 @@
             }else{ //colorpicker が非表示だった場合
                 clearBuf();
             }
+
+            propertyEditingBehavor_setAsdefault.cancel();
         }
 
         //編集を確定する
@@ -7454,6 +7539,8 @@
                 $pickerElem.spectrum("hide"); //colorpickerをcancelする
                 
             }
+
+            propertyEditingBehavor_setAsdefault.confirm();
         }
 
         //spectrum (color picker) が表示状態かどうかを返す
@@ -7621,6 +7708,10 @@
             // mouseEnterdTime = 0; //<- enterd time はクリアしない
             mouseMovedTime = 0;
             clickedTime = 0;
+        }
+
+        this.confirm = function(){
+            confirmPreview();
         }
 
         function startPreview(){
