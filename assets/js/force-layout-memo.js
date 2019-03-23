@@ -478,11 +478,14 @@
         }
 
         // Property Editor が編集中の場合、編集状態を確定させる
-        this.confirm = function(){
-            confirmPropertyEditors();
+        this.cancel = function(){
+            cancelPropertyEditors();
+            cancelPropertyEditorsLink();
         }
 
-        this.confirmLink = function(){
+        // Property Editor が編集中の場合、編集状態を確定させる
+        this.confirm = function(){
+            confirmPropertyEditors();
             confirmPropertyEditorsLink();
         }
 
@@ -581,6 +584,29 @@
                 propertyEditingBehavor_line_marker_end.adjustToStyleObj(computedStyleObj, explicitnessObj);
                 propertyEditingBehavor_line_stroke_dasharray.adjustToStyleObj(computedStyleObj, explicitnessObj);
             }
+        }
+
+        function cancelPropertyEditors(){
+            // propertyEditingBehavor_text_text_content.cancel(); //<- APIを用意していない
+            propertyEditingBehavor_text_text_anchor.cancel();
+            propertyEditingBehavor_text_font_family.cancel();
+            propertyEditingBehavor_text_font_size.cancel();
+            propertyEditingBehavor_text_text_fill.cancel();
+            propertyEditingBehavor_text_text_font_weight.cancel();
+            propertyEditingBehavor_text_text_font_style.cancel();
+            propertyEditingBehavor_text_text_decoration.cancel();
+            propertyEditingBehavor_text_frame_shape.cancel();
+            propertyEditingBehavor_frame_stroke.cancel();
+            propertyEditingBehavor_frame_stroke_width.cancel();
+            propertyEditingBehavor_frame_stroke_dasharray.cancel();
+            propertyEditingBehavor_frame_fill.cancel();
+        }
+
+        function cancelPropertyEditorsLink(){
+            propertyEditingBehavor_line_stroke.cancel();
+            propertyEditingBehavor_line_stroke_width.cancel();
+            propertyEditingBehavor_line_marker_end.cancel();
+            propertyEditingBehavor_line_stroke_dasharray.cancel();
         }
         
         function confirmPropertyEditors(){
@@ -5588,8 +5614,7 @@
             }
 
             if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
-                //todo previewしている editor 状態を cancel
-                //propertyEditorsManager.cancel(); //previewしている editor 状態を cancel
+                propertyEditorsManager.cancel(); //previewしている editor 状態を cancel
             }
             
             $transactionHistoryElement.children('.transaction[data-history_index="' + startIndex.toString() + '"]')
@@ -6791,6 +6816,7 @@
         }
 
         function exitEditors(){
+            comfirmBufTotalReport(); //Bufferの確定
             for(var i = 0 ; i < editingDataArr.length ; i++){
                 editingDataArr[i].bindedData.$3bindedSVGElement.select("text").style("visibility", null); //表示状態に戻す
                 editingDataArr[i].$3textareaElem.remove(); //<textarea>要素を削除する
@@ -7177,9 +7203,9 @@
 
                     if(clickedTime == 1){
                         if(mouseMovedTime == 0){ //mouse move せずに click した場合
-                            //todo
+                            startPreview(event.data);
                         }
-                        confirmPreview(this, event);
+                        confirmPreview();
                     }
                 }
             });
