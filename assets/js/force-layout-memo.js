@@ -7764,6 +7764,13 @@
             }
         });
 
+        // tab key で enter した場合
+        $buttunElem.get(0).onfocus = function(){
+            if(!($buttunElem.prop("disabled"))){ //ボタンが有効の場合
+                startPreview();
+            }
+        }
+
         // Mouse Move event
         $buttunElem.mousemove(function(){
             if(!($buttunElem.prop("disabled"))){ //ボタンが有効の場合
@@ -7804,6 +7811,16 @@
                 clickedTime = 0;
             }
         });
+
+        // tab key で leave した場合
+        $buttunElem.get(0).onblur = function(){
+            if(!($buttunElem.prop("disabled"))){ //ボタンが有効の場合
+                cancelPreview();
+                // mouseEnterdTime = 0; //<- enterd time はクリアしない
+                mouseMovedTime = 0;
+                clickedTime = 0;
+            }
+        }
 
         //ボタンを無効にする
         this.disable = function(){
