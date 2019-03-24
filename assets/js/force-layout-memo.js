@@ -6146,6 +6146,10 @@
             }
         }
 
+        if(isAnimatingPropertyEditConsoleElement){
+            $propertyEditConsoleElement.finish();
+            isAnimatingPropertyEditConsoleElement = false;
+        }
         isAnimatingPropertyEditConsoleElement = true;
         $propertyEditConsoleElement.slideUp(100,function(){ //edit consoleの終了
             isAnimatingPropertyEditConsoleElement = false;
@@ -6302,6 +6306,11 @@
         if(editingNodeKeys.length > 0 || editingLinkKeys.length > 0){ //1つ以上の Node or Link を選択している場合
             //選択 Node(s) を元に PropertyEditConsole に反映
             adjustPropertyEditConsole();
+            
+            if(isAnimatingPropertyEditConsoleElement){
+                $propertyEditConsoleElement.finish();
+                isAnimatingPropertyEditConsoleElement = false;
+            }
             isAnimatingPropertyEditConsoleElement = true;
             $propertyEditConsoleElement.slideDown(100, function(){ //PropertyEditorを表示
                 isAnimatingPropertyEditConsoleElement = false;
