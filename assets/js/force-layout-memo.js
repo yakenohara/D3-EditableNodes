@@ -113,6 +113,7 @@
     var $3motherElement; //全てのもと
     var $3propertyEditConsoleElement;        //Property Edit Console (D3.js selection)
     var $propertyEditConsoleElement;         //Property Edit Console (jQuery selection)
+    var UIisEnable = false;
     var isAnimatingPropertyEditConsoleElement = false;
     var $propertyEditConsoleElement_node;    //(For Node) Property Edit Console (jQuery selection)
     var $propertyEditConsoleElement_link;    //(For Link) Property Edit Console (jQuery selection)
@@ -802,6 +803,27 @@
     $SVGDrawingAreaElement.get(0).addEventListener('dragleave', function(e){
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
+
+    // <mouse イベントを発生させた部分が、範囲内部分かどうかを判定する>-----------
+    $(document).on('click', function(e) {
+        checkUIisEnable(e);
+
+    });
+    $(document).on("mousedown", function(e){
+        checkUIisEnable(e);
+
+    });
+    function checkUIisEnable(e){
+        var closestDoms = $(e.target).closest('#' + idName_superElement);
+
+        if(closestDoms.length) {
+            UIisEnable = true;
+        
+        }else{ // ターゲット要素をクリックした時
+            UIisEnable = false;
+        }
+    }
+    // ----------</mouse イベントを発生させた部分が、範囲内部分かどうかを判定する>
     
     // Node以外に対する click event
     $SVGDrawingAreaElement.on('click', function(e){
@@ -1043,7 +1065,7 @@
         }
     );
 
-    document.onkeydown = function(e){
+    $(document).on("keydown", function(e){
         // console.log(e);
 
         switch(e.keyCode){
@@ -1057,14 +1079,14 @@
             default:
             break;
         }
-    }
+    });
 
     var returnThisOnContextMenu = true;
-    document.oncontextmenu = function(){
+    $(document).on("contextmenu", function(){
         var tmp = returnThisOnContextMenu;
         returnThisOnContextMenu = true;
         return tmp;
-    }
+    });
 
     function applicationKeyDwon(e){
 
