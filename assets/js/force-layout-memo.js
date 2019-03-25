@@ -1,4 +1,4 @@
-(function () {
+function forceLayoutMemo(initializerObj){
 
     /* <settings>------------------------------------------------------------------------------------------------ */
 
@@ -37,7 +37,7 @@
         
     };
 
-    //外部コンポーネントパス
+    //外部コンポーネントパス(default)
     var url_externalComponent = "assets/components/force-layout-memo_compo.html";
 
     //ファイル出力(Export)時に設定するファイル名
@@ -54,9 +54,6 @@
     
     //<text>要素内での行間 note:単位は[em]
     var valOfLineHightInText = 1.3;
-
-    //全ての親となるDOM要素のID名
-    var idName_superElement = "force-layout-memo";
 
     //Property Edit Console要素のclass名
     var className_propertyEditConsoleElement = "propertyEditConsole";
@@ -83,6 +80,8 @@
     
     /* <Hard cords>---------------------------------------------------------------------------------------------- */
 
+    var classNameInMotherElem = "force-layout-memo";
+    
     var forSpectrumRegisteringOptionObj = {
         showAlpha: true,
         allowEmpty: false,
@@ -97,13 +96,15 @@
     var linkDistance = 100; //linkの長さ
 
     /* ---------------------------------------------------------------------------------------------</Hard cords> */
+
+    //全ての親となるDOM要素のID名
+    var idName_superElement = "";
     
-    //todo localize
-    dataset = { //Bind用Dataset
+    var dataset = { //Bind用Dataset
         datas:[],
         links:[]
     };
-    transactionHistory = [];  //history
+    var transactionHistory = [];  //history
 
     var nowEditng = false;　      //Property Edit Console が起動中かどうか
     var nowTyping = false;        //<textarea>に focus が当たっている間 true にする()
@@ -141,6 +142,50 @@
     var targetHilighted = false;
     var highlightingStartPointKey = null;
 
+    // <check initializerObj>------------------------------------------------
+
+    var tmpType = typeof initializerObj;
+    if(tmpType == 'undefined'){
+        console.error("Required argument `initializerObj` is undefined");
+        return;
+    }
+    if(tmpType != 'object'){
+        console.error("Required argument `initializerObj` is defined as `" + tmpType + "` type. Required type is `object`.");
+        return;
+    }
+    
+    var tmpType = typeof initializerObj.elemIdNameToBind;
+    if(tmpType == 'undefined'){
+        console.error("Required argument `initializerObj.elemIdNameToBind` is undefined");
+        return;
+    }
+    if(tmpType != 'string'){
+        console.error("Required argument `initializerObj.elemIdNameToBind` is defined as `" + tmpType + "` type. Required type is `string`.");
+        return;
+    }
+    var tmpElem = document.getElementById(initializerObj.elemIdNameToBind);
+    if(tmpElem === null){
+        console.error("Specified argment initializerObj.elemIdNameToBind:`" + initializerObj.elemIdNameToBind + "` is not exist.");
+        return;
+    }
+    if(tmpElem.classList.contains(classNameInMotherElem)){ //すでに bind 済みだった場合
+        console.error("Specified element (specified by argment initializerObj.elemIdNameToBind:`" + initializerObj.elemIdNameToBind + "`) has already class name `" + classNameInMotherElem + "`.");
+        return;
+    }
+    idName_superElement = initializerObj.elemIdNameToBind;
+
+    var tmpType = typeof initializerObj.componentPath;
+    if(tmpType != 'undefined'){
+        if(tmpType != 'string'){
+            console.error("Specified argument `initializerObj.componentPath` is defined as `" + tmpType + "` type. Required type is `string`.");
+            return;
+        }
+        url_externalComponent = initializerObj.componentPath;
+    }
+    
+    // -----------------------------------------------</check initializerObj>
+
+    var mousetrapInstance = new Mousetrap();
     var dataSelectionManager = new clsfnc_dataSelectionManager();
     var historyManager = new clsfnc_historyManager();
 
@@ -653,6 +698,7 @@
 
     //DOM構築
     $3motherElement = d3.select("#" + idName_superElement) //全てのもと
+        .classed(classNameInMotherElem, true)
         .style("font-size", "0")
         .style("overflow", "hidden")
         .style("position", "relative");
@@ -1155,7 +1201,7 @@
     // Mousetrap がイベントを取得できないから。(特にie以外のブラウザ)
     
     // Nodeに対する複数編集イベント
-    Mousetrap.bind(keySettings.editSVGNodes, function(e){
+    mousetrapInstance.bind(keySettings.editSVGNodes, function(e){
 
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
 
@@ -1164,7 +1210,7 @@
     });
 
     // Node編集機能の終了
-    Mousetrap.bind(keySettings.escapeEditor, function(e, combo){
+    mousetrapInstance.bind(keySettings.escapeEditor, function(e, combo){
 
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
 
@@ -1175,7 +1221,7 @@
     });
 
     // Nodeに対する削除イベント
-    Mousetrap.bind(keySettings.deleteNodes, function(e){
+    mousetrapInstance.bind(keySettings.deleteNodes, function(e){
 
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
 
@@ -1195,28 +1241,28 @@
     });
 
     //arrow key による node 選択イベント
-    Mousetrap.bind(keySettings.selectNodeRight, function(e, combo){
+    mousetrapInstance.bind(keySettings.selectNodeRight, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         // console.log(">");
         call_getColsestData("right_an90");
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
-    Mousetrap.bind(keySettings.selectNodeLeft, function(e, combo){
+    mousetrapInstance.bind(keySettings.selectNodeLeft, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         // console.log("<");
         call_getColsestData("left_an90");
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
-    Mousetrap.bind(keySettings.selectNodeAbove, function(e, combo){
+    mousetrapInstance.bind(keySettings.selectNodeAbove, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         // console.log("^");
         call_getColsestData("above_an90");
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
-    Mousetrap.bind(keySettings.selectNodeBelow, function(e, combo){
+    mousetrapInstance.bind(keySettings.selectNodeBelow, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         // console.log("v");
         call_getColsestData("below_an90");
@@ -1227,68 +1273,68 @@
     //highlight, brush, connect を同時押しされた時のハンドリング
 
     // Node, Link に対する Source, Target highlighting イベント
-    Mousetrap.bind(keySettings.highlightNodesSource, function(e, combo){
+    mousetrapInstance.bind(keySettings.highlightNodesSource, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         binCode_KeyPressing |= 1;
         call_appendHighlight();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     }, 'keydown');
     
-    Mousetrap.bind(keySettings.highlightNodesSource, function(e, combo){
+    mousetrapInstance.bind(keySettings.highlightNodesSource, function(e, combo){
         binCode_KeyPressing &= (~1);
         call_removeHighlight();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     }, 'keyup');
 
-    Mousetrap.bind(keySettings.highlightNodesTarget, function(e, combo){
+    mousetrapInstance.bind(keySettings.highlightNodesTarget, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         binCode_KeyPressing |= 2;
         call_appendHighlight();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     }, 'keydown');
 
-    Mousetrap.bind(keySettings.highlightNodesTarget, function(e, combo){
+    mousetrapInstance.bind(keySettings.highlightNodesTarget, function(e, combo){
         binCode_KeyPressing &= (~2);
         call_removeHighlight();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     }, 'keyup');
 
-    Mousetrap.bind(keySettings.highlightNodesSourceAndTarget, function(e, combo){
+    mousetrapInstance.bind(keySettings.highlightNodesSourceAndTarget, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         binCode_KeyPressing |= 4;
         call_appendHighlight();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     }, 'keydown');
 
-    Mousetrap.bind(keySettings.highlightNodesSourceAndTarget, function(e, combo){
+    mousetrapInstance.bind(keySettings.highlightNodesSourceAndTarget, function(e, combo){
         binCode_KeyPressing &= (~4);
         call_removeHighlight();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     }, 'keyup');
 
-    Mousetrap.bind(keySettings.brushSelecting, function(e, combo){
+    mousetrapInstance.bind(keySettings.brushSelecting, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         startBrush();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     }, 'keydown');
 
-    Mousetrap.bind(keySettings.brushSelecting, function(e, combo){
+    mousetrapInstance.bind(keySettings.brushSelecting, function(e, combo){
         removeBrush();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     }, 'keyup');
 
-    Mousetrap.bind(keySettings.connectDatas, function(e, combo){
+    mousetrapInstance.bind(keySettings.connectDatas, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         checkStartConnect();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     }, 'keydown');
 
-    Mousetrap.bind(keySettings.connectDatas, function(e, combo){
+    mousetrapInstance.bind(keySettings.connectDatas, function(e, combo){
         removeConnect();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     }, 'keyup');
 
-    Mousetrap.bind(keySettings.undo, function(e, combo){
+    mousetrapInstance.bind(keySettings.undo, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         if(nowTyping){return;} //<textarea>の編集中はハジく
 
@@ -1297,7 +1343,7 @@
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
-    Mousetrap.bind(keySettings.redo, function(e, combo){
+    mousetrapInstance.bind(keySettings.redo, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         if(nowTyping){return;} //<textarea>の編集中はハジく
 
@@ -1306,31 +1352,31 @@
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
-    Mousetrap.bind(keySettings.textAnchor_start, function(e, combo){
+    mousetrapInstance.bind(keySettings.textAnchor_start, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         changeStyle('start', ['text', 'text_anchor'], 'datas');
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
-    Mousetrap.bind(keySettings.textAnchor_middle, function(e, combo){
+    mousetrapInstance.bind(keySettings.textAnchor_middle, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         changeStyle('middle', ['text', 'text_anchor'], 'datas');
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
-    Mousetrap.bind(keySettings.textAnchor_end, function(e, combo){
+    mousetrapInstance.bind(keySettings.textAnchor_end, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         changeStyle('end', ['text', 'text_anchor'], 'datas');
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
-    Mousetrap.bind(keySettings.textFontWeight_bold, function(e, combo){
+    mousetrapInstance.bind(keySettings.textFontWeight_bold, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         changeStyle('bold', ['text', 'text_font_weight'], 'datas');
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
-    Mousetrap.bind(keySettings.textFontStyle_italic, function(e, combo){
+    mousetrapInstance.bind(keySettings.textFontStyle_italic, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         changeStyle('italic', ['text', 'text_font_style'], 'datas');
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
@@ -8602,4 +8648,4 @@
         return stack.slice(1); // removes the html element
     }
 
-})();
+}

@@ -1,28 +1,23 @@
 /* <ユーザーが好みで変更する定義>------------------------------------------------------ */
-#force-layout-memo{
-    width: 100%;
-    height: 800px;
-}
-
-#force-layout-memo .SVGForNodesMapping{
+.force-layout-memo .SVGForNodesMapping{
     /* border: 1px solid black; */
     background-color: rgb(44, 44, 44);
 }
 
-#force-layout-memo .nodes .node .frame{
+.force-layout-memo .nodes .node .frame{
     stroke: rgb(0, 89, 255);
     stroke-width: 2px;
     fill: rgb(44, 44, 44);
 }
 
-#force-layout-memo .nodes .node .textContent{
+.force-layout-memo .nodes .node .textContent{
     font-family: arial, sans-serif;
     font-size: 11px;
     fill: rgb(255, 255, 255);
 
 }
 
-#force-layout-memo .links .link line{
+.force-layout-memo .links .link line{
     stroke-width: 2px;
     stroke: rgb(145, 87, 87);
 }
@@ -30,77 +25,77 @@
 /* todo */
 /* node, link を複数選択している状態でlighlight すると、highlight が有効にならない */
 
-#force-layout-memo .selectionLayers .selectionLayer.selected,
-#force-layout-memo .selectionLayers .selectionLayer.selected.highlight{
+.force-layout-memo .selectionLayers .selectionLayer.selected,
+.force-layout-memo .selectionLayers .selectionLayer.selected.highlight{
     fill: rgba(40, 207, 96, 0.644);
     stroke: rgba(40, 207, 96, 0.644);
 }
 
-#force-layout-memo .selectionLayers .selectionLayer.highlight{
+.force-layout-memo .selectionLayers .selectionLayer.highlight{
     fill: rgba(255, 29, 255, 0.938);
     stroke: rgba(255, 29, 255, 0.938);
 }
 
-#force-layout-memo .propertyEditConsole{
+.force-layout-memo .propertyEditConsole{
     background-color: rgb(167, 167, 167);
 }
 
 
-#force-layout-memo .propertyEditConsole .propertyEditor .selected{
+.force-layout-memo .propertyEditConsole .propertyEditor .selected{
     background-color: rgba(0, 89, 255, 0.548);
 }
 
-#force-layout-memo .propertyEditConsole .propertyEditor .SVGicon{
+.force-layout-memo .propertyEditConsole .propertyEditor .SVGicon{
     stroke:black;
 }
 
-#force-layout-memo .transactionHistory{
+.force-layout-memo .transactionHistory{
     background-color: rgb(160, 160, 160);
 }
 
-#force-layout-memo .transactionHistory .selected{
+.force-layout-memo .transactionHistory .selected{
     background-color: rgb(77, 74, 255);
 }
 
 /* -----------------------------------------------------</ユーザーが好みで変更する定義> */
 
 /* <構造定義>------------------------------------------------------ */
-#force-layout-memo .selectionLayers .selectionLayer
+.force-layout-memo .selectionLayers .selectionLayer
 {
     visibility: hidden;
 }
 
-#force-layout-memo .selectionLayers .selectionLayer.selected,
-#force-layout-memo .selectionLayers .selectionLayer.highlight{
+.force-layout-memo .selectionLayers .selectionLayer.selected,
+.force-layout-memo .selectionLayers .selectionLayer.highlight{
     visibility: visible;
 }
 
-#force-layout-memo .propertyEditConsole .description{
+.force-layout-memo .propertyEditConsole .description{
     font-size:medium;
     padding: 3px 5px;
 }
 
-#force-layout-memo .propertyEditConsole .propertyEditor{
+.force-layout-memo .propertyEditConsole .propertyEditor{
     padding: 0px 5px;
 }
 
 /* div要素リストを横並びにする為に設定する */
-#force-layout-memo .propertyEditConsole .propertyEditor.text_text_anchor,
-#force-layout-memo .propertyEditConsole .propertyEditor.text_frame_shape,
-#force-layout-memo .propertyEditConsole .propertyEditor.text_font_weight,
-#force-layout-memo .propertyEditConsole .propertyEditor.text_font_style{
+.force-layout-memo .propertyEditConsole .propertyEditor.text_text_anchor,
+.force-layout-memo .propertyEditConsole .propertyEditor.text_frame_shape,
+.force-layout-memo .propertyEditConsole .propertyEditor.text_font_weight,
+.force-layout-memo .propertyEditConsole .propertyEditor.text_font_style{
     font-size:0;
 }
 
-#force-layout-memo .propertyEditConsole .propertyEditor .textAnchorType,
-#force-layout-memo .propertyEditConsole .propertyEditor .frameShapeType,
-#force-layout-memo .propertyEditConsole .propertyEditor .arrowType{
+.force-layout-memo .propertyEditConsole .propertyEditor .textAnchorType,
+.force-layout-memo .propertyEditConsole .propertyEditor .frameShapeType,
+.force-layout-memo .propertyEditConsole .propertyEditor .arrowType{
     display: inline-block;
     padding: 2px;
     cursor: pointer;
 }
 
-#force-layout-memo .propertyEditConsole .propertyEditor .text_property{
+.force-layout-memo .propertyEditConsole .propertyEditor .text_property{
     vertical-align: middle;
 
     width:200px;
@@ -112,7 +107,7 @@
     padding:4px;
 }
 
-#force-layout-memo .propertyEditConsole .propertyEditor .number_property{
+.force-layout-memo .propertyEditConsole .propertyEditor .number_property{
     vertical-align: middle;
 
     width:50px;
@@ -124,20 +119,20 @@
     padding:4px;
 }
 
-#force-layout-memo .propertyEditConsole .propertyEditor .fontWeightType,
-#force-layout-memo .propertyEditConsole .propertyEditor .fontStyleType{
+.force-layout-memo .propertyEditConsole .propertyEditor .fontWeightType,
+.force-layout-memo .propertyEditConsole .propertyEditor .fontStyleType{
     display: inline-block;
     padding: 4px;
     cursor: pointer;
     font-size:15px;
 }
 
-#force-layout-memo .propertyEditConsole .propertyEditor .message.explicitness{
+.force-layout-memo .propertyEditConsole .propertyEditor .message.explicitness{
     font-size:small;
 }
 
 
-#force-layout-memo .propertyEditConsole .propertyEditor .pickedColorText{
+.force-layout-memo .propertyEditConsole .propertyEditor .pickedColorText{
     vertical-align: middle;
 
     width:150px;
@@ -149,20 +144,20 @@
     padding:4px;
 }
 
-#force-layout-memo .propertyEditConsole .propertyEditor.all{
+.force-layout-memo .propertyEditConsole .propertyEditor.all{
     padding: 10px 10px;
 }
 
-#force-layout-memo .propertyEditConsole .propertyEditor button{
+.force-layout-memo .propertyEditConsole .propertyEditor button{
     border-style: none;
 }
 
-#force-layout-memo .transactionHistory{
+.force-layout-memo .transactionHistory{
     width: 200px;
     max-height: 300px;
 }
 
-#force-layout-memo .transactionHistory .transaction{
+.force-layout-memo .transactionHistory .transaction{
     padding: 3px 5px;
     cursor: pointer;
 }
