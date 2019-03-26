@@ -16,7 +16,7 @@
 			}
 		</style>
 
-		<!-- <include dependencies>===================================================== -->
+		<!-- <include dependencies for force-layout-memo.js>=========================== -->
 
 		<!-- https://github.com/d3/d3 -->
 		<script src="assets/js/d3.v5.5.0.js"></script>
@@ -38,7 +38,7 @@
 		<script src="assets/js/jquery.contextMenu-2.7.1-jquery.ui.position.js"></script>
 		<link rel="stylesheet" href="assets/css/jquery.contextMenu-2.7.1.css" />
 
-		<!-- ====================================================</include dependencies> -->
+		<!-- ==========================</include dependencies for force-layout-memo.js> -->
 
 		<link rel="stylesheet" href="assets/css/force-layout-memo.css">
 		<script src="assets/js/force-layout-memo.js"></script>
@@ -60,6 +60,7 @@
 				elemIdNameToBind:"force-memo1",
 				// componentPath:"assets/js/force-layout-memo_compo.html"
 			});
+			memo1.loadFile("tester files/1 basics/4 nodes, 3 links.json");
 		</script>
 		<p>document after</p>
 	</body>

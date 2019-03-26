@@ -76,6 +76,9 @@ function forceLayoutMemo(initializerObj){
     //Clickableな要素が選択状態である事を表すclass名
     var className_nodeIsSelected = "selected";
 
+    //history の1つめのメッセージ
+    var firstHistoryMessage = "New";
+
     /* -----------------------------------------------------------------------------------------------</settings> */
     
     /* <Hard cords>---------------------------------------------------------------------------------------------- */
@@ -141,6 +144,31 @@ function forceLayoutMemo(initializerObj){
     var sourceHilighted = false;
     var targetHilighted = false;
     var highlightingStartPointKey = null;
+
+    this.loadFile = function(filePath){
+        
+        var xhr = new XMLHttpRequest();
+		xhr.open('GET', filePath, true);
+		xhr.responseType = 'text';
+		xhr.onloadend = function(e){
+
+            if (xhr.readyState === 4 && // 'DONE' の場合   https://developer.mozilla.org/ja/docs/Web/API/XMLHttpRequest/readyState
+                xhr.status === 200){    // '200 OK' の場合 https://developer.mozilla.org/ja/docs/Web/HTTP/Status
+
+                var errmsg = appendNodesFromText(xhr.response, true);
+                if(typeof errmsg != 'undefined'){
+                    console.warn("Following error was occurred while loading `" + filePath + "`. This file will be ignored.");
+                    console.warn(errmsg);
+                }
+
+                
+            }else{
+                console.error('Cannot access to Specified file `' + filePath + "`");
+            }
+        };
+        xhr.send();
+
+    }
 
     // <check initializerObj>------------------------------------------------
 
@@ -815,24 +843,10 @@ function forceLayoutMemo(initializerObj){
 
                 var file_reader = new FileReader();
                 file_reader.onload = function(e){
-                    
-                    try{
-                        var parsedObj = JSON.parse(file_reader.result); //SyntaxErrorをthrowする可能性がある
-                        var appendingSafeObjArr = checkObjArr(parsedObj);
-
-                        if(appendingSafeObjArr.datas.length == 0 &&
-                            appendingSafeObjArr.links.length == 0){ //有効な要素が存在しなかった場合
-                            
-                            console.error("\`" + nm + "\` has no available object.");
-                        
-                        }else{
-                            var appendingTotalReport = appendNodes(appendingSafeObjArr);
-                            historyManager.appendHistory(appendingTotalReport);
-                        }
-                        
-
-                    }catch(e){ //SyntaxErrorの場合
-                        console.warn(e);
+                    var errmsg = appendNodesFromText(file_reader.result);
+                    if(typeof errmsg != 'undefined'){
+                        console.warn("Following error was occurred while loading `" + filePath + "`. This file will be ignored.");
+                        console.warn(errmsg);
                     }
                     readFilesSequential(indexOfFiles+1); //次のファイルを読み込み
                 };
@@ -2385,6 +2399,33 @@ function forceLayoutMemo(initializerObj){
         
 
     //--------------------------------------------------------------------</UI TRAP>
+
+    // 文字列をパースして成功したら appendNodes() をコールする
+    // エラーが発生した場合はconsoleに表示させずにエラー内容を返す
+    function appendNodesFromText(fromThisText, preload){
+
+        var errVal;
+
+        try{
+            var parsedObj = JSON.parse(fromThisText); //SyntaxErrorをthrowする可能性がある
+            var appendingSafeObjArr = checkObjArr(parsedObj);
+
+            if(appendingSafeObjArr.datas.length == 0 &&
+                appendingSafeObjArr.links.length == 0){ //有効な要素が存在しなかった場合
+                
+                errVal = "No available object defined";
+            
+            }else{
+                var appendingTotalReport = appendNodes(appendingSafeObjArr);
+                historyManager.appendHistory(appendingTotalReport, preload);
+            }
+
+        }catch(e){ //SyntaxErrorの場合
+            errVal = e;
+        }
+
+        return errVal;
+    }
 
     function checkObjArr(objArr){
 
@@ -5573,7 +5614,7 @@ function forceLayoutMemo(initializerObj){
                         datas:[],
                         links:[],
                     },
-                    message:"Start",
+                    message:firstHistoryMessage,
                 };
 
                 insertHistory(openReport);
