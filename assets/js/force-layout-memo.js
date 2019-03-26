@@ -5560,7 +5560,60 @@ function forceLayoutMemo(initializerObj){
         var mouseMovedTime = 0;
         var clickedTime = 0;
 
-        this.appendHistory = function(transactionObj){
+        this.appendHistory = function(transactionObj, preload){
+            
+            //最初のhistory 追加時は、ダミーの report を UI 上に配置する
+            if(pointingIndexOfHistory == -1 && (!preload)){
+
+                var openReport = {
+                    type:'change',
+                    allOK:true,
+                    allNG:true,
+                    reportsArr:{
+                        datas:[],
+                        links:[],
+                    },
+                    message:"Start",
+                };
+
+                insertHistory(openReport);
+            }
+
+            insertHistory(transactionObj);
+        }
+
+        this.applyPrevioursObj = function(renderingObj){
+            return rollbackOrReplayTransaction(renderingObj, "PrevObj");
+        }
+
+        this.traceHistory = function(incrOrDecrVal){
+
+            var toThisIndex;
+
+            if(pointingIndexOfHistory < 0){return;} //history が 1つもない
+            if(incrOrDecrVal == 0){return;} //0 は除外
+
+            //incrOrDecrValの有効範囲内チェック
+            toThisIndex = incrOrDecrVal + pointingIndexOfHistory;
+            if(toThisIndex < 0 ){ //transactionHistory[] の index no がマイナス値になってしまう場合
+                toThisIndex = 0;
+
+            }else if(transactionHistory.length <= toThisIndex){ //transactionHistory[] の最大 index値より大きい数になってしまう場合
+                toThisIndex = transactionHistory.length-1;
+            }
+
+            if(toThisIndex == pointingIndexOfHistory){ //history 移動が発生しない場合
+                return;
+            }
+            
+            cancelPreview(); //preview している history を cancel
+            replayHistory(pointingIndexOfHistory, toThisIndex); //mouseenterしたhistoryをPreview
+            scrollTo($transactionHistoryElement.children('.transaction[data-history_index="' + toThisIndex.toString() + '"]').get(0)); //選択 history を表示範囲内に表示させる
+            pointingIndexOfHistory = toThisIndex; //選択 index の更新
+
+        }
+
+        function insertHistory(transactionObj){
 
             //historyの挿入チェック
             if((pointingIndexOfHistory + 1) < transactionHistory.length){ //historyの途中に挿入する場合
@@ -5668,37 +5721,6 @@ function forceLayoutMemo(initializerObj){
                 mouseMovedTime = 0;
                 clickedTime = 0;
             }
-        }
-
-        this.applyPrevioursObj = function(renderingObj){
-            return rollbackOrReplayTransaction(renderingObj, "PrevObj");
-        }
-
-        this.traceHistory = function(incrOrDecrVal){
-
-            var toThisIndex;
-
-            if(pointingIndexOfHistory < 0){return;} //history が 1つもない
-            if(incrOrDecrVal == 0){return;} //0 は除外
-
-            //incrOrDecrValの有効範囲内チェック
-            toThisIndex = incrOrDecrVal + pointingIndexOfHistory;
-            if(toThisIndex < 0 ){ //transactionHistory[] の index no がマイナス値になってしまう場合
-                toThisIndex = 0;
-
-            }else if(transactionHistory.length <= toThisIndex){ //transactionHistory[] の最大 index値より大きい数になってしまう場合
-                toThisIndex = transactionHistory.length-1;
-            }
-
-            if(toThisIndex == pointingIndexOfHistory){ //history 移動が発生しない場合
-                return;
-            }
-            
-            cancelPreview(); //preview している history を cancel
-            replayHistory(pointingIndexOfHistory, toThisIndex); //mouseenterしたhistoryをPreview
-            scrollTo($transactionHistoryElement.children('.transaction[data-history_index="' + toThisIndex.toString() + '"]').get(0)); //選択 history を表示範囲内に表示させる
-            pointingIndexOfHistory = toThisIndex; //選択 index の更新
-
         }
 
         function startPreview(specifiedElem){
