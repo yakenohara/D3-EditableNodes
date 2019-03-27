@@ -19,6 +19,9 @@ function forceLayoutMemo(initializerObj){
         connectDatas: "c", //conect nodes
         undo: "ctrl+z", //undo
         redo: "ctrl+y", //redo
+        copyNodes: "ctrl+c",  //copy
+        cutNodes: "ctrl+x",   //cut
+        pasteNodes: "ctrl+v", //paste
 
         // Editing
 
@@ -1378,6 +1381,66 @@ function forceLayoutMemo(initializerObj){
         historyManager.traceHistory(1);
         
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+    //Browser の Clipboard events
+    $3motherElement.node().addEventListener('cut', function(e){
+        console.log("cut");
+        cancelTouchingToOSClipboard(e);
+    });
+    $3motherElement.node().addEventListener('copy', function(e){
+        console.log("copy");
+        cancelTouchingToOSClipboard(e);
+    });
+    $3motherElement.node().addEventListener('paste', function(e){
+        console.log("paste");
+        cancelTouchingToOSClipboard(e);
+    });
+    function cancelTouchingToOSClipboard(e){
+        //UIエリア範囲外で mouse event を発生させていた場合はハジく(= OS の pasteコマンドを実行する)
+        if(!UIisEnable){return;}
+
+        //編集中の場合はハジく(= OS の pasteコマンドを実行する)
+        if(nowEditng){return;}
+        
+        //ブラウザにキーイベントを渡さない(= OS の pasteコマンドを実行させない)
+        //note
+        //node(s) の paste 処理は、
+        //keySettings.pasteNodes でバインドした event で処理する
+        disablingKeyEvent(e); 
+    }
+    
+    mousetrapInstance.bind(keySettings.cutNodes, function(e, combo){
+        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowEditng){return;} //編集中の場合はハジく
+
+        //todo
+        console.log(combo);
+        
+        // disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+    mousetrapInstance.bind(keySettings.copyNodes, function(e, combo){
+        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowEditng){return;} //編集中の場合はハジく
+
+        console.log(combo);
+
+        //todo addEventListener('copy'~ 内 event では成功するが、
+        //ここでは成功しない
+        copyStrToClipboard("text\nstring", $3motherElement.node());
+        
+        // disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+    mousetrapInstance.bind(keySettings.pasteNodes, function(e, combo){
+        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowEditng){return;} //編集中の場合はハジく
+
+        //todo
+        console.log(combo);
+        
+        // disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
     mousetrapInstance.bind(keySettings.textAnchor_start, function(e, combo){
@@ -8534,6 +8597,36 @@ function forceLayoutMemo(initializerObj){
 
         return scrollbarwidth;
         
+    }
+
+    function copyStrToClipboard(str, onlyForCalcElem){
+
+        //計算用のdivを作る
+        var tmpElem = onlyForCalcElem.appendChild(document.createElement("div"));
+        tmpElem.setAttribute("class", "copyStrToClipboard");
+        tmpElem.setAttribute("style",
+            "position: absolute; " +
+            "display: inline-block; " +
+            "top: 0; " + 
+            "left: 0; " + 
+            "margin: 0; " +
+            "border: 0; " +
+            "padding: 0;"
+        );
+        var tmpElem_textarea = tmpElem.appendChild(document.createElement("textarea"));
+        tmpElem_textarea.setAttribute("style", 
+            "margin: 0; " +
+            "border: 0; " +
+            "padding: 0;"
+        );
+        tmpElem_textarea.value = str;
+        
+        tmpElem_textarea.select(); //todo 最終選択部分の保存
+        var result = document.execCommand('copy');
+
+        //計算用divの削除
+        onlyForCalcElem.removeChild(tmpElem);
+
     }
 
     //Unique な key を生成する
