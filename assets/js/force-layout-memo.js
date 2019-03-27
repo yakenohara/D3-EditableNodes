@@ -874,13 +874,25 @@ function forceLayoutMemo(initializerObj){
 
     });
     function checkUIisEnable(e){
-        var closestDoms = $(e.target).closest('#' + idName_superElement);
+        var closestDoms;
 
-        if(closestDoms.length) {
+        //click された element から親要素を辿り、
+        //contextmenu に到達するか確認
+        closestDoms = $(e.target).closest('.' + clsNameInCntxtMenu);
+
+        if(closestDoms.length){ //contextmenu に到達した場合
             UIisEnable = true;
-        
-        }else{ // ターゲット要素をクリックした時
-            UIisEnable = false;
+
+        }else{ //contextmenu に到達しなかった場合
+
+            closestDoms = $(e.target).closest('#' + idName_superElement); //UIエリアの元に到達するか確認
+
+            if(closestDoms.length) { //UIエリアの元に到達した場合
+                UIisEnable = true;
+            
+            }else{  //UIエリア範囲外をクリックした場合
+                UIisEnable = false;
+            }
         }
     }
     // ----------</mouse イベントを発生させた部分が、範囲内部分かどうかを判定する>
@@ -906,8 +918,10 @@ function forceLayoutMemo(initializerObj){
 
     // Node以外に対する right click event
     var clsNameForCntxtMenu = getUniqueClassName('context-menu-');
+    var clsNameInCntxtMenu =  getUniqueClassName('context-menu-');
     $3SVGDrawingAreaElement.classed(clsNameForCntxtMenu, true);
     $.contextMenu({
+        className: clsNameInCntxtMenu,
         selector: '.' + clsNameForCntxtMenu,
         items: {
             add:{
@@ -6895,7 +6909,6 @@ function forceLayoutMemo(initializerObj){
                 .style("background-color", "rgba(105, 105, 105, 0)") // <- 透明度100%にする
                 .style("width", 0)
                 .style("height", 0)
-                .classed(getUniqueClassName(structureArr.join('_')), true)
                 .classed("mousetrap",true)
                 .property("value", textareaValue)
                 .attr("wrap","off");
