@@ -19,10 +19,7 @@ function forceLayoutMemo(initializerObj){
         connectDatas: "c", //conect nodes
         undo: "ctrl+z", //undo
         redo: "ctrl+y", //redo
-        copyNodes: "ctrl+c",  //copy
-        cutNodes: "ctrl+x",   //cut
-        pasteNodes: "ctrl+v", //paste
-
+        
         // Editing
 
         editSVGNodes: "f2", //Node編集モードの開始
@@ -1383,66 +1380,6 @@ function forceLayoutMemo(initializerObj){
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
-    //Browser の Clipboard events
-    $3motherElement.node().addEventListener('cut', function(e){
-        console.log("cut");
-        cancelTouchingToOSClipboard(e);
-    });
-    $3motherElement.node().addEventListener('copy', function(e){
-        console.log("copy");
-        cancelTouchingToOSClipboard(e);
-    });
-    $3motherElement.node().addEventListener('paste', function(e){
-        console.log("paste");
-        cancelTouchingToOSClipboard(e);
-    });
-    function cancelTouchingToOSClipboard(e){
-        //UIエリア範囲外で mouse event を発生させていた場合はハジく(= OS の pasteコマンドを実行する)
-        if(!UIisEnable){return;}
-
-        //編集中の場合はハジく(= OS の pasteコマンドを実行する)
-        if(nowEditng){return;}
-        
-        //ブラウザにキーイベントを渡さない(= OS の pasteコマンドを実行させない)
-        //note
-        //node(s) の paste 処理は、
-        //keySettings.pasteNodes でバインドした event で処理する
-        disablingKeyEvent(e); 
-    }
-    
-    mousetrapInstance.bind(keySettings.cutNodes, function(e, combo){
-        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
-        if(nowEditng){return;} //編集中の場合はハジく
-
-        //todo
-        console.log(combo);
-        
-        // disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
-    });
-
-    mousetrapInstance.bind(keySettings.copyNodes, function(e, combo){
-        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
-        if(nowEditng){return;} //編集中の場合はハジく
-
-        console.log(combo);
-
-        //todo addEventListener('copy'~ 内 event では成功するが、
-        //ここでは成功しない
-        copyStrToClipboard("text\nstring", $3motherElement.node());
-        
-        // disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
-    });
-
-    mousetrapInstance.bind(keySettings.pasteNodes, function(e, combo){
-        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
-        if(nowEditng){return;} //編集中の場合はハジく
-
-        //todo
-        console.log(combo);
-        
-        // disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
-    });
-
     mousetrapInstance.bind(keySettings.textAnchor_start, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         changeStyle('start', ['text', 'text_anchor'], 'datas');
@@ -1470,6 +1407,52 @@ function forceLayoutMemo(initializerObj){
     mousetrapInstance.bind(keySettings.textFontStyle_italic, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         changeStyle('italic', ['text', 'text_font_style'], 'datas');
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+    //
+    // Browser clipboard events
+    //
+    // note
+    // clipboard へアクセスする為に、内部的に document.execCommand を使っている
+    // この API は Browser の Clipboard events のタスク内でないと
+    // clipboard にアクセス出来ないという制約がある為、
+    //  `mousetrapInstance.bind('ctrl+c, function(){~`のような
+    // キーボード操作を override した event タスクでは実現不可能
+    //
+    // -> `Async Clipboard API`が一般的になったら実現できるかも
+    //
+    $3motherElement.node().addEventListener('cut', function(e){
+        
+        
+        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowEditng){return;} //編集中の場合はハジく
+
+        //todo
+        console.log("cut");
+        
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+    $3motherElement.node().addEventListener('copy', function(e){
+        
+        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowEditng){return;} //編集中の場合はハジく
+
+        //todo
+        console.log("copy");
+
+        copyStrToClipboard("test\nstring", $3motherElement.node());
+        
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+    $3motherElement.node().addEventListener('paste', function(e){
+        
+        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowEditng){return;} //編集中の場合はハジく
+
+        //todo
+        console.log("paste");
+        
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
@@ -8599,9 +8582,10 @@ function forceLayoutMemo(initializerObj){
         
     }
 
+    // 文字列を clipboard に格納する
     function copyStrToClipboard(str, onlyForCalcElem){
 
-        //計算用のdivを作る
+        //clipboard.v2.0.4.js に必要な DOM element を作る
         var tmpElem = onlyForCalcElem.appendChild(document.createElement("div"));
         tmpElem.setAttribute("class", "copyStrToClipboard");
         tmpElem.setAttribute("style",
@@ -8620,13 +8604,39 @@ function forceLayoutMemo(initializerObj){
             "padding: 0;"
         );
         tmpElem_textarea.value = str;
+        var tmpElem_button = tmpElem.appendChild(document.createElement("input"));
+        tmpElem_button.setAttribute("type","button");
+        tmpElem_button.setAttribute("style", 
+            "margin: 0; " +
+            "border: 0; " +
+            "padding: 0;"
+        );
         
-        tmpElem_textarea.select(); //todo 最終選択部分の保存
-        var result = document.execCommand('copy');
+        var clip = new ClipboardJS(tmpElem_button,{
+            target: function(trigger){
+                return tmpElem_textarea;
+            },
+            text: function(trigger){
+                return str;
+            }
+        });
+        clip.on('success', function(e){
+            console.log("clipped");
+            todoOnFinally();
+        })
+        clip.on('error', function(e){
+            console.error("clip failed");
+            todoOnFinally();
+        })
 
+        tmpElem_button.click(); //clipboard.v2.0.4.js の copy event を call
+        
         //計算用divの削除
-        onlyForCalcElem.removeChild(tmpElem);
-
+        function todoOnFinally(){
+            clip.destroy();
+            onlyForCalcElem.removeChild(tmpElem);
+            
+        }
     }
 
     //Unique な key を生成する
