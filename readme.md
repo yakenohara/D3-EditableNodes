@@ -14,4 +14,5 @@
  - 必要な最小width, height
  
  - link の矢印表示 (ie11 only)
- 
+ - クリップボード操作系のショートカットキー(ctrl+x, ctrl+c, ctrl+v)は非対応 (ie11 only)
+ - クリップボード操作系の Context menu は 非対応( ie11 以外)

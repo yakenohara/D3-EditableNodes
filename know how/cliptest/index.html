@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Clip Tester</title>
+        <script src="clipboard.v2.0.4.js"></script>
+    </head>
+    <body>
+
+        <h1>Clip Tester</h1>
+
+        <h2>clipboard.v2.0.4.js</h2>
+
+        <h3>cut</h3>
+
+        <textarea id="document_execcommand_clipboardJS_cut_textarea"></textarea>
+        <button id="document_execcommand_clipboardJS_cut_button" >cut</button>
+        <script>
+            (function(){
+                var btn = document.getElementById("document_execcommand_clipboardJS_cut_button");
+                btn.setAttribute("data-clipboard-action","cut");
+                btn.addEventListener('click', function(e){
+
+                    var txtarea = document.getElementById("document_execcommand_clipboardJS_cut_textarea");
+                    var clipboardJSObj = new ClipboardJS(btn,{
+                        target:function(trigger){
+                            return txtarea;
+                        },
+                        // text:function(trigger){    // note
+                        //     return txtarea.value;  // <- cut の場合はこの object を指定すると、失敗する。
+                        // }                          //    (<textarea>内の文字列は削除されず、clipboard へ copy のみされる)
+                    })
+
+                    clipboardJSObj.on('success', function(e){
+                        console.log("clipboard.v2.0.4.js cut executed.");
+                        console.log('listener:');
+                        console.log("success");
+                        console.log("event:");
+                        console.log(e);
+                    });
+
+                    clipboardJSObj.on('error', function(e){
+                        console.log("clipboard.v2.0.4.js cut executed.");
+                        console.log('listener:');
+                        console.log("error");
+                        console.log("event:");
+                        console.log(e);
+                    });
+                    
+                })
+            }());
+            
+        </script>
+
+        <h3>copy</h3>
+
+        <textarea id="document_execcommand_clipboardJS_copy_textarea"></textarea>
+        <button id="document_execcommand_clipboardJS_copy_button" >copy</button>
+        <script>
+            (function(){
+                var btn = document.getElementById("document_execcommand_clipboardJS_copy_button");
+                btn.setAttribute("data-clipboard-action","copy");
+                btn.addEventListener('click', function(e){
+
+                    var txtarea = document.getElementById("document_execcommand_clipboardJS_copy_textarea");
+                    var clipboardJSObj = new ClipboardJS(btn,{
+                        target:function(trigger){
+                            return txtarea;
+                        },
+                        text:function(trigger){    // note 
+                            return txtarea.value;  // <- cut の場合はこの object を指定すると、失敗する。
+                        }                          //    (<textarea>内の文字列は削除されず、clipboard へ copy のみされる)
+                    })
+
+                    clipboardJSObj.on('success', function(e){
+                        console.log("clipboard.v2.0.4.js copy executed.");
+                        console.log('listener:');
+                        console.log("success");
+                        console.log("event:");
+                        console.log(e);
+                    });
+
+                    clipboardJSObj.on('error', function(e){
+                        console.log("clipboard.v2.0.4.js copy executed.");
+                        console.log('listener:');
+                        console.log("error");
+                        console.log("event:");
+                        console.log(e);
+                    });
+                    
+                })
+            }());
+            
+        </script>
+
+        <h3>paste</h3>
+        <p>clipboard.v2.0.4.js does not support paste function.</p>
+
+        <h2>document.execCommand</h2>
+
+        <h3>cut</h3>
+
+        <textarea id="document_execcommand_cut_textarea"></textarea>
+        <button id="document_execcommand_cut_button" >cut</button>
+        <script>
+            document.getElementById("document_execcommand_cut_button").addEventListener('click', function(e){
+                document.getElementById("document_execcommand_cut_textarea").select();
+                var result = document.execCommand('cut'); //API返却値はコマンド受付可否を表すだけで、成功可否は取得できない
+                console.log("document.execCommand cut executed.");
+                console.log("result:");
+                console.log(result);
+            });
+            
+        </script>
+
+        <h3>copy</h3>
+
+        <textarea id="document_execcommand_copy_textarea"></textarea>
+        <button id="document_execcommand_copy_button" >copy</button>
+        <script>
+            document.getElementById("document_execcommand_copy_button").addEventListener('click', function(e){
+                document.getElementById("document_execcommand_copy_textarea").select();
+                var result = document.execCommand('copy'); //API返却値はコマンド受付可否を表すだけで、成功可否は取得できない
+                console.log("document.execCommand copy executed.");
+                console.log("result:");
+                console.log(result);
+            });
+            
+        </script>
+
+        <h3>paste</h3>
+
+        <textarea id="document_execcommand_paste_textarea"></textarea>
+        <button id="document_execcommand_paste_button" >paste</button>
+        <script>
+            document.getElementById("document_execcommand_paste_button").addEventListener('click', function(e){
+                var txtarea = document.getElementById("document_execcommand_paste_textarea");
+                txtarea.value = "";
+                txtarea.focus();
+                var result = document.execCommand('paste'); //API返却値はコマンド受付可否を表すだけで、成功可否は取得できない
+                console.log("document.execCommand paste executed.");
+                console.log("result:");
+                console.log(result);
+                console.log("value:");
+                console.log(txtarea.value);
+            });
+            
+        </script>
+
+        <h2>window.clipboardData</h2>
+
+        <h3>cut</h3>
+
+        <textarea id="clipboarddata_cut_textarea"></textarea>
+        <button id="clipboarddata_cut_button" >cut</button>
+        <script>
+            document.getElementById("clipboarddata_cut_button").addEventListener('click', function(e){
+                var txtarea = document.getElementById("clipboarddata_cut_textarea");
+                txtarea.select();
+                window.clipboardData.setData('text', txtarea.value); //返却値はなし。成功可否は取得できない
+                console.log("clipboardData cut executed.");
+                txtarea.value = "";
+            });
+            
+        </script>
+
+        <h3>copy</h3>
+
+        <textarea id="clipboarddata_copy_textarea"></textarea>
+        <button id="clipboarddata_copy_button" >copy</button>
+        <script>
+            document.getElementById("clipboarddata_copy_button").addEventListener('click', function(e){
+                var txtarea = document.getElementById("clipboarddata_copy_textarea");
+                txtarea.select();
+                window.clipboardData.setData('text', txtarea.value); //返却値はなし。成功可否は取得できない
+                console.log("clipboardData copy executed.");
+            });
+            
+        </script>
+        
+        <h3>paste</h3>
+
+        <textarea id="clipboarddata_paste_textarea"></textarea>
+        <button id="clipboarddata_paste_button" >paste</button>
+        <script>
+            document.getElementById("clipboarddata_paste_button").addEventListener('click', function(e){
+                var cliptext = window.clipboardData.getData('text'); //失敗の場合は空文字が返る
+                console.log("clipboardData paste executed.");
+                console.log("value:");
+                console.log(cliptext);
+                var txtarea = document.getElementById("clipboarddata_paste_textarea");
+                txtarea.value = cliptext;
+            });
+            
+        </script>
+
+        <h2>event.clipboardData</h2>
+
+        <h3>cut</h3>
+
+        <textarea id="event_clipboarddata_cut_textarea"></textarea>
+        <button id="event_clipboarddata_cut_button" >cut</button>
+        <script>
+            (function(){
+                var txtarea = document.getElementById("event_clipboarddata_cut_textarea");
+                txtarea.addEventListener('cut', function(e){
+                    e.clipboardData.setData('text/plain', "cut event overrided"); //返却値はなし。成功可否は取得できない
+                    console.log("clipboardData cut (by browser clipboard event) executed.");
+                    txtarea.value = "";
+                    e.preventDefault();
+                });
+                document.getElementById("event_clipboarddata_cut_button").addEventListener('click', function(e){
+                    e.clipboardData.setData('text/plain', txtarea.value); //返却値はなし。成功可否は取得できない
+                    console.log("clipboardData cut (by button click) executed.");
+                    txtarea.value = "";
+                    e.preventDefault();
+                });
+            }());
+            
+        </script>
+
+        <h3>copy</h3>
+
+        <textarea id="event_clipboarddata_copy_textarea"></textarea>
+        <button id="event_clipboarddata_copy_button" >copy</button>
+        <script>
+            (function(){
+                var txtarea = document.getElementById("event_clipboarddata_copy_textarea");
+                txtarea.addEventListener('copy', function(e){
+                    e.clipboardData.setData('text/plain', "copy evet overrided"); //返却値はなし。成功可否は取得できない
+                    console.log("clipboardData copy (by browser clipboard event) executed.");
+                    e.preventDefault();
+                });
+                document.getElementById("event_clipboarddata_copy_button").addEventListener('click', function(e){
+                    e.clipboardData.setData('text/plain', txtarea.value); //返却値はなし。成功可否は取得できない
+                    console.log("clipboardData copy (by button click) executed.");
+                    e.preventDefault();
+                });
+            }());
+            
+        </script>
+
+        <h3>paste</h3>
+
+        <textarea id="event_clipboarddata_paste_textarea"></textarea>
+        <button id="event_clipboarddata_paste_button" >paste</button>
+        <script>
+            (function(){
+                var txtarea = document.getElementById("event_clipboarddata_paste_textarea");
+                txtarea.addEventListener('paste', function(e){
+                    var txt = e.clipboardData.getData('text/plain'); //返却値はなし。成功可否は取得できない
+                    console.log("clipboardData paste (by browser clipboard event) executed.");
+                    console.log("return val:");
+                    console.log(txt);
+                    txtarea.value = txt;
+                    e.preventDefault();
+                });
+                document.getElementById("event_clipboarddata_paste_button").addEventListener('click', function(e){
+                    var txt = e.clipboardData.getData('text/plain'); //返却値はなし。成功可否は取得できない
+                    console.log("clipboardData paste (by browser clipboard event) executed.");
+                    console.log("return val:");
+                    console.log(txt);
+                    txtarea.value = txt;
+                    e.preventDefault();
+                });
+            }());
+            
+        </script>
+
+        <h2>Async Clipboard API</h2>
+
+        <h3>query read permission</h3>
+
+        <button id="permissions_api_query_read_permission_button" >query read permission</button>
+        <textarea id="permissions_api_query_read_permission_textarea"></textarea>
+        <script>
+            document.getElementById("permissions_api_query_read_permission_button").addEventListener('click', function(e){
+                var txtarea = document.getElementById("permissions_api_query_read_permission_textarea");
+                var prom = navigator.permissions.query({name:'clipboard-read'});
+                
+                prom.then(function(result){
+                    console.log("Query read permission executed.");
+                    console.log("Callback type:");
+                    console.log("success");
+                    console.log("argument object:");
+                    console.log(result);
+                    txtarea.value = result.state;
+                })
+
+                prom.catch(function(e){
+                    console.log("Query read permission executed.");
+                    console.log("Callback type:");
+                    console.log("failured");
+                    console.log("argument object:");
+                    console.log(e);
+                })
+            });
+        </script>
+
+        <h3>request read permission</h3>
+
+        <button id="permissions_api_request_read_permission_button" >request read permission</button>
+        <textarea id="permissions_api_request_read_permission_textarea"></textarea>
+        <script>
+            document.getElementById("permissions_api_request_read_permission_button").addEventListener('click', function(e){
+                var txtarea = document.getElementById("permissions_api_request_read_permission_textarea");
+                var prom = navigator.permissions.request({name:'clipboard-read'});
+                
+                prom.then(function(result){
+                    console.log("Request read permission executed.");
+                    console.log("Callback type:");
+                    console.log("success");
+                    console.log("argument object:");
+                    console.log(result);
+                    txtarea.value = result.state;
+                })
+
+                prom.catch(function(e){
+                    console.log("Request read permission executed.");
+                    console.log("Callback type:");
+                    console.log("failured");
+                    console.log("argument object:");
+                    console.log(e);
+                })
+            });
+        </script>
+
+        <h3>query write permission</h3>
+
+        <button id="permissions_api_query_write_permission_button" >query write permission</button>
+        <textarea id="permissions_api_query_write_permission_textarea"></textarea>
+        <script>
+            document.getElementById("permissions_api_query_write_permission_button").addEventListener('click', function(e){
+                var txtarea = document.getElementById("permissions_api_query_write_permission_textarea");
+                var prom = navigator.permissions.query({name:'clipboard-write'});
+                
+                prom.then(function(result){
+                    console.log("Query write permission executed.");
+                    console.log("Callback type:");
+                    console.log("success");
+                    console.log("argument object:");
+                    console.log(result);
+                    txtarea.value = result.state;
+                })
+
+                prom.catch(function(e){
+                    console.log("Query write permission executed.");
+                    console.log("Callback type:");
+                    console.log("failured");
+                    console.log("argument object:");
+                    console.log(e);
+                })
+            });
+        </script>
+
+        <h3>request write permission</h3>
+
+        <button id="permissions_api_request_write_permission_button" >request write permission</button>
+        <textarea id="permissions_api_request_write_permission_textarea"></textarea>
+        <script>
+            document.getElementById("permissions_api_request_write_permission_button").addEventListener('click', function(e){
+                var txtarea = document.getElementById("permissions_api_request_write_permission_textarea");
+                var prom = navigator.permissions.request({name:'clipboard-write'});
+                
+                prom.then(function(result){
+                    console.log("Request write permission executed.");
+                    console.log("Callback type:");
+                    console.log("success");
+                    console.log("argument object:");
+                    console.log(result);
+                    txtarea.value = result.state;
+                })
+
+                prom.catch(function(e){
+                    console.log("Request write permission executed.");
+                    console.log("Callback type:");
+                    console.log("failured");
+                    console.log("argument object:");
+                    console.log(e);
+                })
+            });
+        </script>
+
+        <h3>cut</h3>
+
+        <textarea id="async_clipboard_api_cut_textarea"></textarea>
+        <button id="async_clipboard_api_cut_button" >cut</button>
+        <script>
+            document.getElementById("async_clipboard_api_cut_button").addEventListener('click', function(e){
+                var txtarea = document.getElementById("async_clipboard_api_cut_textarea");
+                var prom = navigator.clipboard.writeText(txtarea.value);
+                
+                prom.then(function(result){
+                    console.log("Async clipboard API cut executed.");
+                    console.log("Callback type:");
+                    console.log("success");
+                    console.log("argument object:");
+                    console.log(result);
+                    txtarea.value = "";
+                })
+
+                prom.catch(function(e){
+                    console.log("Async clipboard API cut executed.");
+                    console.log("Callback type:");
+                    console.log("failured");
+                    console.log("argument object:");
+                    console.log(e);
+                })
+            });
+        </script>
+
+        <h3>copy</h3>
+
+        <textarea id="async_clipboard_api_copy_textarea"></textarea>
+        <button id="async_clipboard_api_copy_button" >copy</button>
+        <script>
+            document.getElementById("async_clipboard_api_copy_button").addEventListener('click', function(e){
+                var txtarea = document.getElementById("async_clipboard_api_copy_textarea");
+                var prom = navigator.clipboard.writeText(txtarea.value);
+                
+                prom.then(function(result){
+                    console.log("Async clipboard API copy executed.");
+                    console.log("Callback type:");
+                    console.log("success");
+                    console.log("argument object:");
+                    console.log(result);
+                })
+
+                prom.catch(function(e){
+                    console.log("Async clipboard API copy executed.");
+                    console.log("Callback type:");
+                    console.log("failured");
+                    console.log("argument object:");
+                    console.log(e);
+                })
+            });
+        </script>
+
+        <h3>paste</h3>
+
+        <textarea id="async_clipboard_api_paste_textarea"></textarea>
+        <button id="async_clipboard_api_paste_button" >paste</button>
+        <script>
+            document.getElementById("async_clipboard_api_paste_button").addEventListener('click', function(e){
+                var txtarea = document.getElementById("async_clipboard_api_paste_textarea");
+                var prom = navigator.clipboard.readText();
+                
+                prom.then(function(result){
+                    console.log("Async clipboard API paste executed.");
+                    console.log("Callback type:");
+                    console.log("success");
+                    console.log("argument object:");
+                    console.log(result);
+                    txtarea.value = result;
+                })
+
+                prom.catch(function(e){
+                    console.log("Async clipboard API paste executed.");
+                    console.log("Callback type:");
+                    console.log("failured");
+                    console.log("argument object:");
+                    console.log(e);
+                })
+            });
+        </script>
+
+    </body>
+</html>

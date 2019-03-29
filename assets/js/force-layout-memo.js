@@ -155,10 +155,10 @@ function forceLayoutMemo(initializerObj){
             if (xhr.readyState === 4 && // 'DONE' の場合   https://developer.mozilla.org/ja/docs/Web/API/XMLHttpRequest/readyState
                 xhr.status === 200){    // '200 OK' の場合 https://developer.mozilla.org/ja/docs/Web/HTTP/Status
 
-                var errmsg = appendNodesFromText(xhr.response, true);
-                if(typeof errmsg != 'undefined'){
+                var retObj = appendNodesFromText(xhr.response, true);
+                if(!retObj.allOK){
                     console.warn("Following error was occurred while loading `" + filePath + "`. This file will be ignored.");
-                    console.warn(errmsg);
+                    console.warn(retObj.errObj);
                 }
 
                 
@@ -813,13 +813,14 @@ function forceLayoutMemo(initializerObj){
     });
 
     //ファイルをDropした場合
+    var totalReport = null;
     $SVGDrawingAreaElement.get(0).addEventListener('drop', function(e){
 
         //External Componentが未loadの場合はハジく
         if(!(checkSucceededLoadOf_ExternalComponent())){return;}
         
         var files = e.dataTransfer.files;
-        
+        totalReport = null;
         readFilesSequential(0); //ドロップされた各ファイルへのループ
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
 
@@ -827,6 +828,11 @@ function forceLayoutMemo(initializerObj){
         function readFilesSequential(indexOfFiles){
 
             if(indexOfFiles >= files.length){ //読み込むファイルがない場合
+                
+                if(totalReport !== null){
+                    selectNodesByReport(totalReport);
+                }
+                totalReport = null;
                 return;
             }
 
@@ -843,11 +849,27 @@ function forceLayoutMemo(initializerObj){
 
                 var file_reader = new FileReader();
                 file_reader.onload = function(e){
-                    var errmsg = appendNodesFromText(file_reader.result);
-                    if(typeof errmsg != 'undefined'){
+                    var retObj = appendNodesFromText(file_reader.result);
+                    if(!retObj.allOK){
                         console.warn("Following error was occurred while loading `" + filePath + "`. This file will be ignored.");
-                        console.warn(errmsg);
+                        console.warn(retObj.errObj);
+                    
+                    }else{ //parse 成功の場合
+                        if(totalReport === null){
+                            totalReport = retObj.appendingTotalReport;
+                        
+                        }else{
+
+                            //merge report
+                            var oneTotalReport = retObj.appendingTotalReport;
+                            if(!oneTotalReport.allOK){ //失敗が発生した場合
+                                totalReport.allOK = false;
+                            }
+                            totalReport.reportsArr.datas = totalReport.reportsArr.datas.concat(oneTotalReport.reportsArr.datas);
+                            totalReport.reportsArr.links = totalReport.reportsArr.links.concat(oneTotalReport.reportsArr.links);
+                        }
                     }
+
                     readFilesSequential(indexOfFiles+1); //次のファイルを読み込み
                 };
                 file_reader.readAsText(droppedFileObj);
@@ -955,6 +977,33 @@ function forceLayoutMemo(initializerObj){
                     call_editSVGNode(bindedData);
                 }
             },
+
+            //<ie11のみ>----------------------------------
+
+            cut:{
+                name: "Cut (X)",
+                accesskey: 'x',
+                callback: function(itemKey, opt){
+                    cutNodesToClipboard();
+                }
+            },
+            copy:{
+                name: "Copy (C)",
+                accesskey: 'c',
+                callback: function(itemKey, opt){
+                    copyNodesToClipboard();
+                }
+            },
+            paste:{
+                name: "Paste (V)",
+                accesskey: 'v',
+                callback: function(itemKey, opt){
+                    pasteNodesFromClipboard();
+                }
+            },
+
+            //---------------------------------</ie11のみ>
+
             edit:{
                 //編集開始
                 name: "Edit (" + keySettings.editSVGNodes.toUpperCase() + ")",
@@ -1261,7 +1310,6 @@ function forceLayoutMemo(initializerObj){
             }else{ // 編集中でない場合
     
                 deleteSVGNodes(); //選択状態のNode(s)を削除
-                dataSelectionManager.clearSelections(); //node選択履歴をクリア
                 disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
             }
         }
@@ -1414,7 +1462,7 @@ function forceLayoutMemo(initializerObj){
     // Browser clipboard events
     //
     // note
-    // clipboard へアクセスする為に、内部的に document.execCommand を使っている
+    // clipboard へアクセスする為に、内部的に document.execCommand を使っている //修正
     // この API は Browser の Clipboard events のタスク内でないと
     // clipboard にアクセス出来ないという制約がある為、
     //  `mousetrapInstance.bind('ctrl+c, function(){~`のような
@@ -1422,36 +1470,35 @@ function forceLayoutMemo(initializerObj){
     //
     // -> `Async Clipboard API`が一般的になったら実現できるかも
     //
-    $3motherElement.node().addEventListener('cut', function(e){
-        
-        
-        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
-        if(nowEditng){return;} //編集中の場合はハジく
-
-        //todo
+    var copying = false;
+    document.addEventListener('cut', function(e){
         console.log("cut");
         
-        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
-    });
-    $3motherElement.node().addEventListener('copy', function(e){
-        
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         if(nowEditng){return;} //編集中の場合はハジく
 
         //todo
+        
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+    document.addEventListener('copy', function(e){
         console.log("copy");
 
-        copyStrToClipboard("test\nstring", $3motherElement.node());
-        
-        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
-    });
-    $3motherElement.node().addEventListener('paste', function(e){
-        
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         if(nowEditng){return;} //編集中の場合はハジく
 
         //todo
+        
+        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+    });
+
+    document.addEventListener('paste', function(e){
         console.log("paste");
+
+        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowEditng){return;} //編集中の場合はハジく
+
+        //todo
         
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
@@ -2461,10 +2508,10 @@ function forceLayoutMemo(initializerObj){
     //--------------------------------------------------------------------</UI TRAP>
 
     // 文字列をパースして成功したら appendNodes() をコールする
-    // エラーが発生した場合はconsoleに表示させずにエラー内容を返す
     function appendNodesFromText(fromThisText, preload){
 
-        var errVal;
+        var retObj = {};
+        retObj.allOK = true;
 
         try{
             var parsedObj = JSON.parse(fromThisText); //SyntaxErrorをthrowする可能性がある
@@ -2473,18 +2520,23 @@ function forceLayoutMemo(initializerObj){
             if(appendingSafeObjArr.datas.length == 0 &&
                 appendingSafeObjArr.links.length == 0){ //有効な要素が存在しなかった場合
                 
-                errVal = "No available object defined";
-            
+                retObj.allOK = false;
+                retObj.errObj = "No available object defined";
+
             }else{
-                var appendingTotalReport = appendNodes(appendingSafeObjArr);
-                historyManager.appendHistory(appendingTotalReport, preload);
+                var tmpTotalReport = appendNodes(appendingSafeObjArr);
+                historyManager.appendHistory(tmpTotalReport, preload);
+
+                retObj.allOK = true;
+                retObj.appendingTotalReport = tmpTotalReport;
             }
 
         }catch(e){ //SyntaxErrorの場合
-            errVal = e;
+            retObj.allOK = false;
+            retObj.errObj = e;
         }
 
-        return errVal;
+        return retObj;
     }
 
     function checkObjArr(objArr){
@@ -2846,6 +2898,51 @@ function forceLayoutMemo(initializerObj){
 
         return appendingSafeObjArr;
 
+    }
+
+    function makeObjArrFromPlainText(fromThisString){
+        //argment check
+        if(typeof fromThisString != 'string'){return;}
+        if(fromThisString == ""){return;}
+
+        var tmpObjArr = {
+            datas:[],
+            links:[]
+        };
+
+        //改行コードの変換
+        fromThisString = fromThisString.replace(/\r\n/g, '\n');
+        fromThisString = fromThisString.replace(/\r/g, '\n');
+        fromThisString = fromThisString.replace(/(\n){2,}/g, '\n'); //空行の削除
+
+        var lfSeparatedStrings = fromThisString.split(/\n/); //改行コードで分割
+
+        for(var i = 0 ; i < lfSeparatedStrings.length ; i++){
+
+            tmpObjArr.datas.push({ //data の追加
+                key:i.toString(),
+                type:'text',
+                text:{
+                    text_content: lfSeparatedStrings[i]
+                },
+                coordinate:{
+                    x:lastCoordinate.rightClick.x,
+                    y:(lastCoordinate.rightClick.y + linkDistance*i)
+                }
+            });
+
+            if(i < (lfSeparatedStrings.length-1)){
+                tmpObjArr.links.push({ //link の追加
+                    type:defaultLinkhape,
+                    source:i.toString(),
+                    target:(i+1).toString()
+                });
+            }
+        }
+
+        var appendingSafeObjArr = checkObjArr(tmpObjArr);
+
+        return appendingSafeObjArr;
     }
     
     function appendNodes(appendThisObjArr){
@@ -3209,7 +3306,7 @@ function forceLayoutMemo(initializerObj){
 
         return appendingTotalReport;
     }
-
+    
     //
     //選択状態のSVGノード(複数)を削除する
     //
@@ -3236,6 +3333,7 @@ function forceLayoutMemo(initializerObj){
         if((toDeleteKeyArr.datas.length > 0) || (toDeleteKeyArr.links.length > 0)){ //削除対象Nodeが存在する場合
             var deletingTotalReport = deleteNodes(toDeleteKeyArr, true); //source か target で紐づけられた link も削除する
             historyManager.appendHistory(deletingTotalReport);
+            dataSelectionManager.clearSelections(); //node選択履歴をクリア
         }
     }
 
@@ -6390,6 +6488,18 @@ function forceLayoutMemo(initializerObj){
 
     function exportNodes(selectedOnly){
 
+        var toExportObjArr = getToExportObjArr(selectedOnly);
+
+        if((typeof toExportObjArr.datas == 'undefined') && (typeof toExportObjArr.links == 'undefined')){ //吐き出すNodeが存在しない場合
+            console.warn("No Node and Link to Export");
+        
+        }else{ //吐き出すNodeが存在する場合
+            var txtCntnt = JSON.stringify(toExportObjArr, null, '    ');
+            exportTextFile(txtCntnt, fileName_Export); 
+        }
+    }
+
+    function getToExportObjArr(selectedOnly){
         var toExportObjArr = {};
         
         //吐き出し用Obj生成ループ
@@ -6437,13 +6547,7 @@ function forceLayoutMemo(initializerObj){
             toExportObjArr.links.push(toExportObj); //配列に追加
         });
 
-        if((typeof toExportObjArr.datas == 'undefined') && (typeof toExportObjArr.links == 'undefined')){ //吐き出すNodeが存在しない場合
-            console.warn("No Node and Link to Export");
-        
-        }else{ //吐き出すNodeが存在する場合
-            var txtCntnt = JSON.stringify(toExportObjArr, null, '    ');
-            exportTextFile(txtCntnt, fileName_Export); 
-        }
+        return toExportObjArr;
     }
 
     function exportTextFile(content, fileName){
@@ -8582,61 +8686,90 @@ function forceLayoutMemo(initializerObj){
         
     }
 
-    // 文字列を clipboard に格納する
-    function copyStrToClipboard(str, onlyForCalcElem){
+    function cutNodesToClipboard(){
 
-        //clipboard.v2.0.4.js に必要な DOM element を作る
-        var tmpElem = onlyForCalcElem.appendChild(document.createElement("div"));
-        tmpElem.setAttribute("class", "copyStrToClipboard");
-        tmpElem.setAttribute("style",
-            "position: absolute; " +
-            "display: inline-block; " +
-            "top: 0; " + 
-            "left: 0; " + 
-            "margin: 0; " +
-            "border: 0; " +
-            "padding: 0;"
-        );
-        var tmpElem_textarea = tmpElem.appendChild(document.createElement("textarea"));
-        tmpElem_textarea.setAttribute("style", 
-            "margin: 0; " +
-            "border: 0; " +
-            "padding: 0;"
-        );
-        tmpElem_textarea.value = str;
-        var tmpElem_button = tmpElem.appendChild(document.createElement("input"));
-        tmpElem_button.setAttribute("type","button");
-        tmpElem_button.setAttribute("style", 
-            "margin: 0; " +
-            "border: 0; " +
-            "padding: 0;"
-        );
+        var toExportObjArr = getToExportObjArr(true);
+
+        if((typeof toExportObjArr.datas == 'undefined') && (typeof toExportObjArr.links == 'undefined')){ //吐き出すNodeが存在しない場合
+            // nothing to do
         
-        var clip = new ClipboardJS(tmpElem_button,{
-            target: function(trigger){
-                return tmpElem_textarea;
-            },
-            text: function(trigger){
-                return str;
+        }else{ // 選択 Node(s), Link(s) が存在する場合
+            var txtCntnt = JSON.stringify(toExportObjArr, null, '    ');
+            copyStrToClipboard(txtCntnt);
+
+            if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
+                exitEditing(); //編集モードの終了
             }
-        });
-        clip.on('success', function(e){
-            console.log("clipped");
-            todoOnFinally();
-        })
-        clip.on('error', function(e){
-            console.error("clip failed");
-            todoOnFinally();
-        })
 
-        tmpElem_button.click(); //clipboard.v2.0.4.js の copy event を call
-        
-        //計算用divの削除
-        function todoOnFinally(){
-            clip.destroy();
-            onlyForCalcElem.removeChild(tmpElem);
-            
+            deleteSVGNodes();
         }
+    }
+
+    function copyNodesToClipboard(){
+
+        var toExportObjArr = getToExportObjArr(true);
+
+        if((typeof toExportObjArr.datas == 'undefined') && (typeof toExportObjArr.links == 'undefined')){ //吐き出すNodeが存在しない場合
+            // nothing to do
+        
+        }else{ // 選択 Node(s), Link(s) が存在する場合
+            var txtCntnt = JSON.stringify(toExportObjArr, null, '    ');
+            copyStrToClipboard(txtCntnt);
+        }
+    }
+
+    function pasteNodesFromClipboard(){
+        var clipstr = getStrFromClipboard();
+        if(clipstr != ""){
+            var retObj = appendNodesFromText(clipstr, true);
+            
+            if(!retObj.allOK){ //parse 失敗の場合
+
+                var appendingSafeObjArr = makeObjArrFromPlainText(clipstr);
+                if(typeof appendingSafeObjArr != 'object'){ //実装ミス
+                    console.error("Unknown error occurred while pasting from clipboard.");
+                
+                }else{ //plain text から parse 成功の場合
+                    var tmpTotalReport = appendNodes(appendingSafeObjArr);
+                    historyManager.appendHistory(tmpTotalReport, false);
+                    selectNodesByReport(tmpTotalReport);
+                }
+            
+            }else{ //parse 成功の場合
+                selectNodesByReport(retObj.appendingTotalReport);
+            }
+        }
+    }
+
+    //
+    // renderring report を元に選択しなおす
+    //
+    function selectNodesByReport(totalReport){
+        
+        dataSelectionManager.clearSelections(); //node選択履歴をクリア
+
+        //node選択履歴に追加loop
+        for(var i = 0 ; i < totalReport.reportsArr.datas.length ; i++){
+            var oneReport = totalReport.reportsArr.datas[i];
+            var bindeddata = getBindedDataFromKey(oneReport.key);
+            dataSelectionManager.pushDataSelection(bindeddata); //node選択履歴に追加
+        }
+
+        for(var i = 0 ; i < totalReport.reportsArr.links.length ; i++){
+            var oneReport = totalReport.reportsArr.links[i];
+            var bindedlink = getBindedLinkDataFromKey(oneReport.key);
+            dataSelectionManager.pushLinkSelection(bindedlink); //link選択履歴に追加
+        }
+    }
+
+    // 文字列を clipboard に格納する
+    function copyStrToClipboard(str){
+        window.clipboardData.setData('text', str);
+    }
+
+    function getStrFromClipboard(){
+        var str = window.clipboardData.getData('text'); //失敗の場合は空文字が返る
+        return str;
     }
 
     //Unique な key を生成する
