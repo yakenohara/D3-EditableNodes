@@ -977,33 +977,6 @@ function forceLayoutMemo(initializerObj){
                     call_editSVGNode(bindedData);
                 }
             },
-
-            //<ie11のみ>----------------------------------
-
-            cut:{
-                name: "Cut (X)",
-                accesskey: 'x',
-                callback: function(itemKey, opt){
-                    cutNodesToClipboard();
-                }
-            },
-            copy:{
-                name: "Copy (C)",
-                accesskey: 'c',
-                callback: function(itemKey, opt){
-                    copyNodesToClipboard();
-                }
-            },
-            paste:{
-                name: "Paste (V)",
-                accesskey: 'v',
-                callback: function(itemKey, opt){
-                    pasteNodesFromClipboard();
-                }
-            },
-
-            //---------------------------------</ie11のみ>
-
             edit:{
                 //編集開始
                 name: "Edit (" + keySettings.editSVGNodes.toUpperCase() + ")",
@@ -1459,49 +1432,199 @@ function forceLayoutMemo(initializerObj){
     });
 
     //
-    // Browser clipboard events
-    //
+    // <clipboard events>-----------------------------------------------------------
+    // <!caution!> ブラウザ依存コードを含む <!caution!>
+    // 
     // note
-    // clipboard へアクセスする為に、内部的に document.execCommand を使っている //修正
-    // この API は Browser の Clipboard events のタスク内でないと
-    // clipboard にアクセス出来ないという制約がある為、
-    //  `mousetrapInstance.bind('ctrl+c, function(){~`のような
-    // キーボード操作を override した event タスクでは実現不可能
+    // clipboard へアクセスする為に、内部的に clipboardData API を使っている
+    // この API は Browser 毎に実装が異なる
+    //  - IE11以外の場合
+    //     W3Cの仕様通り -> https://www.w3.org/TR/clipboard-apis/
+    //  - IE11の場合
+    //      独自タスク内でアクセス可能で、読み込み方法は以下の通り。
+    //      第1引数は'text'以外は指定不可。
+    //        - read
+    //           `str = window.clipboardData.getData('text');`
+    //        - write
+    //           `window.clipboardData.setData('text', "any string");`
     //
-    // -> `Async Clipboard API`が一般的になったら実現できるかも
-    //
-    var copying = false;
-    document.addEventListener('cut', function(e){
-        console.log("cut");
+    var browserIsIE11 = (navigator.userAgent.toLowerCase().indexOf('trident/7') > -1);
+    var clipboardEvent = null;
+    if(browserIsIE11){
+        mousetrapInstance.bind("ctrl+x", function(e, combo){
+            console.log("Mousetrap cut event");
+            
+            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+            if(nowEditng){return;} //編集中の場合はハジく
+
+            cutNodesToClipboard();
+            
+            disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+        });
+        document.addEventListener('cut', function(e){
+            console.log("browser cut event");
+            
+            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+            if(nowEditng){return;} //編集中の場合はハジく
+
+            disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+        });
+
+        mousetrapInstance.bind("ctrl+c", function(e, combo){
+            console.log("Mousetrap copy event");
+            
+            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+            if(nowEditng){return;} //編集中の場合はハジく
+
+            copyNodesToClipboard();
+            
+            disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+        });
+        document.addEventListener('copy', function(e){
+            console.log("browser copy event");
+
+            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+            if(nowEditng){return;} //編集中の場合はハジく
+
+            disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+        });
+
+        mousetrapInstance.bind("ctrl+v", function(e, combo){
+            console.log("Mousetrap paste event");
+            
+            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+            if(nowEditng){return;} //編集中の場合はハジく
+
+            pasteNodesFromClipboard();
+            
+            disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+        });
+        document.addEventListener('paste', function(e){
+            console.log("browser paste event");
+
+            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+            if(nowEditng){return;} //編集中の場合はハジく
+
+            disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
+        });
+    
+    }else{
+
+        document.addEventListener('cut', function(e){
+            console.log("browser cut event");
+            
+            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+            if(nowEditng){return;} //編集中の場合はハジく
+
+            clipboardEvent = e;
+            cutNodesToClipboard();
+            clipboardEvent.preventDefault();
+        });
+        document.addEventListener('copy', function(e){
+            console.log("browser copy event");
+
+            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+            if(nowEditng){return;} //編集中の場合はハジく
+
+            clipboardEvent = e;
+            copyNodesToClipboard();
+            clipboardEvent.preventDefault();
+        });
+
+        document.addEventListener('paste', function(e){
+            console.log("browser paste event");
+
+            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+            if(nowEditng){return;} //編集中の場合はハジく
+
+            clipboardEvent = e;
+            pasteNodesFromClipboard();
+            clipboardEvent.preventDefault();
+        });
+
+    }
+
+    function cutNodesToClipboard(){
+
+        var toExportObjArr = getToExportObjArr(true);
+
+        if((typeof toExportObjArr.datas == 'undefined') && (typeof toExportObjArr.links == 'undefined')){ //吐き出すNodeが存在しない場合
+            // nothing to do
         
-        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
-        if(nowEditng){return;} //編集中の場合はハジく
+        }else{ // 選択 Node(s), Link(s) が存在する場合
+            var txtCntnt = JSON.stringify(toExportObjArr, null, '    ');
+            copyStrToClipboard(txtCntnt);
 
-        //todo
+            if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
+                exitEditing(); //編集モードの終了
+            }
+
+            deleteSVGNodes();
+        }
+    }
+
+    function copyNodesToClipboard(){
+
+        var toExportObjArr = getToExportObjArr(true);
+
+        if((typeof toExportObjArr.datas == 'undefined') && (typeof toExportObjArr.links == 'undefined')){ //吐き出すNodeが存在しない場合
+            // nothing to do
         
-        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
-    });
-    document.addEventListener('copy', function(e){
-        console.log("copy");
+        }else{ // 選択 Node(s), Link(s) が存在する場合
+            var txtCntnt = JSON.stringify(toExportObjArr, null, '    ');
+            copyStrToClipboard(txtCntnt);
+        }
+    }
 
-        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
-        if(nowEditng){return;} //編集中の場合はハジく
+    function pasteNodesFromClipboard(){
+        var clipstr = getStrFromClipboard();
+        if(clipstr != ""){
+            var retObj = appendNodesFromText(clipstr, true);
+            
+            if(!retObj.allOK){ //parse 失敗の場合
 
-        //todo
+                var appendingSafeObjArr = makeObjArrFromPlainText(clipstr);
+                if(typeof appendingSafeObjArr != 'object'){ //実装ミス
+                    console.error("Unknown error occurred while pasting from clipboard.");
+                
+                }else{ //plain text から parse 成功の場合
+                    var tmpTotalReport = appendNodes(appendingSafeObjArr);
+                    historyManager.appendHistory(tmpTotalReport, false);
+                    selectNodesByReport(tmpTotalReport);
+                }
+            
+            }else{ //parse 成功の場合
+                selectNodesByReport(retObj.appendingTotalReport);
+            }
+        }
+    }
+
+    // 文字列を clipboard に格納する
+    function copyStrToClipboard(str){
         
-        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
-    });
-
-    document.addEventListener('paste', function(e){
-        console.log("paste");
-
-        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
-        if(nowEditng){return;} //編集中の場合はハジく
-
-        //todo
+        try{
+            window.clipboardData.setData('text', str);
         
-        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
-    });
+        }catch(e){
+            clipboardEvent.clipboardData.setData('text/plain', str);
+        }
+        
+    }
+
+    function getStrFromClipboard(){
+        var str = "";
+        
+        try{
+            str = window.clipboardData.getData('text'); //失敗の場合は空文字が返る
+        
+        }catch(e){
+            str = clipboardEvent.clipboardData.getData('text/plain');
+        }
+        
+        return str;
+    }
+    
+    // ----------------------------------------------------------</clipboard events>
 
     function call_appendHighlight(){
         
@@ -2506,6 +2629,27 @@ function forceLayoutMemo(initializerObj){
         
 
     //--------------------------------------------------------------------</UI TRAP>
+
+    //
+    // renderring report を元に選択しなおす
+    //
+    function selectNodesByReport(totalReport){
+        
+        dataSelectionManager.clearSelections(); //node選択履歴をクリア
+
+        //node選択履歴に追加loop
+        for(var i = 0 ; i < totalReport.reportsArr.datas.length ; i++){
+            var oneReport = totalReport.reportsArr.datas[i];
+            var bindeddata = getBindedDataFromKey(oneReport.key);
+            dataSelectionManager.pushDataSelection(bindeddata); //node選択履歴に追加
+        }
+
+        for(var i = 0 ; i < totalReport.reportsArr.links.length ; i++){
+            var oneReport = totalReport.reportsArr.links[i];
+            var bindedlink = getBindedLinkDataFromKey(oneReport.key);
+            dataSelectionManager.pushLinkSelection(bindedlink); //link選択履歴に追加
+        }
+    }
 
     // 文字列をパースして成功したら appendNodes() をコールする
     function appendNodesFromText(fromThisText, preload){
@@ -8684,92 +8828,6 @@ function forceLayoutMemo(initializerObj){
 
         return scrollbarwidth;
         
-    }
-
-    function cutNodesToClipboard(){
-
-        var toExportObjArr = getToExportObjArr(true);
-
-        if((typeof toExportObjArr.datas == 'undefined') && (typeof toExportObjArr.links == 'undefined')){ //吐き出すNodeが存在しない場合
-            // nothing to do
-        
-        }else{ // 選択 Node(s), Link(s) が存在する場合
-            var txtCntnt = JSON.stringify(toExportObjArr, null, '    ');
-            copyStrToClipboard(txtCntnt);
-
-            if(checkSucceededLoadOf_ExternalComponent() && nowEditng){ //property editor がload済み && 編集中の場合
-                exitEditing(); //編集モードの終了
-            }
-
-            deleteSVGNodes();
-        }
-    }
-
-    function copyNodesToClipboard(){
-
-        var toExportObjArr = getToExportObjArr(true);
-
-        if((typeof toExportObjArr.datas == 'undefined') && (typeof toExportObjArr.links == 'undefined')){ //吐き出すNodeが存在しない場合
-            // nothing to do
-        
-        }else{ // 選択 Node(s), Link(s) が存在する場合
-            var txtCntnt = JSON.stringify(toExportObjArr, null, '    ');
-            copyStrToClipboard(txtCntnt);
-        }
-    }
-
-    function pasteNodesFromClipboard(){
-        var clipstr = getStrFromClipboard();
-        if(clipstr != ""){
-            var retObj = appendNodesFromText(clipstr, true);
-            
-            if(!retObj.allOK){ //parse 失敗の場合
-
-                var appendingSafeObjArr = makeObjArrFromPlainText(clipstr);
-                if(typeof appendingSafeObjArr != 'object'){ //実装ミス
-                    console.error("Unknown error occurred while pasting from clipboard.");
-                
-                }else{ //plain text から parse 成功の場合
-                    var tmpTotalReport = appendNodes(appendingSafeObjArr);
-                    historyManager.appendHistory(tmpTotalReport, false);
-                    selectNodesByReport(tmpTotalReport);
-                }
-            
-            }else{ //parse 成功の場合
-                selectNodesByReport(retObj.appendingTotalReport);
-            }
-        }
-    }
-
-    //
-    // renderring report を元に選択しなおす
-    //
-    function selectNodesByReport(totalReport){
-        
-        dataSelectionManager.clearSelections(); //node選択履歴をクリア
-
-        //node選択履歴に追加loop
-        for(var i = 0 ; i < totalReport.reportsArr.datas.length ; i++){
-            var oneReport = totalReport.reportsArr.datas[i];
-            var bindeddata = getBindedDataFromKey(oneReport.key);
-            dataSelectionManager.pushDataSelection(bindeddata); //node選択履歴に追加
-        }
-
-        for(var i = 0 ; i < totalReport.reportsArr.links.length ; i++){
-            var oneReport = totalReport.reportsArr.links[i];
-            var bindedlink = getBindedLinkDataFromKey(oneReport.key);
-            dataSelectionManager.pushLinkSelection(bindedlink); //link選択履歴に追加
-        }
-    }
-
-    // 文字列を clipboard に格納する
-    function copyStrToClipboard(str){
-        window.clipboardData.setData('text', str);
-    }
-
-    function getStrFromClipboard(){
-        var str = window.clipboardData.getData('text'); //失敗の場合は空文字が返る
-        return str;
     }
 
     //Unique な key を生成する
