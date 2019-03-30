@@ -155,7 +155,7 @@ function forceLayoutMemo(initializerObj){
             if (xhr.readyState === 4 && // 'DONE' の場合   https://developer.mozilla.org/ja/docs/Web/API/XMLHttpRequest/readyState
                 xhr.status === 200){    // '200 OK' の場合 https://developer.mozilla.org/ja/docs/Web/HTTP/Status
 
-                var retObj = appendNodesFromText(xhr.response, true);
+                var retObj = appendNodesFromText(xhr.response, true, true);
                 if(!retObj.allOK){
                     console.warn("Following error was occurred while loading `" + filePath + "`. This file will be ignored.");
                     console.warn(retObj.errObj);
@@ -849,7 +849,7 @@ function forceLayoutMemo(initializerObj){
 
                 var file_reader = new FileReader();
                 file_reader.onload = function(e){
-                    var retObj = appendNodesFromText(file_reader.result);
+                    var retObj = appendNodesFromText(file_reader.result, true, false);
                     if(!retObj.allOK){
                         console.warn("Following error was occurred while loading `" + filePath + "`. This file will be ignored.");
                         console.warn(retObj.errObj);
@@ -1433,16 +1433,17 @@ function forceLayoutMemo(initializerObj){
 
     //
     // <clipboard events>-----------------------------------------------------------
+    //
     // <!caution!> ブラウザ依存コードを含む <!caution!>
     // 
     // note
     // clipboard へアクセスする為に、内部的に clipboardData API を使っている
-    // この API は Browser 毎に実装が異なる
+    // この API は IE とそれ以外で実装が異なる
     //  - IE11以外の場合
     //     W3Cの仕様通り -> https://www.w3.org/TR/clipboard-apis/
     //  - IE11の場合
     //      独自タスク内でアクセス可能で、読み込み方法は以下の通り。
-    //      第1引数は'text'以外は指定不可。
+    //      第1引数は 'text' 以外は指定不可。
     //        - read
     //           `str = window.clipboardData.getData('text');`
     //        - write
@@ -1450,9 +1451,68 @@ function forceLayoutMemo(initializerObj){
     //
     var browserIsIE11 = (navigator.userAgent.toLowerCase().indexOf('trident/7') > -1);
     var clipboardEvent = null;
-    if(browserIsIE11){
+
+    if(!browserIsIE11){ // IE11でない場合
+
+        //
+        //note
+        // IE11以外の Browser では、W3Cの仕様通り、
+        // Browser の Clipboard event を Overrideする方法(具体的には、
+        // `document.addEventListener('copy', function(e){ ~ ` のように実装した event タスク内)
+        // でないと clipboardData API を使って Clipboard にアクセスできない。
+        // その為、 `mousetrapInstance.bind("alt+c", function(e, combo){ ~ ` のように実装した
+        // 独自の key bind によって Clipboard を control することは不可能。
+        // Clipboard control は Browser の Clipboard event を Override する。
+
+        document.addEventListener('cut', function(e){
+            // console.log("browser cut event");
+            
+            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+            if(nowEditng){return;} //編集中の場合はハジく
+
+            clipboardEvent = e;
+            cutNodesToClipboard();
+            clipboardEvent.preventDefault();
+        });
+
+        document.addEventListener('copy', function(e){
+            // console.log("browser copy event");
+
+            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+            if(nowEditng){return;} //編集中の場合はハジく
+
+            clipboardEvent = e;
+            copyNodesToClipboard();
+            clipboardEvent.preventDefault();
+        });
+
+        document.addEventListener('paste', function(e){
+            // console.log("browser paste event");
+
+            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+            if(nowEditng){return;} //編集中の場合はハジく
+
+            clipboardEvent = e;
+            pasteNodesFromClipboard();
+            clipboardEvent.preventDefault();
+        });
+    
+    }else{ // IE11の場合
+
+        //
+        //note
+        // IE11 の場合は、
+        // `document.addEventListener('cut', function(e){ ~` で evet を拾おうとしても、拾えない事がある。
+        // (少なくとも、`contenteditable="false"` な `div` 要素をクリック後に
+        // `ctrl+x` or `ctrl+v` しても、 cut/paste event は拾えなかった。)
+        // その為、IE11用の実装としては、
+        // `mousetrapInstance.bind("ctrl+x", function(e, combo){ ~ ` のように実装した
+        // 独自event 内で clipboard control を行い、
+        // Browser の Clipboard event タスク内では `event.returnValue = false;` する
+        // 
+
         mousetrapInstance.bind("ctrl+x", function(e, combo){
-            console.log("Mousetrap cut event");
+            // console.log("Mousetrap cut event");
             
             if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
             if(nowEditng){return;} //編集中の場合はハジく
@@ -1462,7 +1522,7 @@ function forceLayoutMemo(initializerObj){
             disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
         });
         document.addEventListener('cut', function(e){
-            console.log("browser cut event");
+            // console.log("browser cut event");
             
             if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
             if(nowEditng){return;} //編集中の場合はハジく
@@ -1471,7 +1531,7 @@ function forceLayoutMemo(initializerObj){
         });
 
         mousetrapInstance.bind("ctrl+c", function(e, combo){
-            console.log("Mousetrap copy event");
+            // console.log("Mousetrap copy event");
             
             if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
             if(nowEditng){return;} //編集中の場合はハジく
@@ -1481,7 +1541,7 @@ function forceLayoutMemo(initializerObj){
             disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
         });
         document.addEventListener('copy', function(e){
-            console.log("browser copy event");
+            // console.log("browser copy event");
 
             if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
             if(nowEditng){return;} //編集中の場合はハジく
@@ -1490,7 +1550,7 @@ function forceLayoutMemo(initializerObj){
         });
 
         mousetrapInstance.bind("ctrl+v", function(e, combo){
-            console.log("Mousetrap paste event");
+            // console.log("Mousetrap paste event");
             
             if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
             if(nowEditng){return;} //編集中の場合はハジく
@@ -1500,46 +1560,12 @@ function forceLayoutMemo(initializerObj){
             disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
         });
         document.addEventListener('paste', function(e){
-            console.log("browser paste event");
+            // console.log("browser paste event");
 
             if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
             if(nowEditng){return;} //編集中の場合はハジく
 
             disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
-        });
-    
-    }else{
-
-        document.addEventListener('cut', function(e){
-            console.log("browser cut event");
-            
-            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
-            if(nowEditng){return;} //編集中の場合はハジく
-
-            clipboardEvent = e;
-            cutNodesToClipboard();
-            clipboardEvent.preventDefault();
-        });
-        document.addEventListener('copy', function(e){
-            console.log("browser copy event");
-
-            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
-            if(nowEditng){return;} //編集中の場合はハジく
-
-            clipboardEvent = e;
-            copyNodesToClipboard();
-            clipboardEvent.preventDefault();
-        });
-
-        document.addEventListener('paste', function(e){
-            console.log("browser paste event");
-
-            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
-            if(nowEditng){return;} //編集中の場合はハジく
-
-            clipboardEvent = e;
-            pasteNodesFromClipboard();
-            clipboardEvent.preventDefault();
         });
 
     }
@@ -1579,7 +1605,7 @@ function forceLayoutMemo(initializerObj){
     function pasteNodesFromClipboard(){
         var clipstr = getStrFromClipboard();
         if(clipstr != ""){
-            var retObj = appendNodesFromText(clipstr, true);
+            var retObj = appendNodesFromText(clipstr, false, false);
             
             if(!retObj.allOK){ //parse 失敗の場合
 
@@ -2652,14 +2678,14 @@ function forceLayoutMemo(initializerObj){
     }
 
     // 文字列をパースして成功したら appendNodes() をコールする
-    function appendNodesFromText(fromThisText, preload){
+    function appendNodesFromText(fromThisText, msgEnable_warn, preload){
 
         var retObj = {};
         retObj.allOK = true;
 
         try{
             var parsedObj = JSON.parse(fromThisText); //SyntaxErrorをthrowする可能性がある
-            var appendingSafeObjArr = checkObjArr(parsedObj);
+            var appendingSafeObjArr = checkObjArr(parsedObj, msgEnable_warn);
 
             if(appendingSafeObjArr.datas.length == 0 &&
                 appendingSafeObjArr.links.length == 0){ //有効な要素が存在しなかった場合
@@ -2683,12 +2709,12 @@ function forceLayoutMemo(initializerObj){
         return retObj;
     }
 
-    function checkObjArr(objArr){
+    function checkObjArr(objArr, msgEnable_warn){
 
         //オブジェクトコピー
         var appendingSafeObjArr = {};
         mergeObj(objArr, appendingSafeObjArr, false);
-
+    
         var returnValWhenAborted = { //エラー発生時に返却する為の空定義
             datas:[],
             links:[]
@@ -2696,91 +2722,95 @@ function forceLayoutMemo(initializerObj){
         
         var untreatedPropertyNames = Object.keys(appendingSafeObjArr); //未処理プロパティリスト
         var treatThisObjects = [];
-
+    
         var lastStrForLinkExistence = "_existInArg";
-
+    
         var convToAvoidDupliKeyDifi = {};
-
+    
         var arrayCheckOK = true;
         isThisArray("datas");
         isThisArray("links");
         function isThisArray(objName){
-
+    
             if(typeof appendingSafeObjArr[objName] == 'undefined'){ //定義がない場合
                 appendingSafeObjArr[objName] = []; //空配列にする
-
+    
             }else{ //定義がある場合
                 
                 if(!Array.isArray(appendingSafeObjArr[objName])){ //Arrayでない場合
-                    console.warn("Obj \`" + objName + "\` is not Array");
+                    if(msgEnable_warn){console.warn("Obj \`" + objName + "\` is not Array");}                
                     appendingSafeObjArr[objName] = []; //空配列にする
                     arrayCheckOK = false;
-
+    
                 }else{                    
                     treatThisObjects.push(objName);
                 }
-
+    
                 untreatedPropertyNames.splice(untreatedPropertyNames.indexOf(objName), 1) //未処理プロパティリストから削除
             }
         }
-
+    
         //不明なObject定義が存在する場合
         untreatedPropertyNames.forEach(function(objName,idx){
             var wrn = "Unkdown Object \`" + objName + "\` defined. This Object will ignored.";
-            console.warn(wrn);
+            if(msgEnable_warn){console.warn(wrn);}
             delete appendingSafeObjArr[objName];
         });
-
+    
         if(!arrayCheckOK){ //datas or links が array型でない場合
             return returnValWhenAborted; //空定義を返す
         }
-
+    
         if(treatThisObjects.length == 0){ //有効な要素が存在しなかった場合
             return returnValWhenAborted; //空定義を返す
         }
-
+    
         if(treatThisObjects.indexOf("datas") >= 0){ //"datas"定義が存在する場合
             
             //定義型チェックループ
             for(var i = 0 ; i < appendingSafeObjArr.datas.length ; i++){
                 
                 var typeOf_key = (typeof appendingSafeObjArr.datas[i].key);
-
+    
                 switch(typeOf_key){
                     case 'undefined':
                     {
                         appendingSafeObjArr.datas[i].key = i.toString();//appendingSafeObjArr.datas[]内のindex noをkeyとして使う
                     }
                     break;
-
+    
                     case 'string':
                     {
                         //空文字回避
                         if(appendingSafeObjArr.datas[i].key == ""){
                             var empstr = "(EmptyString)";
-                            console.warn("\`\`(empty string) is defined in datas[" + i + "\].key ." +
-                                         " key:\`" + empstr + "\` will apply.");
+                            if(msgEnable_warn){
+                                console.warn("\`\`(empty string) is defined in datas[" + i + "\].key ." +
+                                             " key:\`" + empstr + "\` will apply.");
+                            }
                             appendingSafeObjArr.datas[i].key = empstr;
                         }
                     }
                     break;
-
+    
                     case 'number':
                     {
                         appendingSafeObjArr.datas[i].key = appendingSafeObjArr.datas[i].key.toString(); //文字列型に変換
                     }
                     break;
-
+    
                     default: //unknown な型の場合
                     {
-                        console.warn("key \`" + appendingSafeObjArr.datas[i].key.toString() + "\` is defined as \`" + typeOf_key + "\` type. " +
-                                     "key \`" + i.toString() + "\` will apply.");
+                        if(msgEnable_warn){
+                            console.warn("key \`" + appendingSafeObjArr.datas[i].key.toString() + "\` is defined as \`" + typeOf_key + "\` type. " +
+                                         "key \`" + i.toString() + "\` will apply.");
+                        }
                         appendingSafeObjArr.datas[i].key = i.toString();
                     }
                     break;
                 }
             }
-
+    
             //datas[]内でkey重複チェック
             for(var i = 0 ; i < appendingSafeObjArr.datas.length ; i++){
                 for(var j = i+1 ; j < appendingSafeObjArr.datas.length ; j++ ){
@@ -2794,61 +2824,67 @@ function forceLayoutMemo(initializerObj){
             }
             
         }
-
+    
         if(treatThisObjects.indexOf("links") >= 0){ //"links"定義が存在する場合
-
+    
             //定義型チェックループ
             for(var i = 0 ; i < appendingSafeObjArr.links.length  ; i++){
-
+    
                 var typeOf_key = (typeof appendingSafeObjArr.links[i].key);
-
+    
                 switch(typeOf_key){
                     case 'undefined':
                     {
                         appendingSafeObjArr.links[i].key = i.toString();//appendingSafeObjArr.links[]内のindex noをkeyとして使う
                     }
                     break;
-
+    
                     case 'string':
                     {
                         //空文字回避
                         if(appendingSafeObjArr.links[i].key == ""){
                             var empstr = "(EmptyString)";
-                            console.warn("\`\`(empty string) is defined in links[" + i + "\].key ." +
-                                         " key:\`" + empstr + "\` will apply.");
+                            if(msgEnable_warn){
+                                console.warn("\`\`(empty string) is defined in links[" + i + "\].key ." +
+                                             " key:\`" + empstr + "\` will apply.");
+                            }
                             appendingSafeObjArr.links[i].key = empstr;
                         }
                     }
                     break;
-
+    
                     case 'number':
                     {
                         appendingSafeObjArr.links[i].key = appendingSafeObjArr.links[i].key.toString(); //文字列型に変換
                     }
                     break;
-
+    
                     default: //unknown な型の場合
                     {
-                        console.warn("key \`" + appendingSafeObjArr.links[i].key.toString() + "\` is defined as \`" + typeOf_key + "\` type. " +
-                                     "key \`" + i.toString() + "\` will apply.");
+                        if(msgEnable_warn){
+                            console.warn("key \`" + appendingSafeObjArr.links[i].key.toString() + "\` is defined as \`" + typeOf_key + "\` type. " +
+                                         "key \`" + i.toString() + "\` will apply.");
+                        }
                         appendingSafeObjArr.links[i].key = i.toString();
                     }
                     break;
                 }
-
+    
                 var sourceKeyNameIsDefinedInArgDatas = keyIsDefinedInArgDatas("source");
                 var targetKeyNameIsDefinedInArgDatas = keyIsDefinedInArgDatas("target");
-
+    
                 function keyIsDefinedInArgDatas(propertyName){
-
+    
                     var isDefined = true;
                     var typeOf_key = (typeof appendingSafeObjArr.links[i][propertyName]);
-
+    
                     switch(typeOf_key){
-
+    
                         case 'undefined':
                         {
-                            console.warn("links[" + i.toString() + "] does not have \`" + propertyName + "\` property. This link will be ignored.");
+                            if(msgEnable_warn){
+                                console.warn("links[" + i.toString() + "] does not have \`" + propertyName + "\` property. This link will be ignored.");
+                            }
                             isDefined = false;
                         }
                         break;
@@ -2859,7 +2895,7 @@ function forceLayoutMemo(initializerObj){
                             if(typeOf_key == 'number'){
                                 appendingSafeObjArr.links[i][propertyName] = appendingSafeObjArr.links[i][propertyName].toString(); //文字列型に変換
                             }
-
+    
                             //指定キーが datas[] 内に存在するかどうかチェックする
                             var existencePropName = propertyName + lastStrForLinkExistence;
                             appendingSafeObjArr.links[i][existencePropName] = false;
@@ -2873,26 +2909,30 @@ function forceLayoutMemo(initializerObj){
                             }
                         }
                         break;
-
+    
                         default: //unknown な型の場合
                         {
-                            console.warn("links[" + i.toString() + "]." + propertyName + " is defined as \`" + typeOf_key + "\` type. " +
-                                         "This link will be ignored.");
+                            if(msgEnable_warn){
+                                console.warn("links[" + i.toString() + "]." + propertyName + " is defined as \`" + typeOf_key + "\` type. " +
+                                             "This link will be ignored.");
+                            }
                             isDefined = false;
                         }
                         break;
                     }
-
+    
                     return isDefined;
                 }
-
+    
                 if(appendingSafeObjArr.links[i].source == appendingSafeObjArr.links[i].target){ //source と target が同じ場合
-                    console.warn("links[" + i.toString() + "] defines same \`source\`,/\`target\`:" + appendingSafeObjArr.links[i].source +
-                                 "This link will be ignored.");
-
+                    if(msgEnable_warn){
+                        console.warn("links[" + i.toString() + "] defines same \`source\`,/\`target\`:" + appendingSafeObjArr.links[i].source +
+                                     "This link will be ignored.");
+                    }
+    
                     sourceKeyNameIsDefinedInArgDatas = false;
                 }
-
+    
                 if((!sourceKeyNameIsDefinedInArgDatas) || (!targetKeyNameIsDefinedInArgDatas)){ //source or target の key 定義に誤りがあった場合
                     appendingSafeObjArr.links[i].keyDefTypeIsSafe = false; //NG 状態を記録
                 }else{
@@ -2902,18 +2942,18 @@ function forceLayoutMemo(initializerObj){
         }
         
         if(treatThisObjects.indexOf("datas") >= 0){ //"datas"定義が存在する場合
-
+    
             //dataset.datas[]へ追加ループ
             for(var i = 0 ; i < appendingSafeObjArr.datas.length ; i++){
-
+    
                 //dataset.datas[] 内とのkey重複チェック
                 if(isReservedDataKey(appendingSafeObjArr.datas[i].key)){
-
+    
                     // Unique な key を生成
                     var uniqueKeyName = makeUniqueKey(appendingSafeObjArr.datas[i].key, function(tryThisKeyName){
                             
                         var isReserved = isReservedDataKey(tryThisKeyName); //dataset.datas[]内で重複しているかどうかを取得
-
+    
                         if(isReserved){ //dataset.datas[]内で重複している
                             return true;
                         
@@ -2930,10 +2970,12 @@ function forceLayoutMemo(initializerObj){
                         
                         return false; // `unique` を返却
                     });
-
-                    console.warn("datas[" + i + "\].key:\`" + appendingSafeObjArr.datas[i].key  + "\` is already used. " +
-                        "Unique key:\`" + uniqueKeyName + "\` will apply.")
-                    ;
+    
+                    if(msgEnable_warn){
+                        console.warn("datas[" + i + "\].key:\`" + appendingSafeObjArr.datas[i].key  + "\` is already used. " +
+                            "Unique key:\`" + uniqueKeyName + "\` will apply.")
+                        ;
+                    }
                     
                     convToAvoidDupliKeyDifi[appendingSafeObjArr.datas[i].key] = uniqueKeyName; //key名変更を記録
                     appendingSafeObjArr.datas[i].key = uniqueKeyName;
@@ -2941,18 +2983,18 @@ function forceLayoutMemo(initializerObj){
                 }
             }
         }
-
+    
         //Linksの追加
         if(treatThisObjects.indexOf("links") >= 0){ //"links"定義が存在する場合
-
+    
             //dataset.links[]へ追加ループ
             for(var i = 0 ; i < appendingSafeObjArr.links.length ; i++){
-
+    
                 if(appendingSafeObjArr.links[i].keyDefTypeIsSafe){ // source or target に指定したkey名定義は、型チェックOKだった場合
-
+    
                     var sourceKeyIsExist = isExistKey("source");
                     var targetKeyIsExist = isExistKey("target");
-
+    
                     //key名がdataset.datas[]内に存在するかどうかチェック
                     function isExistKey(propertyName){
                         
@@ -2960,34 +3002,36 @@ function forceLayoutMemo(initializerObj){
                         var existencePropName = propertyName + lastStrForLinkExistence;
                         
                         if(appendingSafeObjArr.links[i][existencePropName]){ //key名は appendingSafeObjArr.datas[] 内に存在する場合
-
+    
                             //key変換チェック
                             if(typeof convToAvoidDupliKeyDifi[appendingSafeObjArr.links[i][propertyName]] != 'undefined'){ //source の key 名に変換があった場合
                                 appendingSafeObjArr.links[i][propertyName] = convToAvoidDupliKeyDifi[appendingSafeObjArr.links[i][propertyName]]; //変換
                             }
-
+    
                         }else{ //key名は appendingSafeObjArr.datas[] 内に存在しない場合
-
+    
                             //key名存在チェック
                             var searchByThisKeyName = appendingSafeObjArr.links[i][propertyName];
-
+    
                             if(typeof (getBindedDataFromKey(searchByThisKeyName)) == 'undefined'){ //keyが dataset.datas[]内に見つからない場合
-                                console.warn("links[" + i + "]." + propertyName + "):\`" + searchByThisKeyName +
-                                            "\` is not defined in any datas[].key . This link will be ignored.");
+                                if(msgEnable_warn){
+                                    console.warn("links[" + i + "]." + propertyName + "):\`" + searchByThisKeyName +
+                                                "\` is not defined in any datas[].key . This link will be ignored.");
+                                }
                                 existence = false;
                             }
                         }
-
+    
                         delete appendingSafeObjArr.links[i][existencePropName];
-
+    
                         return existence;
                     }
-
+    
                     if(sourceKeyIsExist && targetKeyIsExist){ //source と target の key チェックが OK の場合
-
+    
                         //dataset.links[] 内とのkey重複チェック
                         if(isReservedLinkKey(appendingSafeObjArr.links[i].key)){
-
+    
                             // Unique な key を生成
                             var uniqueKeyName = makeUniqueKey(appendingSafeObjArr.links[i].key, function(tryThisKeyName){
                                     
@@ -3009,60 +3053,62 @@ function forceLayoutMemo(initializerObj){
                                 
                                 return false; // `unique` を返却
                             });
-
-                            console.warn("links[" + i + "\].key:\`" + appendingSafeObjArr.links[i].key  + "\` is already used. " +
-                                "Unique key:\`" + uniqueKeyName + "\` will apply.")
-                            ;
+    
+                            if(msgEnable_warn){
+                                console.warn("links[" + i + "\].key:\`" + appendingSafeObjArr.links[i].key  + "\` is already used. " +
+                                    "Unique key:\`" + uniqueKeyName + "\` will apply.")
+                                ;
+                            }
                             
                             appendingSafeObjArr.links[i].key = uniqueKeyName;
                                 
                         }
                     
                     }else{ //source と target の key チェックが NG の場合
-
+    
                         appendingSafeObjArr.links[i].keyDefTypeIsSafe = false; // NG 状態を記録
                     }
                 }
             }
         }
-
+    
         if(treatThisObjects.indexOf("links") >= 0){ //"links"定義が存在する場合
-
+    
             // NG 状態を記録した link を削除する
             for(var i = appendingSafeObjArr.links.length-1 ; i >= 0  ; i--){ //要素削除の可能性があるので、デクリメントで網羅する
                 
                 var isSveLink = appendingSafeObjArr.links[i].keyDefTypeIsSafe; //記録状態を取得
                 delete appendingSafeObjArr.links[i].keyDefTypeIsSafe; //状態記録プロパティを削除
-
+    
                 if(!isSveLink){ // NG状態だった場合
                     appendingSafeObjArr.links.splice(i, 1); //削除
                 }
             }
         }
-
+    
         return appendingSafeObjArr;
-
+    
     }
-
+    
     function makeObjArrFromPlainText(fromThisString){
         //argment check
         if(typeof fromThisString != 'string'){return;}
         if(fromThisString == ""){return;}
-
+    
         var tmpObjArr = {
             datas:[],
             links:[]
         };
-
+    
         //改行コードの変換
         fromThisString = fromThisString.replace(/\r\n/g, '\n');
         fromThisString = fromThisString.replace(/\r/g, '\n');
         fromThisString = fromThisString.replace(/(\n){2,}/g, '\n'); //空行の削除
-
+    
         var lfSeparatedStrings = fromThisString.split(/\n/); //改行コードで分割
-
+    
         for(var i = 0 ; i < lfSeparatedStrings.length ; i++){
-
+    
             tmpObjArr.datas.push({ //data の追加
                 key:i.toString(),
                 type:'text',
@@ -3074,7 +3120,7 @@ function forceLayoutMemo(initializerObj){
                     y:(lastCoordinate.rightClick.y + linkDistance*i)
                 }
             });
-
+    
             if(i < (lfSeparatedStrings.length-1)){
                 tmpObjArr.links.push({ //link の追加
                     type:defaultLinkhape,
@@ -3083,9 +3129,9 @@ function forceLayoutMemo(initializerObj){
                 });
             }
         }
-
-        var appendingSafeObjArr = checkObjArr(tmpObjArr);
-
+    
+        var appendingSafeObjArr = checkObjArr(tmpObjArr, false);
+    
         return appendingSafeObjArr;
     }
     
