@@ -5364,27 +5364,30 @@ function forceLayoutMemo(initializerObj){
         var untreatedPropertyNames = Object.keys(renderByThisObj.line); //未処理プロパティリスト
 
         //line存在チェック
+        var sVGLinkElement_line;
         var $3SVGLinkElement_line;
         var fc = bindedData.$3bindedSVGLinkElement.node().firstChild;
         if(!(fc)){ //lineの描画要素が存在しない場合(= 1回目の描画の場合)
             $3SVGLinkElement_line = bindedData.$3bindedSVGLinkElement.append("line");
+            sVGLinkElement_line = $3SVGLinkElement_line.node();
         
         }else{
+            sVGLinkElement_line = fc;
             $3SVGLinkElement_line = d3.select(fc);
         }
 
         //Selection Layer 存在チェック
+        var sVGLinkElement_line_forSelection;
         var $3SVGLinkElement_line_forSelection;
         fc = bindedData.$3bindedSelectionLayerSVGElement.node().firstChild
         if(!(fc)){ //line用の selection layer 描画要素が存在しない場合(= 1回目の描画の場合)
             $3SVGLinkElement_line_forSelection = bindedData.$3bindedSelectionLayerSVGElement.append("line");
+            sVGLinkElement_line_forSelection = $3SVGLinkElement_line_forSelection.node();
         
         }else{
+            sVGLinkElement_line_forSelection = fc;
             $3SVGLinkElement_line_forSelection = d3.select(fc);
         }
-
-        var inlineStyleOf_SVGlinkElem_line = $3SVGLinkElement_line.node().style;
-        var computedStyleOf_SVGlinkElem_line = window.getComputedStyle($3SVGLinkElement_line.node());
 
         //座標更新
         if(typeof (renderByThisObj.coordinate) != 'undefined'){
@@ -5425,13 +5428,11 @@ function forceLayoutMemo(initializerObj){
         if(typeof renderByThisObj.line.stroke != 'undefined'){ //stroke指定有り
 
             applyStyleSafely_StringToString({
-                bindedObj:bindedData.line,
-                $3element:$3SVGLinkElement_line,
-                inlineStyleOfElement:inlineStyleOf_SVGlinkElem_line,
-                computedtyleOfElement:computedStyleOf_SVGlinkElem_line,
+                boundObj:bindedData.line,
+                $3targetElement:$3SVGLinkElement_line,
+                styleDefinitionObj:renderByThisObj.line,
                 propertyName:"stroke",
                 attributeName:"stroke",
-                renderByThisObj:renderByThisObj.line,
                 prevReportObj:reportObj.PrevObj.line,
                 renderedReportObj:reportObj.RenderedObj.line,
                 failuredMessagesObj:reportObj.FailuredMessages.line
@@ -5443,14 +5444,11 @@ function forceLayoutMemo(initializerObj){
         if(typeof renderByThisObj.line.stroke_width != 'undefined'){ //stroke-width指定有り
 
             applyStyleSafely_NumberToPixel({
-                bindedObj:bindedData.line,
-                $3element:$3SVGLinkElement_line,
-                $3sameTypeElement:$3SVGLinkElement_line_forSelection, //selectionlayerにも反映させる
-                inlineStyleOfElement:inlineStyleOf_SVGlinkElem_line,
-                computedtyleOfElement:computedStyleOf_SVGlinkElem_line,
+                boundObj:bindedData.line,
+                $3targetElement:d3.selectAll([sVGLinkElement_line, sVGLinkElement_line_forSelection]), //selectionlayerにも反映させる
+                styleDefinitionObj:renderByThisObj.line,
                 propertyName:"stroke_width",
                 attributeName:"stroke-width",
-                renderByThisObj:renderByThisObj.line,
                 prevReportObj:reportObj.PrevObj.line,
                 renderedReportObj:reportObj.RenderedObj.line,
                 failuredMessagesObj:reportObj.FailuredMessages.line
@@ -5462,18 +5460,15 @@ function forceLayoutMemo(initializerObj){
         if(typeof renderByThisObj.line.marker_end != 'undefined'){ //stroke指定有り
 
             applyStyleSafely_StringToString({
-                bindedObj:bindedData.line,
-                $3element:$3SVGLinkElement_line,
-                $3sameTypeElement:$3SVGLinkElement_line_forSelection, //selectionlayerにも反映させる
-                inlineStyleOfElement:inlineStyleOf_SVGlinkElem_line,
-                computedtyleOfElement:computedStyleOf_SVGlinkElem_line,
+                boundObj:bindedData.line,
+                $3targetElement:d3.selectAll([sVGLinkElement_line, sVGLinkElement_line_forSelection]), //selectionlayerにも反映させる
+                styleDefinitionObj:renderByThisObj.line,
                 propertyName:"marker_end",
                 attributeName:"marker-end",
-                renderByThisObj:renderByThisObj.line,
                 prevReportObj:reportObj.PrevObj.line,
                 renderedReportObj:reportObj.RenderedObj.line,
                 failuredMessagesObj:reportObj.FailuredMessages.line,
-                callbackWhenJustBeforeApply:function(writtenInJson, convertedResultObj){
+                converter:function(writtenInJson, convertedResultObj){
 
                     var applyThisAtrribute;
 
@@ -5510,18 +5505,15 @@ function forceLayoutMemo(initializerObj){
         if(typeof renderByThisObj.line.stroke_dasharray != 'undefined'){ //stroke指定有り
 
             applyStyleSafely_StringToString({
-                bindedObj:bindedData.line,
-                $3element:$3SVGLinkElement_line,
-                $3sameTypeElement:$3SVGLinkElement_line_forSelection, //selectionlayerにも反映させる
-                inlineStyleOfElement:inlineStyleOf_SVGlinkElem_line,
-                computedtyleOfElement:computedStyleOf_SVGlinkElem_line,
+                boundObj:bindedData.line,
+                $3targetElement:d3.selectAll([sVGLinkElement_line, sVGLinkElement_line_forSelection]), //selectionlayerにも反映させる
+                styleDefinitionObj:renderByThisObj.line,
                 propertyName:"stroke_dasharray",
                 attributeName:"stroke-dasharray",
-                renderByThisObj:renderByThisObj.line,
                 prevReportObj:reportObj.PrevObj.line,
                 renderedReportObj:reportObj.RenderedObj.line,
                 failuredMessagesObj:reportObj.FailuredMessages.line,
-                callbackWhenJustBeforeApply:function(writtenInJson, convertedResultObj){
+                converter:function(writtenInJson, convertedResultObj){
 
                     //"px"とスペースは無視する
                     writtenInJson = writtenInJson.replace(/px/g, "");
@@ -5529,7 +5521,7 @@ function forceLayoutMemo(initializerObj){
 
                     return writtenInJson;
                 },
-                callbackWhenVerify:function(triedAttribute, appliedAttribute){
+                verifier:function(triedAttribute, appliedAttribute){
 
                     var convertedResultObj = {
                         succeeded:true
@@ -5580,51 +5572,44 @@ function forceLayoutMemo(initializerObj){
     //
     // "abcdef"(string) -> "abcdef"(string)
     //
-    //指定必須プロパティ
-    //
-    // | Propery name          | Description                                   |
-    // | --------------------- | --------------------------------------------- |
-    // | bindedObj             | Objcet that was binded by d3.js               |
-    // | $3element             | DOM element selection(d3.js selection)        |
-    // | inlineStyleOfElement  | Inline style of DOM element                   |
-    // | computedtyleOfElement | Computed style of DOM element                 |
-    // | propertyName          | Specified property name in argment object     |
-    // | attributeName         | To appliying attribute name (in inline style) |
-    // | renderByThisObj       | Argment Object                                |
-    // | prevReportObj         | Object to save previous style                 |
-    // | renderedReportObj     | Object to save rendered style                 |
-    // | failuredMessagesObj   | Object to save warning message                |
+    // Required properties
     // 
-    //任意指定プロパティ
+    // | Propery name        | Description                                                  |
+    // | ------------------- | ------------------------------------------------------------ |
+    // | boundObj            | Objcet that was bound by d3.js                               |
+    // | $3targetElement     | DOM element selection(d3.js selection) to applying style     |
+    // | styleDefinitionObj  | Object for which property name is defined                    |                                               |
+    // | propertyName        | Property name in style definition object                     |
+    // | attributeName       | Attribute name (inline style) to apply to target DOM element |
+    // | prevReportObj       | Object to save previous style                                |
+    // | renderedReportObj   | Object to save rendered style                                |
+    // | failuredMessagesObj | Object to save warning message                               |
     //
-    // | Propery name                | Description                                                |
-    // | --------------------------- | ---------------------------------------------------------- |
-    // | $3sameTypeElement           | DOM element selection (d3.js selection)                    |
-    // | callbackWhenJustBeforeApply | Call back function that invoked just before applying style |
-    // | callbackWhenVerify          | Call back function that invoked just after applied style   |
+    // Optional properties
+    // 
+    // | Propery name | Description                                                |
+    // | ------------ | ---------------------------------------------------------- |
+    // | converter    | Call back function that invoked just before applying style |
+    // | verifier     | Call back function that invoked just after applied style   |
     //
     function applyStyleSafely_StringToString(argmentsObj){
 
         //変更前状態を取得
-        var previousAttribute = argmentsObj.inlineStyleOfElement.getPropertyValue(argmentsObj.attributeName);
+        var previousAttribute = argmentsObj.$3targetElement.node().style.getPropertyValue(argmentsObj.attributeName);
         if(previousAttribute == ""){ //未設定の場合
             previousAttribute = null;
         }
 
-        if(argmentsObj.renderByThisObj[argmentsObj.propertyName] === null){ //削除指定の場合
-            argmentsObj.$3element.style(argmentsObj.attributeName, null);
-
-            if(typeof argmentsObj.$3sameTypeElement == 'object'){ //同じstyleを適用するelementがある場合
-                argmentsObj.$3sameTypeElement.style(argmentsObj.attributeName, null); //style適用
-            }
-
+        if(argmentsObj.styleDefinitionObj[argmentsObj.propertyName] === null){ //削除指定の場合
+            
+            argmentsObj.$3targetElement.style(argmentsObj.attributeName, null);
             argmentsObj.prevReportObj[argmentsObj.propertyName] = previousAttribute;
             argmentsObj.renderedReportObj[argmentsObj.propertyName] = null;
-            delete argmentsObj.bindedObj[argmentsObj.propertyName];
+            delete argmentsObj.boundObj[argmentsObj.propertyName];
 
-        }else if(typeof argmentsObj.renderByThisObj[argmentsObj.propertyName] != 'string'){ //型がstringでない場合
+        }else if(typeof argmentsObj.styleDefinitionObj[argmentsObj.propertyName] != 'string'){ //型がstringでない場合
             var wrn = "Wrong type specified in \`" + argmentsObj.propertyName + "\`. " +
-                      "specified type:\`" + (typeof (argmentsObj.renderByThisObj[argmentsObj.propertyName])) + "\`, expected type:\`string\`.";
+                      "specified type:\`" + (typeof (argmentsObj.styleDefinitionObj[argmentsObj.propertyName])) + "\`, expected type:\`string\`.";
             console.warn(wrn);
             argmentsObj.failuredMessagesObj[argmentsObj.propertyName] = wrn;
         
@@ -5634,22 +5619,22 @@ function forceLayoutMemo(initializerObj){
                 succeeded:true
             };
             var applyThisAttribute;
-            if(typeof argmentsObj.callbackWhenJustBeforeApply == 'function'){ //コールバック関数による変換指定アリの場合
-                applyThisAttribute = argmentsObj.callbackWhenJustBeforeApply(argmentsObj.renderByThisObj[argmentsObj.propertyName], convertedResultObj); //指定したCallback関数に変換させる
+            if(typeof argmentsObj.converter == 'function'){ //コールバック関数による変換指定アリの場合
+                applyThisAttribute = argmentsObj.converter(argmentsObj.styleDefinitionObj[argmentsObj.propertyName], convertedResultObj); //指定したCallback関数に変換させる
             }else{ //コールバック関数による変換指定ナシの場合
-                applyThisAttribute = argmentsObj.renderByThisObj[argmentsObj.propertyName]; //指定文字列をそのまま使用する
+                applyThisAttribute = argmentsObj.styleDefinitionObj[argmentsObj.propertyName]; //指定文字列をそのまま使用する
             }
 
             if(!convertedResultObj.succeeded){ //コールバック関数による変換失敗の場合
                 argmentsObj.failuredMessagesObj[argmentsObj.propertyName] = convertedResultObj.warningMessage;
 
             }else{
-                argmentsObj.$3element.style(argmentsObj.attributeName, applyThisAttribute); //style適用
+                argmentsObj.$3targetElement.style(argmentsObj.attributeName, applyThisAttribute); //style適用
 
                 //適用可否チェック
-                var appliedAttribute = argmentsObj.computedtyleOfElement.getPropertyValue(argmentsObj.attributeName);
-                if(typeof argmentsObj.callbackWhenVerify == 'function'){ //コールバック関数によるチェック指定アリの場合
-                    convertedResultObj = argmentsObj.callbackWhenVerify(applyThisAttribute, appliedAttribute); //一致確認用CallBakk関数に比較させる
+                var appliedAttribute = window.getComputedStyle(argmentsObj.$3targetElement.node()).getPropertyValue(argmentsObj.attributeName);
+                if(typeof argmentsObj.verifier == 'function'){ //コールバック関数によるチェック指定アリの場合
+                    convertedResultObj = argmentsObj.verifier(applyThisAttribute, appliedAttribute); //一致確認用CallBakk関数に比較させる
                 
                 }else{ //コールバック関数によるチェック指定ナシの場合
                     convertedResultObj = {
@@ -5667,17 +5652,13 @@ function forceLayoutMemo(initializerObj){
                 if(!(convertedResultObj.succeeded)){ //computed styleに適用されなかった場合
                     
                     argmentsObj.failuredMessagesObj[argmentsObj.propertyName] = convertedResultObj.warningMessage;
-                    argmentsObj.$3element.style(argmentsObj.attributeName, previousAttribute); //変更前の状態に戻す
+                    argmentsObj.$3targetElement.style(argmentsObj.attributeName, previousAttribute); //変更前の状態に戻す
                 
                 }else{ //適用された場合
 
-                    if(typeof argmentsObj.$3sameTypeElement == 'object'){ //同じstyleを適用するelementがある場合
-                        argmentsObj.$3sameTypeElement.style(argmentsObj.attributeName, applyThisAttribute); //style適用
-                    }
-
                     argmentsObj.prevReportObj[argmentsObj.propertyName] = previousAttribute;
-                    argmentsObj.renderedReportObj[argmentsObj.propertyName] = argmentsObj.renderByThisObj[argmentsObj.propertyName];
-                    argmentsObj.bindedObj[argmentsObj.propertyName]= argmentsObj.renderByThisObj[argmentsObj.propertyName];
+                    argmentsObj.renderedReportObj[argmentsObj.propertyName] = argmentsObj.styleDefinitionObj[argmentsObj.propertyName];
+                    argmentsObj.boundObj[argmentsObj.propertyName]= argmentsObj.styleDefinitionObj[argmentsObj.propertyName];
                 }
             }
         }
@@ -5686,71 +5667,58 @@ function forceLayoutMemo(initializerObj){
     //
     // 0.0(number) -> "0.0px"(string)
     //
-    //指定必須プロパティ
-    //
-    // | Propery name          | Description                                   |
-    // | --------------------- | --------------------------------------------- |
-    // | bindedObj             | Objcet that was binded by d3.js               |
-    // | $3element             | DOM element selection(d3.js selection)        |
-    // | inlineStyleOfElement  | Inline style of DOM element                   |
-    // | computedtyleOfElement | Computed style of DOM element                 |
-    // | propertyName          | Specified property name in argment object     |
-    // | attributeName         | To appliying attribute name (in inline style) |
-    // | renderByThisObj       | Argment Object                                |
-    // | prevReportObj         | Object to save previous style                 |
-    // | renderedReportObj     | Object to save rendered style                 |
-    // | failuredMessagesObj   | Object to save warning message                |
-    //
-    //任意指定プロパティ
-    //
-    // | Propery name                | Description                                                |
-    // | --------------------------- | ---------------------------------------------------------- |
-    // | $3sameTypeElement           | DOM element selection (d3.js selection)                    |
+    // Required properties
+    // 
+    // | Propery name        | Description                                                  |
+    // | ------------------- | ------------------------------------------------------------ |
+    // | boundObj            | Objcet that was bound by d3.js                               |
+    // | $3targetElement     | DOM element selection(d3.js selection) to applying style     |
+    // | styleDefinitionObj  | Object for which property name is defined                    |                                               |
+    // | propertyName        | Property name in style definition object                     |
+    // | attributeName       | Attribute name (inline style) to apply to target DOM element |
+    // | prevReportObj       | Object to save previous style                                |
+    // | renderedReportObj   | Object to save rendered style                                |
+    // | failuredMessagesObj | Object to save warning message                               |
     //
     function applyStyleSafely_NumberToPixel(argmentsObj){
             
         //変更前状態を取得
-        var previousAttribute = argmentsObj.inlineStyleOfElement.getPropertyValue(argmentsObj.attributeName);
+        var previousAttribute = argmentsObj.$3targetElement.node().style.getPropertyValue(argmentsObj.attributeName);
         if(previousAttribute == ""){
             previousAttribute = null;
         }
 
-        if(argmentsObj.renderByThisObj[argmentsObj.propertyName] === null){ //削除指定の場合
-            argmentsObj.$3element.style(argmentsObj.attributeName, null); //削除
-
-            //同形式のDOM element に対しても style を適用する
-            if(typeof argmentsObj.$3sameTypeElement != 'undefined'){
-                argmentsObj.$3sameTypeElement.style(argmentsObj.attributeName, null);
-            }
+        if(argmentsObj.styleDefinitionObj[argmentsObj.propertyName] === null){ //削除指定の場合
+            argmentsObj.$3targetElement.style(argmentsObj.attributeName, null); //削除
 
             if(previousAttribute !== null){
                 previousAttribute = parseFloat(previousAttribute); // "0.0px"(string) -> 0.0(number) 形式に変換
             }
             argmentsObj.prevReportObj[argmentsObj.propertyName] = previousAttribute;
             argmentsObj.renderedReportObj[argmentsObj.propertyName] = null;
-            delete argmentsObj.bindedObj[argmentsObj.propertyName];
+            delete argmentsObj.boundObj[argmentsObj.propertyName];
         
-        }else if(typeof argmentsObj.renderByThisObj[argmentsObj.propertyName] != 'number'){ //型がnumberでない場合
+        }else if(typeof argmentsObj.styleDefinitionObj[argmentsObj.propertyName] != 'number'){ //型がnumberでない場合
             var wrn = "Wrong type specified in \`" + argmentsObj.propertyName + "\`. " +
-                      "specified type:\`" + (typeof (argmentsObj.renderByThisObj[argmentsObj.propertyName])) + "\`, expected type:\`number\`.";
+                      "specified type:\`" + (typeof (argmentsObj.styleDefinitionObj[argmentsObj.propertyName])) + "\`, expected type:\`number\`.";
             console.warn(wrn);
             argmentsObj.failuredMessagesObj[argmentsObj.propertyName] = wrn;
         
         }else{ //型がnumber
             var pixcelNumberRegex = new RegExp(/^[-]?[0-9]+(\.[0-9]+)?px$/);
-            var applyThisAttribute = argmentsObj.renderByThisObj[argmentsObj.propertyName] + "px";
+            var applyThisAttribute = argmentsObj.styleDefinitionObj[argmentsObj.propertyName] + "px";
 
             if(!(pixcelNumberRegex.test(applyThisAttribute))){ //指定数値が `0.0px`形式にならない場合(ex: NaNを指定)
-                var wrn = "Invalid Number \`" + argmentsObj.renderByThisObj[argmentsObj.propertyName].toString() + "\` specified.";
+                var wrn = "Invalid Number \`" + argmentsObj.styleDefinitionObj[argmentsObj.propertyName].toString() + "\` specified.";
                 console.warn(wrn);
                 argmentsObj.failuredMessagesObj[argmentsObj.propertyName] = wrn;
 
             }else{
-                argmentsObj.$3element.style(argmentsObj.attributeName, applyThisAttribute);
+                argmentsObj.$3targetElement.style(argmentsObj.attributeName, applyThisAttribute);
 
                 //適用可否チェック
-                var appliedAttribute = argmentsObj.computedtyleOfElement.getPropertyValue(argmentsObj.attributeName);
-
+                var appliedAttribute = window.getComputedStyle(argmentsObj.$3targetElement.node()).getPropertyValue(argmentsObj.attributeName);
+                
                 if(!(pixcelNumberRegex.test(appliedAttribute))){ // `0.0px`形式に設定できていない場合
                                                                  // 指数表記になるような極端な数値も、このルートに入る
 
@@ -5759,33 +5727,28 @@ function forceLayoutMemo(initializerObj){
                     console.warn(wrn);
                     argmentsObj.failuredMessagesObj[argmentsObj.propertyName] = wrn;
 
-                    argmentsObj.$3element.style(argmentsObj.attributeName, previousAttribute); //変更前の状態に戻す
+                    argmentsObj.$3targetElement.style(argmentsObj.attributeName, previousAttribute); //変更前の状態に戻す
 
                 }else{
 
                     //適用されたstrke-widthと指定したstrke-widthの差分チェック
-                    if( Math.abs(parseFloat(appliedAttribute) - argmentsObj.renderByThisObj[argmentsObj.propertyName]) >= 0.1){
+                    if( Math.abs(parseFloat(appliedAttribute) - argmentsObj.styleDefinitionObj[argmentsObj.propertyName]) >= 0.1){
                         var wrn = "Specified style in \`" + argmentsObj.propertyName + "\` did not applied. " +
                                   "specified style:\`" + applyThisAttribute + "\`, browser applied style:\`" + appliedAttribute + "\`.";
                         console.warn(wrn);
                         argmentsObj.failuredMessagesObj[argmentsObj.propertyName] = wrn;
 
-                        argmentsObj.$3element.style(argmentsObj.attributeName, previousAttribute); //変更前の状態に戻す
+                        argmentsObj.$3targetElement.style(argmentsObj.attributeName, previousAttribute); //変更前の状態に戻す
                     
                     }else{ //適用された場合
 
-                        //同形式のDOM element に対しても style を適用する
-                        if(typeof argmentsObj.$3sameTypeElement != 'undefined'){
-                            argmentsObj.$3sameTypeElement.style(argmentsObj.attributeName, applyThisAttribute);
-                        }
-                        
                         if(previousAttribute !== null){
                             previousAttribute = parseFloat(previousAttribute); // "0.0px"(string) -> 0.0(number) 形式に変換
                         }
 
                         argmentsObj.prevReportObj[argmentsObj.propertyName] = previousAttribute;
-                        argmentsObj.renderedReportObj[argmentsObj.propertyName] = argmentsObj.renderByThisObj[argmentsObj.propertyName];
-                        argmentsObj.bindedObj[argmentsObj.propertyName] = argmentsObj.renderByThisObj[argmentsObj.propertyName];
+                        argmentsObj.renderedReportObj[argmentsObj.propertyName] = argmentsObj.styleDefinitionObj[argmentsObj.propertyName];
+                        argmentsObj.boundObj[argmentsObj.propertyName] = argmentsObj.styleDefinitionObj[argmentsObj.propertyName];
                     }
                 }
             }
