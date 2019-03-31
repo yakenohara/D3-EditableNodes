@@ -1324,6 +1324,7 @@ function forceLayoutMemo(initializerObj){
     // Node, Link に対する Source, Target highlighting イベント
     mousetrapInstance.bind(keySettings.highlightNodesSource, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowTyping){return;} //<textarea>の編集中はハジく
         binCode_KeyPressing |= 1;
         call_appendHighlight();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
@@ -1337,6 +1338,7 @@ function forceLayoutMemo(initializerObj){
 
     mousetrapInstance.bind(keySettings.highlightNodesTarget, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowTyping){return;} //<textarea>の編集中はハジく
         binCode_KeyPressing |= 2;
         call_appendHighlight();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
@@ -1350,6 +1352,7 @@ function forceLayoutMemo(initializerObj){
 
     mousetrapInstance.bind(keySettings.highlightNodesSourceAndTarget, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowTyping){return;} //<textarea>の編集中はハジく
         binCode_KeyPressing |= 4;
         call_appendHighlight();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
@@ -1363,6 +1366,7 @@ function forceLayoutMemo(initializerObj){
 
     mousetrapInstance.bind(keySettings.brushSelecting, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowTyping){return;} //<textarea>の編集中はハジく
         startBrush();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     }, 'keydown');
@@ -1374,6 +1378,7 @@ function forceLayoutMemo(initializerObj){
 
     mousetrapInstance.bind(keySettings.connectDatas, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowTyping){return;} //<textarea>の編集中はハジく
         checkStartConnect();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     }, 'keydown');
