@@ -43,6 +43,9 @@ function forceLayoutMemo(initializerObj){
     //ファイル出力(Export)時に設定するファイル名
     var fileName_Export = "Nodes.json";
 
+    //ファイル出力(Export as SVG)時に設定するファイル名
+    var fileName_svg_Export = "Nodes.svg";
+
     // frameType 未指定時に設定する Default Shape
     var defaultTextFrameShape = "ellipse";
 
@@ -991,7 +994,7 @@ function forceLayoutMemo(initializerObj){
                 accesskey: 'e',
                 items:{
                     export_all:{
-                        name: "Export All (A)",
+                        name: "Export all (A)",
                         accesskey: 'a',//todo <- "Add (A)"が優先されてしまう
                         callback: function(itemKey, opt){
                             //DL確認画面終了後にhide出来ないことがあるので、先にhideする
@@ -1001,13 +1004,33 @@ function forceLayoutMemo(initializerObj){
                         }
                     },
                     export_selected:{
-                        name: "Export Selected (S)",
+                        name: "Export selected (S)",
                         accesskey: 's',
                         callback: function(itemKey, opt){
                             //DL確認画面終了後にhide出来ないことがあるので、先にhideする
                             opt.$menu.trigger("contextmenu:hide");
 
                             exportNodes(true); //選択Node(s)ファイル吐き出し
+                        }
+                    },
+                    export_as_svg_all:{
+                        name: "Export as SVG (all)",
+                        // accesskey: 's',
+                        callback: function(itemKey, opt){
+                            //DL確認画面終了後にhide出来ないことがあるので、先にhideする
+                            opt.$menu.trigger("contextmenu:hide");
+
+                            exportSVG(false);
+                        }
+                    },
+                    export_as_svg_view_port_only:{
+                        name: "Export as SVG (current display range)",
+                        // accesskey: 's',
+                        callback: function(itemKey, opt){
+                            //DL確認画面終了後にhide出来ないことがあるので、先にhideする
+                            opt.$menu.trigger("contextmenu:hide");
+
+                            exportSVG(true);
                         }
                     },
                 }
@@ -6653,7 +6676,7 @@ function forceLayoutMemo(initializerObj){
         
         }else{ //吐き出すNodeが存在する場合
             var txtCntnt = JSON.stringify(toExportObjArr, null, '    ');
-            exportTextFile(txtCntnt, fileName_Export); 
+            exportTextFile(txtCntnt, fileName_Export);
         }
     }
 
@@ -6706,6 +6729,51 @@ function forceLayoutMemo(initializerObj){
         });
 
         return toExportObjArr;
+    }
+
+    function exportSVG(viewPortOnly){
+
+        //note
+        // IE11 では <SVG> 要素に対して outerHTML が使えない
+        
+        var tempElem = document.createElement('div');
+        var cloneSVGElem = deepCloneWithStyles($3SVGDrawingAreaElement.node());
+
+        //必須属性の指定
+        //https://ascii.jp/elem/000/001/014/1014703/
+        var $3cloneSVGElem = d3.select(cloneSVGElem);
+        $3cloneSVGElem
+            .attr("xmlns", "http://www.w3.org/2000/svg")
+            .attr("width", $3motherElement.node().offsetWidth)
+            .attr("height", $3motherElement.node().offsetHeight)
+            .attr("viewBox", ("0 0 " + $3motherElement.node().offsetWidth.toString() + " " + $3motherElement.node().offsetHeight.toString() ))
+        ;
+
+        //todo "Export as SVG (all)" / "Export as SVG (current display range)" で処理分け
+
+        tempElem.appendChild(cloneSVGElem);
+        
+        console.log(tempElem.innerHTML);
+        
+        exportTextFile(tempElem.innerHTML, fileName_svg_Export);
+
+        function deepCloneWithStyles(node) {
+            console.log(node);
+
+            var clone = node.cloneNode(false);
+            
+            if(node instanceof Element){
+                var style = window.getComputedStyle(node); //getComputedStyleに指定できる 引数は Element 型
+                console.log(style.cssText); //todo chrome73 OK, IE11/firefox66 NG(.cssText で空文字が返る)
+                clone.style = style.cssText;
+            }
+
+            for ( var i = 0; i < node.childNodes.length; i++ ) {
+                clone.appendChild(deepCloneWithStyles(node.childNodes[i]));
+            }
+            
+            return clone;
+        }
     }
 
     function exportTextFile(content, fileName){
