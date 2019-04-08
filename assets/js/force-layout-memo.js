@@ -99,7 +99,7 @@ function forceLayoutMemo(initializerObj){
         preferredFormat: "rgb",
     }
 
-    var linkDistance = 100; //linkの長さ
+    var defaultLinkDistance = 100; //linkの長さ
 
     /* ---------------------------------------------------------------------------------------------</Hard cords> */
 
@@ -2588,7 +2588,13 @@ function forceLayoutMemo(initializerObj){
                         key:uniqueKey,
                         type:targetDrawerObj.type,
                         source:targetDrawerObj.source,
-                        target:d.key
+                        target:d.key,
+                        link:{
+                            distance: Math.sqrt(
+                                Math.pow(Math.abs(d.coordinate.y - sourceNode.coordinate.y), 2) + 
+                                Math.pow(Math.abs(d.coordinate.x - sourceNode.coordinate.x), 2)
+                            )
+                        }
                     }
                 ]
             };
@@ -3145,7 +3151,7 @@ function forceLayoutMemo(initializerObj){
                 },
                 coordinate:{
                     x:lastCoordinate.rightClick.x,
-                    y:(lastCoordinate.rightClick.y + linkDistance*i)
+                    y:(lastCoordinate.rightClick.y + defaultLinkDistance*i)
                 }
             });
     
@@ -3831,7 +3837,15 @@ function forceLayoutMemo(initializerObj){
             //
             // default:30
             //
-            .distance(linkDistance)
+            .distance(function (d, i){
+                var returnThisDistance = 0;
+                if(typeof d.line.distance == 'number'){
+                    returnThisDistance = d.line.distance;
+                }else{
+                    returnThisDistance = defaultLinkDistance;
+                }
+                return returnThisDistance;
+            })
 
             //
             //link.strength([strength])
@@ -5567,6 +5581,31 @@ function forceLayoutMemo(initializerObj){
             });
 
             untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("stroke_dasharray"), 1); //未処理プロパティリストから削除
+        }
+
+        if(typeof renderByThisObj.line.distance != 'undefined'){ //distance指定有り
+
+            var previousProperty = bindedData.line.distance;
+
+            if(renderByThisObj.line.distance === null){ //削除指定の場合
+                reportObj.PrevObj.line.distance = previousProperty;
+                reportObj.RenderedObj.line.distance = null;
+                delete bindedData.line.distance;
+            
+            }else if(typeof renderByThisObj.line.distance != 'number'){
+                var wrn = "Wrong type specified in \`" + "distance" + "\`. " +
+                    "specified type:\`" + (typeof renderByThisObj.line.distance) + "\`, expected type:\`number\`."
+                ;
+                console.warn(wrn);
+                reportObj.FailuredMessages.line.distance = wrn;
+
+            }else{ //型は number
+                reportObj.PrevObj.line.distance = previousProperty;
+                reportObj.RenderedObj.line.distance = renderByThisObj.line.distance;
+                bindedData.line.distance = renderByThisObj.line.distance;
+            }
+
+            untreatedPropertyNames.splice(untreatedPropertyNames.indexOf("distance"), 1); //未処理プロパティリストから削除
         }
 
         //Unkdown Propertyに対する警告
@@ -7365,7 +7404,7 @@ function forceLayoutMemo(initializerObj){
                     uniqueLinkKeyName = makeUniqueKey(uniqueLinkKeyName, isReservedLinkKey);
                 }
 
-                var dropToHereDY = linkDistance*0.6;
+                var dropToHereDY = defaultLinkDistance*0.6;
                 var dropToHereX = bindedData.coordinate.x;
                 var dropToHereY = bindedData.coordinate.y + dropToHereDY;
 
@@ -7375,7 +7414,7 @@ function forceLayoutMemo(initializerObj){
                     var oneData = dataset.datas[i];
                     
                     if( (Math.abs(dropToHereX - oneData.coordinate.x) < 1) &&     //x座標が近すぎる
-                        ((dropToHereY - dropToHereDY) < oneData.coordinate.y) &&  //y座標が (-linkDistance) < (linkDistance*2)
+                        ((dropToHereY - dropToHereDY) < oneData.coordinate.y) &&  //y座標が (-defaultLinkDistance) < (defaultLinkDistance*2)
                         (oneData.coordinate.y < (dropToHereY + dropToHereDY*2))){ 
 
                         dropToHereX += 1;
