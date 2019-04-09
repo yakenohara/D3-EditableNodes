@@ -2588,15 +2588,15 @@ function forceLayoutMemo(initializerObj){
                         key:uniqueKey,
                         type:targetDrawerObj.type,
                         source:targetDrawerObj.source,
-                        target:d.key,
-                        link:{
-                            distance: Math.sqrt(
-                                Math.pow(Math.abs(d.coordinate.y - sourceNode.coordinate.y), 2) + 
-                                Math.pow(Math.abs(d.coordinate.x - sourceNode.coordinate.x), 2)
-                            )
-                        }
+                        target:d.key
                     }
                 ]
+            };
+            appendingArr.links[0][defaultLinkhape] = {
+                distance: Math.sqrt(
+                    Math.pow(Math.abs(d.coordinate.y - sourceNode.coordinate.y), 2) + 
+                    Math.pow(Math.abs(d.coordinate.x - sourceNode.coordinate.x), 2)
+                )
             };
             
             $SVGDrawingAreaElement.get(0).removeEventListener("mousemove",updateCoordinatesOfTargetDrawerObj);
