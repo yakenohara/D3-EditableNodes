@@ -1009,6 +1009,26 @@ function forceLayoutMemo(initializerObj){
                     call_editSVGNodes(false);
                 }
             },
+            startConnect:{
+                name: "StartConnect(C)",
+                accesskey: 'c', //todo keySettings.connectDatasとの競合回避
+                callback: function(itemKey, opt){
+                    checkStartConnect();
+                },
+                visible: function(itemKey, opt){
+                    return !connectStarted;
+                }
+            },
+            removeConnect: {
+                name: "RemoveConnect(C)",
+                accesskey: 'c', //todo keySettings.connectDatasとの競合回避
+                callback: function(itemKey, opt){
+                    removeConnect();
+                },
+                visible: function(itemKey, opt){
+                    return connectStarted;
+                }
+            },
             export: {
                 //エクスポート
                 name: "Export (E)",
