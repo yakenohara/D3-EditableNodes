@@ -57,6 +57,18 @@
     background-color: rgb(77, 74, 255);
 }
 
+.force-layout-memo .statusMessageDiv{
+    background-color: rgb(104, 104, 104);
+    border-radius: 15px;
+}
+
+.force-layout-memo .statusMessageDiv .statusMessage{
+    font-family: arial, sans-serif;
+    font-size: 30px;
+    color: rgb(255, 255, 255);
+    margin: 10px 15px
+}
+
 /* -----------------------------------------------------</ユーザーが好みで変更する定義> */
 
 /* <構造定義>------------------------------------------------------ */

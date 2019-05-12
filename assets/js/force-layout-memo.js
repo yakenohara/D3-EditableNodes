@@ -64,6 +64,9 @@ function forceLayoutMemo(initializerObj){
     //Transaction History要素のclass名
     var className_transactionHistoryElement = "transactionHistory";
 
+    //todo comment
+    var className_statusMessageElement = "statusMessage";
+
     //描画用SVG要素のclass名
     var className_SVGElementForNodesMapping = "SVGForNodesMapping";
 
@@ -126,6 +129,8 @@ function forceLayoutMemo(initializerObj){
     var $propertyEditConsoleElement_link;    //(For Link) Property Edit Console (jQuery selection)
     var $3transactionHistoryElement;         //Transaction History (D3.js selection)
     var $transactionHistoryElement = null;          //Transaction History (jQuery selection)
+    var $3statusMessageElement; //todo comment
+    var $statusMessageElement; //todo comment
     var $3SVGDrawingAreaElement;             //描画用SVG領域 (D3.js selection)
     var $SVGDrawingAreaElement;              //描画用SVG領域 (jQuery selection)
     var $3svgNodesGroup;
@@ -771,6 +776,22 @@ function forceLayoutMemo(initializerObj){
         .classed(className_transactionHistoryElement, true)
         .attr("wrap","off");
     $transactionHistoryElement = $($3transactionHistoryElement.node()).eq(0);
+
+    $3statusMessageElement = $3motherElement.append("div") //transaction history
+        .style("position", "absolute")
+        .style("z-index", 10)
+        .style("margin", 0)
+        .style("border", 0)
+        .style("padding", 0)
+        .style("width", "100%")
+        .style("bottom", 0)
+        .style("text-align", "center")
+        .append("div")
+        .style("display", "inline-block")
+        .classed("statusMessageDiv", true)
+        .append("div")
+        .classed("statusMessage", true)
+    ;
 
     $3SVGDrawingAreaElement = $3motherElement.append("svg") //Node描画用SVGの作成
         .classed(className_SVGElementForNodesMapping, true)
@@ -2490,6 +2511,8 @@ function forceLayoutMemo(initializerObj){
                 // d.$3bindedSVGElement.on('click', null); // click イベントのunbind
             });
 
+            $3statusMessageElement.text("Connect");
+
             startConnect();
         }
     }
@@ -2669,6 +2692,8 @@ function forceLayoutMemo(initializerObj){
             $3svgLinks.each(function(d, i){
                 // d.$3bindedSVGElement.on('click', linkClicked);  // SVGノードの単一選択イベントを登録
             });
+
+            $3statusMessageElement.text("");
 
             connectStarted = false;
         }
