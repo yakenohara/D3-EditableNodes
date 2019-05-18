@@ -2604,6 +2604,9 @@ function forceLayoutMemo(initializerObj){
     // node同士 の link 結合イベント
     function nodeConnected(d){
 
+        //todo
+        //接続済み node の場合は、処理しない
+
         if(d.key != targetDrawerObj.source){ //source, target は別 node の場合
 
             // x座標 が近すぎる node が 3 つ以上並んだ状態で両端の node を結合すると、
@@ -3339,6 +3342,12 @@ function forceLayoutMemo(initializerObj){
                     d.$3bindedSVGElement.call(d3.drag()
                         .on('start', function(d, i){
 
+                            //todo
+                            // connect 操作中 &&
+                            // drag された node は link された connect 元 node を持つ 場合、
+                            // connect 元 node の座標を固定する。
+                            // link の length 調整モードに入る
+
                             if(!d3.event.active) simulation.alphaTarget(0.3).restart();
                             
                             bufTotalReport = {};
@@ -3389,6 +3398,10 @@ function forceLayoutMemo(initializerObj){
                             beforeDragInfo_mouse = {x:d3.event.x, y:d3.event.y};
                         })
                         .on('drag', function(d, i){
+
+                            //todo
+                            // link の length 調整モード の場合、
+                            // connect 元 node と drag node 間の link を調整する
                             
                             //移動していない場合はハジく
                             if(d3.event.dx == 0 && d3.event.dy == 0){return;}
@@ -3434,6 +3447,11 @@ function forceLayoutMemo(initializerObj){
 
                         })
                         .on('end', function(d, i){
+
+                            //todo
+                            // link の length 調整モード の場合、
+                            // connect 元 node の座標を固定を解除する
+
                             if(!d3.event.active) simulation.alphaTarget(0);
                             
                             for(var idx = 0 ; idx < beforeDragInfo_nodes.length ; idx++){
