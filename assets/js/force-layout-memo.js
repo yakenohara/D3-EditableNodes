@@ -3425,8 +3425,9 @@ function forceLayoutMemo(initializerObj){
                             // その node を固定する。 -> link の length 調整モードに入る
                             if(connectStarted){ //connect 操作中の場合
 
-                                //todo
-                                // connect 用 link 表示(targetDrawerObj) を表示させない
+                                //connect 用 link 表示(targetDrawerObj) を表示させない
+                                targetDrawerObj.$3bindedSVGLinkElement.style("visibility", "hidden");
+                                targetDrawerObj.$3bindedSelectionLayerSVGElement.style("visibility", "hidden");
 
                                 for(var i = 0 ; i < dataset.links.length ; i++){
                                     for(var j = 0 ; j < beforeDragInfo_nodes.length ; j++){
@@ -3538,15 +3539,26 @@ function forceLayoutMemo(initializerObj){
 
                                 //todo レポートの merge
                                 console.log(renderReport);
-
-                                //todo リリース直後の simulation 用 distance 係数が古いまま。force simulation に再設定されない。
-                                // -> ex:) 精一杯 node 間を引き伸ばしても、 force simulation で縮められてしまう
                             }
 
                             // link の length 調整の為に座標固定していた node の fx/fy を開放する
                             for(var idx = 0 ; idx < beforeDragInfo_stretchingNodes.length ; idx++){
                                 beforeDragInfo_stretchingNodes[idx].fx = null;
                                 beforeDragInfo_stretchingNodes[idx].fy = null;
+                            }
+
+                            //force simulation の link distance 係数が古いままなので、
+                            //force simulation を restart する
+                            if(beforeDragInfo_stretchingLinks.length > 0){
+                                startForce();
+                            }
+
+                            if(connectStarted){ //connect 操作中の場合
+                                //drag().on('start'~ 時に非表示にした、
+                                //connect 用 link 表示(targetDrawerObj)を復活させる
+                                targetDrawerObj.$3bindedSVGLinkElement.style("visibility", null);
+                                targetDrawerObj.$3bindedSelectionLayerSVGElement.style("visibility", null);
+
                             }
 
                             if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
