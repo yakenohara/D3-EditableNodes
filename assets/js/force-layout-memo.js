@@ -2614,8 +2614,25 @@ function forceLayoutMemo(initializerObj){
     // node同士 の link 結合イベント
     function nodeConnected(d){
 
-        //todo
         //接続済み node の場合は、処理しない
+        for(var i = 0 ; i < dataset.links.length ; i++){
+            if(
+                (   //link の source が click された node &&
+                    //link の target が connect モード中の node
+                    (dataset.links[i].source.key == d.key) &&
+                    (dataset.links[i].target.key == targetDrawerObj.source)
+                )
+                ||
+                (   //link の source が connect モード中の node &&
+                    //link の target が click された node
+                    (dataset.links[i].source.key == targetDrawerObj.source) &&
+                    (dataset.links[i].target.key == d.key)
+                    
+                )
+            ){
+                return;
+            }
+        }
 
         if(d.key != targetDrawerObj.source){ //source, target は別 node の場合
 
