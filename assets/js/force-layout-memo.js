@@ -3364,16 +3364,12 @@ function forceLayoutMemo(initializerObj){
                     var bufTotalReport;
                     var beforeDragInfo_nodes;
                     var beforeDragInfo_mouse;
+                    var beforeDragInfo_stretchingLinks;
+                    var beforeDragInfo_stretchingNodes;
 
                     // Nodeに対する Drag イベント
                     d.$3bindedSVGElement.call(d3.drag()
                         .on('start', function(d, i){
-
-                            //todo
-                            // connect 操作中 &&
-                            // drag された node は link された connect 元 node を持つ 場合、
-                            // connect 元 node の座標を固定する。
-                            // link の length 調整モードに入る
 
                             if(!d3.event.active) simulation.alphaTarget(0.3).restart();
                             
@@ -3386,6 +3382,8 @@ function forceLayoutMemo(initializerObj){
                             bufTotalReport.reportsArr.links = [];
 
                             beforeDragInfo_nodes = [];
+                            beforeDragInfo_stretchingLinks = [];
+                            beforeDragInfo_stretchingNodes = [];
 
                             //DragStartされたNodeの選択状態取得
                             var isSelected = (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
@@ -3422,14 +3420,57 @@ function forceLayoutMemo(initializerObj){
                                                         scale:transformObj.scale});
                             }
 
+                            // connect 操作中 &&
+                            // drag された node は link された node を持つ場合、
+                            // その node を固定する。 -> link の length 調整モードに入る
+                            if(connectStarted){ //connect 操作中の場合
+
+                                //todo
+                                // connect 用 link 表示(targetDrawerObj) を表示させない
+
+                                for(var i = 0 ; i < dataset.links.length ; i++){
+                                    for(var j = 0 ; j < beforeDragInfo_nodes.length ; j++){
+                                        pushTo_beforeDragInfo_stretchingNodes(true);
+                                        pushTo_beforeDragInfo_stretchingNodes(false);
+                                        
+                                        function pushTo_beforeDragInfo_stretchingNodes(checkSource){
+                                            var ck;
+                                            var ad;
+                                            if(checkSource){
+                                                ck = "source";
+                                                ad = "target"
+                                            }else{
+                                                ck = "target";
+                                                ad = "source"
+                                            }
+
+                                            if(beforeDragInfo_nodes[j].toThisData.key == dataset.links[i][ck].key){
+                                                var outOfSelection  = true;
+                                                for(var k = 0 ; k < beforeDragInfo_nodes.length ; k++){
+                                                    if(beforeDragInfo_nodes[k].toThisData.key == dataset.links[i][ad].key){
+                                                        outOfSelection = false;
+                                                        break;
+                                                    }
+                                                }
+                                                if(outOfSelection){
+                                                    beforeDragInfo_stretchingLinks.push(dataset.links[i]);
+                                                    beforeDragInfo_stretchingNodes.push(dataset.links[i][ad]);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            for(var i = 0 ; i < beforeDragInfo_stretchingNodes.length ; i++){ //link された node を固定する
+                                beforeDragInfo_stretchingNodes[i].fx = beforeDragInfo_stretchingNodes[i].x;
+                                beforeDragInfo_stretchingNodes[i].fy = beforeDragInfo_stretchingNodes[i].y;
+                            }
+
                             beforeDragInfo_mouse = {x:d3.event.x, y:d3.event.y};
                         })
                         .on('drag', function(d, i){
 
-                            //todo
-                            // link の length 調整モード の場合、
-                            // connect 元 node と drag node 間の link を調整する
-                            
                             //移動していない場合はハジく
                             if(d3.event.dx == 0 && d3.event.dy == 0){return;}
 
@@ -3475,15 +3516,37 @@ function forceLayoutMemo(initializerObj){
                         })
                         .on('end', function(d, i){
 
-                            //todo
-                            // link の length 調整モード の場合、
-                            // connect 元 node の座標を固定を解除する
-
                             if(!d3.event.active) simulation.alphaTarget(0);
                             
                             for(var idx = 0 ; idx < beforeDragInfo_nodes.length ; idx++){
                                 beforeDragInfo_nodes[idx].toThisData.fx = null;
                                 beforeDragInfo_nodes[idx].toThisData.fy = null;
+                            }
+
+                            //length 調整 していた link を、最終状態の length で登録する
+                            for(var idx = 0 ; idx < beforeDragInfo_stretchingLinks.length ; idx++){
+                                //node 間距離を求める
+                                var tmpDistance = Math.sqrt(
+                                    Math.pow(Math.abs(beforeDragInfo_stretchingLinks[idx].target.coordinate.y - beforeDragInfo_stretchingLinks[idx].source.coordinate.y), 2) + 
+                                    Math.pow(Math.abs(beforeDragInfo_stretchingLinks[idx].target.coordinate.x - beforeDragInfo_stretchingLinks[idx].source.coordinate.x), 2)
+                                );
+                                var renderReport = renderSVGLink(beforeDragInfo_stretchingLinks[idx], {
+                                    line:{
+                                        distance: tmpDistance
+                                    }
+                                });
+
+                                //todo レポートの merge
+                                console.log(renderReport);
+
+                                //todo リリース直後の simulation 用 distance 係数が古いまま。force simulation に再設定されない。
+                                // -> ex:) 精一杯 node 間を引き伸ばしても、 force simulation で縮められてしまう
+                            }
+
+                            // link の length 調整の為に座標固定していた node の fx/fy を開放する
+                            for(var idx = 0 ; idx < beforeDragInfo_stretchingNodes.length ; idx++){
+                                beforeDragInfo_stretchingNodes[idx].fx = null;
+                                beforeDragInfo_stretchingNodes[idx].fy = null;
                             }
 
                             if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
