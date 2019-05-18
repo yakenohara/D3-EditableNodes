@@ -57,16 +57,24 @@
     background-color: rgb(77, 74, 255);
 }
 
-.force-layout-memo .statusMessageDiv{
+.force-layout-memo .statusMessage{
     background-color: rgb(104, 104, 104);
     border-radius: 15px;
 }
 
-.force-layout-memo .statusMessageDiv .statusMessage{
+.force-layout-memo .statusMessage .statusMessage_div{
     font-family: arial, sans-serif;
-    font-size: 30px;
     color: rgb(255, 255, 255);
-    margin: 10px 15px
+}
+
+.force-layout-memo .statusMessage .statusMessage_div .title{
+    font-size: 30px;
+    margin: 10px 15px;
+}
+
+.force-layout-memo .statusMessage .statusMessage_div .description{
+    font-size: 15px;
+    margin: 15px;
 }
 
 /* -----------------------------------------------------</ユーザーが好みで変更する定義> */

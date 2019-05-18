@@ -128,9 +128,10 @@ function forceLayoutMemo(initializerObj){
     var $propertyEditConsoleElement_node;    //(For Node) Property Edit Console (jQuery selection)
     var $propertyEditConsoleElement_link;    //(For Link) Property Edit Console (jQuery selection)
     var $3transactionHistoryElement;         //Transaction History (D3.js selection)
-    var $transactionHistoryElement = null;          //Transaction History (jQuery selection)
-    var $3statusMessageElement; //todo comment
-    var $statusMessageElement; //todo comment
+    var $transactionHistoryElement = null;   //Transaction History (jQuery selection)
+    var $3statusMessageElement;              //Status Message(for first message, and second message) (D3.js selection)
+    var $3statusMessageElement_first;        //Status Message(for first message) (D3.js selection)
+    var $3statusMessageElement_second;       //Status Message(for second message) (D3.js selection)
     var $3SVGDrawingAreaElement;             //描画用SVG領域 (D3.js selection)
     var $SVGDrawingAreaElement;              //描画用SVG領域 (jQuery selection)
     var $3svgNodesGroup;
@@ -223,6 +224,7 @@ function forceLayoutMemo(initializerObj){
 
     var mousetrapInstance = new Mousetrap();
     var dataSelectionManager = new clsfnc_dataSelectionManager();
+    var messageManager = new clsfnc_messageManager();
     var historyManager = new clsfnc_historyManager();
 
     //Node初期化用Objを作る
@@ -777,20 +779,28 @@ function forceLayoutMemo(initializerObj){
         .attr("wrap","off");
     $transactionHistoryElement = $($3transactionHistoryElement.node()).eq(0);
 
-    $3statusMessageElement = $3motherElement.append("div") //transaction history
+    $3statusMessageElement = $3motherElement.append("div") //status message
         .style("position", "absolute")
         .style("z-index", 10)
         .style("margin", 0)
         .style("border", 0)
         .style("padding", 0)
         .style("width", "100%")
-        .style("bottom", 0)
+        .style("bottom", "30px")
         .style("text-align", "center")
         .append("div")
         .style("display", "inline-block")
-        .classed("statusMessageDiv", true)
+        .classed(className_statusMessageElement, true)
         .append("div")
-        .classed("statusMessage", true)
+        .classed("statusMessage_div", true)
+    ;
+
+    $3statusMessageElement_first = $3statusMessageElement.append("div")
+        .classed("title",true)
+    ;
+
+    $3statusMessageElement_second = $3statusMessageElement.append("p")
+        .classed("description",true)
     ;
 
     $3SVGDrawingAreaElement = $3motherElement.append("svg") //Node描画用SVGの作成
@@ -2531,7 +2541,7 @@ function forceLayoutMemo(initializerObj){
                 // d.$3bindedSVGElement.on('click', null); // click イベントのunbind
             });
 
-            $3statusMessageElement.text("Connect");
+            messageManager.setMessage("Connect", "Click node to Connect");
 
             startConnect();
         }
@@ -2716,7 +2726,7 @@ function forceLayoutMemo(initializerObj){
                 // d.$3bindedSVGElement.on('click', linkClicked);  // SVGノードの単一選択イベントを登録
             });
 
-            $3statusMessageElement.text("");
+            messageManager.clearMessage();
 
             connectStarted = false;
         }
@@ -6663,6 +6673,23 @@ function forceLayoutMemo(initializerObj){
                 }
             }
             return latestSelectedData;
+        }
+    }
+
+    function clsfnc_messageManager(){
+        this.setMessage = function(msgFirst, msgSecond){
+            $3statusMessageElement_first.text(msgFirst);
+
+            if(typeof msgSecond != undefined){
+                $3statusMessageElement_second.text(msgSecond);
+            }else{
+                $3statusMessageElement_second.text("");
+            }
+        }
+
+        this.clearMessage = function(){
+            $3statusMessageElement_first.text("");
+            $3statusMessageElement_second.text("");
         }
     }
 
