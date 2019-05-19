@@ -2615,6 +2615,7 @@ function forceLayoutMemo(initializerObj){
     function nodeConnected(d){
 
         //接続済み node の場合は、処理しない
+        var alreadyConnected = false;
         for(var i = 0 ; i < dataset.links.length ; i++){
             if(
                 (   //link の source が click された node &&
@@ -2630,11 +2631,14 @@ function forceLayoutMemo(initializerObj){
                     
                 )
             ){
-                return;
+                alreadyConnected = true;
+                break;
             }
         }
 
-        if(d.key != targetDrawerObj.source){ //source, target は別 node の場合
+        if(!alreadyConnected && //接続済みではない
+            typeof targetDrawerObj.source != 'undefined' && // node connect 用 link 表示(targetDrawerObj)が存在する
+            d.key != targetDrawerObj.source){ //source, target は別 node の場合
 
             // x座標 が近すぎる node が 3 つ以上並んだ状態で両端の node を結合すると、
             // 間にはさまれた node が横方向に散らばらないので、回避する
@@ -2672,18 +2676,20 @@ function forceLayoutMemo(initializerObj){
                 )
             };
             
+            var appendingTotalReport = appendNodes(appendingArr);
+            historyManager.appendHistory(appendingTotalReport);
+        }
+
+        if(typeof targetDrawerObj.$3bindedSVGLinkElement != 'undefined'){
             $SVGDrawingAreaElement.get(0).removeEventListener("mousemove",updateCoordinatesOfTargetDrawerObj);
             targetDrawerObj.$3bindedSVGLinkElement.remove();
             targetDrawerObj.$3bindedSelectionLayerSVGElement.remove();
-
-            var appendingTotalReport = appendNodes(appendingArr);
-            historyManager.appendHistory(appendingTotalReport);
-
-            dataSelectionManager.clearSelections(); //選択履歴をクリア
-            dataSelectionManager.pushDataSelection(d); //node選択履歴に1つ追加
-
-            startConnect();
         }
+        
+        dataSelectionManager.clearSelections(); //選択履歴をクリア
+        dataSelectionManager.pushDataSelection(d); //node選択履歴に1つ追加
+
+        startConnect();
     }
 
     function startConnect(){
