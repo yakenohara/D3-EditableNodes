@@ -1042,6 +1042,26 @@ function forceLayoutMemo(initializerObj){
                     return connectStarted;
                 }
             },
+            startBrush:{
+                name: "StartBrush(B)",
+                accesskey: 'b', //todo keySettings.brushSelectingとの競合回避
+                callback: function(itemKey, opt){
+                    startBrush();
+                },
+                visible: function(itemKey, opt){
+                    return ($3NodeSelectingBrushGroup === null);
+                }
+            },
+            removeBrush: {
+                name: "RemoveBrush(B)",
+                accesskey: 'b', //todo keySettings.brushSelectingとの競合回避
+                callback: function(itemKey, opt){
+                    removeBrush();
+                },
+                visible: function(itemKey, opt){
+                    return ($3NodeSelectingBrushGroup !== null);
+                }
+            },
             export: {
                 //エクスポート
                 name: "Export (E)",
@@ -2490,6 +2510,8 @@ function forceLayoutMemo(initializerObj){
 
             $3NodeSelectingBrushGroup = $3selectionLayersGroup.append("g");
             $3NodeSelectingBrushGroup.call(brush);
+
+            messageManager.setMessage("Brush selection");
         }
     }
 
@@ -2523,6 +2545,8 @@ function forceLayoutMemo(initializerObj){
             $3NodeSelectingBrushGroup.on(".brush", null);
             $3selectionLayersGroup.node().removeChild($3NodeSelectingBrushGroup.node());
             $3NodeSelectingBrushGroup = null;
+
+            messageManager.clearMessage();
         }
     }
 
