@@ -1313,30 +1313,35 @@ function forceLayoutMemo(initializerObj){
             showContextMenuHere.x = 
                 latestSelectedData.coordinate.x * transformObj.scale +
                 transformObj.translates.x +
-                boundingClientRect.left
+                boundingClientRect.left +
+                window.pageXOffset
             ;
 
             showContextMenuHere.y =
                 latestSelectedData.coordinate.y * transformObj.scale +
                 transformObj.translates.y +
-                boundingClientRect.top
+                boundingClientRect.top +
+                window.pageYOffset
             ;
             
         
         }else{
             // 画面中央にメニューを表示する
             showContextMenuHere.x =
-                boundingClientRect.left + ($3motherElement.node().offsetWidth / 2)
+                boundingClientRect.left +
+                ($3motherElement.node().offsetWidth / 2) +
+                window.pageXOffset
             ;
 
             showContextMenuHere.y =
-                boundingClientRect.top + ($3motherElement.node().offsetHeight / 2)
+                boundingClientRect.top +
+                ($3motherElement.node().offsetHeight / 2) +
+                window.pageYOffset
             ;
         }
 
-        $("." + clsNameForCntxtMenu).contextMenu(showContextMenuHere); //contextMenu の表示 //todo スクロールしている状態だと、表示位置がおかしい
+        $("." + clsNameForCntxtMenu).contextMenu(showContextMenuHere); //contextMenu の表示
         
-
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
 
         //document.oncontextmenuイベントで、
