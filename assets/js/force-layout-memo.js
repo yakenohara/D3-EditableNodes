@@ -2675,6 +2675,14 @@ function forceLayoutMemo(initializerObj){
                     Math.pow(Math.abs(d.coordinate.x - sourceNode.coordinate.x), 2)
                 )
             };
+
+            //note
+            //targetDrawerObj は $3svgLinks の1要素として定義している(renderSVGLink機能で rendering する為)
+            //でも targetDrawerObj は source と target の接続先を持たない dummy の link なため、
+            //appendNodes() 実行中にコケる。 その防止の為に、appendNodes() 実行前に削除する。
+            $SVGDrawingAreaElement.get(0).removeEventListener("mousemove",updateCoordinatesOfTargetDrawerObj);
+            targetDrawerObj.$3bindedSVGLinkElement.remove();
+            targetDrawerObj.$3bindedSelectionLayerSVGElement.remove();
             
             var appendingTotalReport = appendNodes(appendingArr);
             historyManager.appendHistory(appendingTotalReport);
