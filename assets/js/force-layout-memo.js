@@ -997,7 +997,7 @@ function forceLayoutMemo(initializerObj){
                         datas:[
                             {
                                 key:uniqueDataKeyName,
-                                coordinate: { //右クリック位置に挿入する //todo 画面するロールしている状態だと、スクロール分ずれる
+                                coordinate: { //右クリック位置に挿入する
                                     x:lastCoordinate.rightClick.x,
                                     y:lastCoordinate.rightClick.y
                                 },
@@ -1091,7 +1091,7 @@ function forceLayoutMemo(initializerObj){
                 
             },
         },
-        position: function (opt, x, y) {
+        position: function (opt, x, y) { //caution! x <- pageX, y <- pageY
 
             var boundingClientRect = $SVGDrawingAreaElement.get(0).getBoundingClientRect();
             
@@ -1107,8 +1107,8 @@ function forceLayoutMemo(initializerObj){
             }
 
             //右クリック位置の保存
-            lastCoordinate.rightClick.x = ((x - boundingClientRect.left) - transformObj.translates.x) / transformObj.scale;
-            lastCoordinate.rightClick.y = ((y - boundingClientRect.top) - transformObj.translates.y) / transformObj.scale;
+            lastCoordinate.rightClick.x = ((x - (boundingClientRect.left + window.pageXOffset)) - transformObj.translates.x) / transformObj.scale;
+            lastCoordinate.rightClick.y = ((y - (boundingClientRect.top + window.pageYOffset)) - transformObj.translates.y) / transformObj.scale;
 
             var $win = $(window);
 
