@@ -3603,6 +3603,13 @@ function forceLayoutMemo(initializerObj){
                                 beforeDragInfo_nodes[idx].toThisData.fy = null;
                             }
 
+                            // link の length 調整の為に座標固定していた node の fx/fy を開放する
+                            //note 単なるnode click でも .on('start' が実行されて fx/fy が設定されてしまうので、ここで開放する
+                            for(var idx = 0 ; idx < beforeDragInfo_stretchingNodes.length ; idx++){
+                                beforeDragInfo_stretchingNodes[idx].fx = null;
+                                beforeDragInfo_stretchingNodes[idx].fy = null;
+                            }
+
                             if(connectStarted && !bufTotalReport.allNG){ //connnect 中で、かつ drag().on('drag',~ が発動していた場合
 
                                 var draggingReports = {};
@@ -3643,12 +3650,6 @@ function forceLayoutMemo(initializerObj){
                                     // history message は直接編集する。(`~ node(s) moved` を残すため)
                                     bufTotalReport.message += " " + draggingReports.reportsArr.links.length + " link(s) stretched.";
                                     overWriteScceededTransaction(draggingReports, bufTotalReport, 'links');
-                                }
-
-                                // link の length 調整の為に座標固定していた node の fx/fy を開放する
-                                for(var idx = 0 ; idx < beforeDragInfo_stretchingNodes.length ; idx++){
-                                    beforeDragInfo_stretchingNodes[idx].fx = null;
-                                    beforeDragInfo_stretchingNodes[idx].fy = null;
                                 }
 
                                 //drag().on('start'~ 時に非表示にした、
