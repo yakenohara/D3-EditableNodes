@@ -1771,6 +1771,8 @@ function forceLayoutMemo(initializerObj){
                 targetHilighted = true;
             }
         }
+
+        highlightingMessage(); //message 更新
     }
 
     function appendHighlight(sourceOrTarget){
@@ -1818,6 +1820,8 @@ function forceLayoutMemo(initializerObj){
         if((binCode_KeyPressing & (1 | 2 | 4)) == 0){ //highlight すべて解除後
             highlightingStartPointKey = null;
         }
+        
+        highlightingMessage(); //message 更新
     }
 
     function removeHighlight(sourceOrTarget){
@@ -1838,6 +1842,29 @@ function forceLayoutMemo(initializerObj){
                 dataset.links[i][sourceOrTarget].$3bindedSelectionLayerSVGElement.classed("highlight", false);
                 dataset.links[i].$3bindedSelectionLayerSVGElement.classed("highlight", false);
             }
+        }
+    }
+
+    function highlightingMessage(){
+
+        if( ((binCode_KeyPressing & 4) > 0) // source:ON and target:ON
+            ||
+            (
+                ((binCode_KeyPressing & 2) > 0)
+                &&
+                ((binCode_KeyPressing & 1) > 0)
+            )
+        ){
+            messageManager.setMessage("Highlighting", "source(s), and target(s)");
+            
+        }else if((binCode_KeyPressing & 2) > 0){ // source:OFF target:ON
+            messageManager.setMessage("Highlighting", "target(s)");
+            
+        }else if((binCode_KeyPressing & 1) > 0){ // source:ON target:OFF
+            messageManager.setMessage("Highlighting", "source(s)");
+
+        }else{ // source:OFF target:OFF
+            messageManager.clearMessage();
         }
     }
 
