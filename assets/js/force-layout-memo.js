@@ -790,16 +790,19 @@ function forceLayoutMemo(initializerObj){
         .style("text-align", "center")
         .append("div")
         .style("display", "inline-block")
+        .style("visibility", "hidden")
         .classed(className_statusMessageElement, true)
-        .append("div")
+    ;
+
+    var $3statusMessageElement_div = $3statusMessageElement.append("div")
         .classed("statusMessage_div", true)
     ;
 
-    $3statusMessageElement_first = $3statusMessageElement.append("div")
+    $3statusMessageElement_first = $3statusMessageElement_div.append("div")
         .classed("title",true)
     ;
 
-    $3statusMessageElement_second = $3statusMessageElement.append("p")
+    $3statusMessageElement_second = $3statusMessageElement_div.append("p")
         .classed("description",true)
     ;
 
@@ -994,7 +997,7 @@ function forceLayoutMemo(initializerObj){
                         datas:[
                             {
                                 key:uniqueDataKeyName,
-                                coordinate: { //右クリック位置に挿入する
+                                coordinate: { //右クリック位置に挿入する //todo 画面するロールしている状態だと、スクロール分ずれる
                                     x:lastCoordinate.rightClick.x,
                                     y:lastCoordinate.rightClick.y
                                 },
@@ -1158,6 +1161,7 @@ function forceLayoutMemo(initializerObj){
             console.warn("Unkown Item selected. Itemkey:\`" + itemKey + "\`, DOM: ", opt.$trigger.get(0));
         }
     });
+    $('.' + clsNameInCntxtMenu).css('z-index', '20');
 
     // SVG領域の Zoom・Pan イベント
     var zoom = d3.zoom()
@@ -2541,8 +2545,8 @@ function forceLayoutMemo(initializerObj){
                 // d.$3bindedSVGElement.on('click', null); // click イベントのunbind
             });
 
-            messageManager.setMessage("Connect", "Click node to Connect");
-
+            messageManager.setMessage("Connect nodes / Stretch link(s)", "Click node to Connect. Or move node(s) to stretch link(s).");
+            connectStarted = true;
             startConnect();
         }
     }
@@ -2733,8 +2737,6 @@ function forceLayoutMemo(initializerObj){
             renderSVGLink(targetDrawerObj, targetDrawerObj); //SVG レンダリング
 
             $SVGDrawingAreaElement.get(0).addEventListener("mousemove",updateCoordinatesOfTargetDrawerObj);
-
-            connectStarted = true;
         }
     }
 
@@ -6812,6 +6814,9 @@ function forceLayoutMemo(initializerObj){
 
     function clsfnc_messageManager(){
         this.setMessage = function(msgFirst, msgSecond){
+
+            $3statusMessageElement.style("visibility", null);
+
             $3statusMessageElement_first.text(msgFirst);
 
             if(typeof msgSecond != undefined){
@@ -6824,6 +6829,7 @@ function forceLayoutMemo(initializerObj){
         this.clearMessage = function(){
             $3statusMessageElement_first.text("");
             $3statusMessageElement_second.text("");
+            $3statusMessageElement.style("visibility", "hidden");
         }
     }
 
