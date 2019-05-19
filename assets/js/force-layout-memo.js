@@ -1332,7 +1332,7 @@ function forceLayoutMemo(initializerObj){
             ;
         }
 
-        $("." + clsNameForCntxtMenu).contextMenu(showContextMenuHere); //contextMenu の表示
+        $("." + clsNameForCntxtMenu).contextMenu(showContextMenuHere); //contextMenu の表示 //todo スクロールしている状態だと、表示位置がおかしい
         
 
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
