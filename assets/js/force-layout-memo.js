@@ -3524,41 +3524,62 @@ function forceLayoutMemo(initializerObj){
                                 beforeDragInfo_nodes[idx].toThisData.fy = null;
                             }
 
-                            //length 調整 していた link を、最終状態の length で登録する
-                            for(var idx = 0 ; idx < beforeDragInfo_stretchingLinks.length ; idx++){
-                                //node 間距離を求める
-                                var tmpDistance = Math.sqrt(
-                                    Math.pow(Math.abs(beforeDragInfo_stretchingLinks[idx].target.coordinate.y - beforeDragInfo_stretchingLinks[idx].source.coordinate.y), 2) + 
-                                    Math.pow(Math.abs(beforeDragInfo_stretchingLinks[idx].target.coordinate.x - beforeDragInfo_stretchingLinks[idx].source.coordinate.x), 2)
-                                );
-                                var renderReport = renderSVGLink(beforeDragInfo_stretchingLinks[idx], {
-                                    line:{
-                                        distance: tmpDistance
+                            if(connectStarted && !bufTotalReport.allNG){ //connnect 中で、かつ drag().on('drag',~ が発動していた場合
+
+                                var draggingReports = {};
+                                draggingReports.type = 'change';
+                                draggingReports.allOK = true;
+                                draggingReports.allNG = true;
+                                draggingReports.reportsArr = {};
+                                draggingReports.reportsArr.datas = [];
+                                draggingReports.reportsArr.links = [];
+
+                                //length 調整 していた link を、最終状態の length で登録する
+                                for(var idx = 0 ; idx < beforeDragInfo_stretchingLinks.length ; idx++){
+                                    //node 間距離を求める
+                                    var tmpDistance = Math.sqrt(
+                                        Math.pow(Math.abs(beforeDragInfo_stretchingLinks[idx].target.coordinate.y - beforeDragInfo_stretchingLinks[idx].source.coordinate.y), 2) + 
+                                        Math.pow(Math.abs(beforeDragInfo_stretchingLinks[idx].target.coordinate.x - beforeDragInfo_stretchingLinks[idx].source.coordinate.x), 2)
+                                    );
+                                    var renderReport = renderSVGLink(beforeDragInfo_stretchingLinks[idx], {
+                                        line:{
+                                            distance: tmpDistance
+                                        }
+                                    });
+
+                                    if(!renderReport.allOK){ //失敗が発生した場合
+                                        draggingReports.allOK = false;
                                     }
-                                });
+                                    if(!renderReport.allNG){ //成功が1つ以上ある場合
+                                        draggingReports.allNG = false;
+                                    }
+                                    draggingReports.reportsArr.links.push(renderReport);
 
-                                //todo レポートの merge
-                                console.log(renderReport);
-                            }
+                                    //todo レポートの merge
+                                    console.log(renderReport);
+                                }
 
-                            // link の length 調整の為に座標固定していた node の fx/fy を開放する
-                            for(var idx = 0 ; idx < beforeDragInfo_stretchingNodes.length ; idx++){
-                                beforeDragInfo_stretchingNodes[idx].fx = null;
-                                beforeDragInfo_stretchingNodes[idx].fy = null;
-                            }
+                                if(!draggingReports.allNG){ //1つ以上適用成功の場合
 
-                            //force simulation の link distance 係数が古いままなので、
-                            //force simulation を restart する
-                            if(beforeDragInfo_stretchingLinks.length > 0){
-                                startForce();
-                            }
+                                    // history message は直接編集する。(`~ node(s) moved` を残すため)
+                                    bufTotalReport.message += " " + draggingReports.reportsArr.links.length + " link(s) stretched.";
+                                    overWriteScceededTransaction(draggingReports, bufTotalReport, 'links');
+                                }
 
-                            if(connectStarted){ //connect 操作中の場合
+                                // link の length 調整の為に座標固定していた node の fx/fy を開放する
+                                for(var idx = 0 ; idx < beforeDragInfo_stretchingNodes.length ; idx++){
+                                    beforeDragInfo_stretchingNodes[idx].fx = null;
+                                    beforeDragInfo_stretchingNodes[idx].fy = null;
+                                }
+
                                 //drag().on('start'~ 時に非表示にした、
                                 //connect 用 link 表示(targetDrawerObj)を復活させる
                                 targetDrawerObj.$3bindedSVGLinkElement.style("visibility", null);
                                 targetDrawerObj.$3bindedSelectionLayerSVGElement.style("visibility", null);
 
+                                //force simulation の link distance 係数が古いままなので、
+                                //force simulation を restart する
+                                startForce();
                             }
 
                             if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
