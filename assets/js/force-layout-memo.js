@@ -2742,10 +2742,13 @@ function forceLayoutMemo(initializerObj){
 
         if(connectStarted){ // 2回連続で処理しないようにする
             
-            $SVGDrawingAreaElement.get(0).removeEventListener("mousemove",updateCoordinatesOfTargetDrawerObj);
-            // targetDrawerObj.remove();
-            targetDrawerObj.$3bindedSVGLinkElement.remove();
-            targetDrawerObj.$3bindedSelectionLayerSVGElement.remove();
+            if(typeof targetDrawerObj.$3bindedSVGLinkElement != 'undefined'){
+                $SVGDrawingAreaElement.get(0).removeEventListener("mousemove",updateCoordinatesOfTargetDrawerObj);
+                // targetDrawerObj.remove();
+                targetDrawerObj.$3bindedSVGLinkElement.remove();
+                targetDrawerObj.$3bindedSelectionLayerSVGElement.remove();
+
+            }
 
             // click イベントの復活
             $3svgNodes.each(function(d, i){
@@ -3440,8 +3443,10 @@ function forceLayoutMemo(initializerObj){
                             if(connectStarted){ //connect 操作中の場合
 
                                 //connect 用 link 表示(targetDrawerObj) を表示させない
-                                targetDrawerObj.$3bindedSVGLinkElement.style("visibility", "hidden");
-                                targetDrawerObj.$3bindedSelectionLayerSVGElement.style("visibility", "hidden");
+                                if(typeof targetDrawerObj.$3bindedSVGLinkElement != 'undefined'){
+                                    targetDrawerObj.$3bindedSVGLinkElement.style("visibility", "hidden");
+                                    targetDrawerObj.$3bindedSelectionLayerSVGElement.style("visibility", "hidden");
+                                }
 
                                 for(var i = 0 ; i < dataset.links.length ; i++){
                                     for(var j = 0 ; j < beforeDragInfo_nodes.length ; j++){
@@ -3588,8 +3593,10 @@ function forceLayoutMemo(initializerObj){
 
                                 //drag().on('start'~ 時に非表示にした、
                                 //connect 用 link 表示(targetDrawerObj)を復活させる
-                                targetDrawerObj.$3bindedSVGLinkElement.style("visibility", null);
-                                targetDrawerObj.$3bindedSelectionLayerSVGElement.style("visibility", null);
+                                if(typeof targetDrawerObj.$3bindedSVGLinkElement != 'undefined'){
+                                    targetDrawerObj.$3bindedSVGLinkElement.style("visibility", null);
+                                    targetDrawerObj.$3bindedSelectionLayerSVGElement.style("visibility", null);
+                                }
 
                                 //force simulation の link distance 係数が古いままなので、
                                 //force simulation を restart する
