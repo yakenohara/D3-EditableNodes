@@ -3640,9 +3640,6 @@ function forceLayoutMemo(initializerObj){
                                         draggingReports.allNG = false;
                                     }
                                     draggingReports.reportsArr.links.push(renderReport);
-
-                                    //todo レポートの merge
-                                    console.log(renderReport);
                                 }
 
                                 if(!draggingReports.allNG){ //1つ以上適用成功の場合
@@ -5854,6 +5851,9 @@ function forceLayoutMemo(initializerObj){
         if(typeof renderByThisObj.line.distance != 'undefined'){ //distance指定有り
 
             var previousProperty = bindedData.line.distance;
+            if(typeof previousProperty == 'undefined'){ //もともと未定義だった場合
+                previousProperty = null;
+            }
 
             if(renderByThisObj.line.distance === null){ //削除指定の場合
                 reportObj.PrevObj.line.distance = previousProperty;
@@ -6332,6 +6332,23 @@ function forceLayoutMemo(initializerObj){
 
             //transactionに対するMouseEnterイベント
             $historyMessageElem.mouseenter(function(){
+                
+                if(connectStarted){ //connect 中の場合
+
+                    //note
+                    //history をたどる処理内で、
+                    //link の rebind処理(以下コード)を実行する可能性がある。
+                    //
+                    //$3svgLinks = $3svgLinksGroup.selectAll("g.link")
+                    //    .data(dataset.links, function(d){return d.key});
+                    //
+                    //この時にnode connect 用 link 表示(targetDrawerObj)が存在すると、
+                    //targetDrawerObj は 紐付いた node を持たない dummy の link なので、
+                    //上記コード実行でコケる。
+                    //これを避ける為に、connect モードを解除する。
+                    removeConnect();
+                }
+
                 var invokedElem = this;
                 checkInit(invokedElem);
                 mouseEnterdTime++;
