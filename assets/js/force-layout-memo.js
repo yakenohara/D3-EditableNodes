@@ -788,9 +788,11 @@ function forceLayoutMemo(initializerObj){
         .style("width", "100%")
         .style("bottom", "30px")
         .style("text-align", "center")
+        .style("pointer-events", "none")
         .append("div")
         .style("display", "inline-block")
         .style("visibility", "hidden")
+        .style("pointer-events", "auto")
         .classed(className_statusMessageElement, true)
     ;
 
