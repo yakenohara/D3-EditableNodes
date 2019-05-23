@@ -144,6 +144,8 @@ function forceLayoutMemo(initializerObj){
         rightClick:{x:0, y:0},
         mouse:{x:0, y:0}
     }
+    var lastUIEvent = 0; //0:mouse event, 1: any key event
+    var ignoreKeyUp = false;
 
     //各Bit と 対応するキー(Bitが立っている間は、そのキー押下がキープされている事を表す)
     // Bit  0 (0000 0001) : keySettings.highlightNodesSource
@@ -937,6 +939,8 @@ function forceLayoutMemo(initializerObj){
     function checkUIisEnable(e){
         var closestDoms;
 
+        lastUIEvent = 0; //mouse event が発生した事を記録
+
         //click された element から親要素を辿り、
         //contextmenu に到達するか確認
         closestDoms = $(e.target).closest('.' + clsNameInCntxtMenu);
@@ -1024,44 +1028,28 @@ function forceLayoutMemo(initializerObj){
                     call_editSVGNodes(false);
                 }
             },
-            startConnect:{
-                name: "StartConnect(C)",
+            connect:{
+                name: "Connect(C)",
                 accesskey: 'c', //todo keySettings.connectDatasとの競合回避
                 callback: function(itemKey, opt){
-                    checkStartConnect();
-                },
-                visible: function(itemKey, opt){
-                    return !connectStarted;
+                    if(!connectStarted){
+                        checkStartConnect();
+                    }else{
+                        removeConnect();
+                    }
+                    return callbackFinally(true);
                 }
             },
-            removeConnect: {
-                name: "RemoveConnect(C)",
-                accesskey: 'c', //todo keySettings.connectDatasとの競合回避
-                callback: function(itemKey, opt){
-                    removeConnect();
-                },
-                visible: function(itemKey, opt){
-                    return connectStarted;
-                }
-            },
-            startBrush:{
-                name: "StartBrush(B)",
+            brush:{
+                name: "Brush(B)",
                 accesskey: 'b', //todo keySettings.brushSelectingとの競合回避
                 callback: function(itemKey, opt){
-                    startBrush();
-                },
-                visible: function(itemKey, opt){
-                    return ($3NodeSelectingBrushGroup === null);
-                }
-            },
-            removeBrush: {
-                name: "RemoveBrush(B)",
-                accesskey: 'b', //todo keySettings.brushSelectingとの競合回避
-                callback: function(itemKey, opt){
-                    removeBrush();
-                },
-                visible: function(itemKey, opt){
-                    return ($3NodeSelectingBrushGroup !== null);
+                    if($3NodeSelectingBrushGroup === null){
+                        startBrush();
+                    }else{
+                        removeBrush();
+                    }
+                    return callbackFinally(true);
                 }
             },
             export: {
@@ -1185,6 +1173,15 @@ function forceLayoutMemo(initializerObj){
     });
     $('.' + clsNameInCntxtMenu).css('z-index', '20');
 
+    function callbackFinally(returnThis){
+
+        if(lastUIEvent == 1){ //最後の UI event が key type の場合 (= キーボードショートカットで callback が処理された場合)
+            ignoreKeyUp = true;
+        }
+
+        return returnThis;
+    }
+
     // SVG領域の Zoom・Pan イベント
     var zoom = d3.zoom()
         .on("zoom", function(){
@@ -1265,6 +1262,9 @@ function forceLayoutMemo(initializerObj){
         
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
 
+        console.log("$(document).on('keydown', function(e){");
+        lastUIEvent = 1; //key event が発生した事を記録
+
         switch(e.keyCode){
 
             case 93: //application key
@@ -1276,6 +1276,10 @@ function forceLayoutMemo(initializerObj){
             default:
             break;
         }
+    });
+
+    $(document).on("click", function(e){
+        console.log("$(document).on('click', function(e){");
     });
 
     var returnThisOnContextMenu = true;
@@ -1477,6 +1481,7 @@ function forceLayoutMemo(initializerObj){
     }, 'keydown');
 
     mousetrapInstance.bind(keySettings.brushSelecting, function(e, combo){
+        if(checkIgnoreKeyUp()){return;}
         removeBrush();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     }, 'keyup');
@@ -1540,6 +1545,17 @@ function forceLayoutMemo(initializerObj){
         changeStyle('italic', ['text', 'text_font_style'], 'datas');
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
+
+    function checkIgnoreKeyUp(){
+        var ret;
+        if(ignoreKeyUp){
+            ignoreKeyUp = false;
+            ret = true;
+        }else{
+            ret = false;
+        }
+        return ret;
+    }
 
     //
     // <clipboard events>-----------------------------------------------------------
