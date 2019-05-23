@@ -64,7 +64,7 @@ function forceLayoutMemo(initializerObj){
     //Transaction History要素のclass名
     var className_transactionHistoryElement = "transactionHistory";
 
-    //todo comment
+    //Status Message要素のClass名
     var className_statusMessageElement = "statusMessage";
 
     //描画用SVG要素のclass名
@@ -2540,7 +2540,8 @@ function forceLayoutMemo(initializerObj){
         
         if($3NodeSelectingBrushGroup === null){ // 2回連続で startBrush(); されないようにする
             
-            removeZoom(); //mouse drag による panning イベントと競合するので、rush選択中は停止する
+            removeConnect(); //connect 状態解除(connect 中かどうかは removeConnect() 内で判定する)
+            removeZoom(); //mouse drag による panning イベントと競合するので、brush選択中は停止する
 
             $3NodeSelectingBrushGroup = $3selectionLayersGroup.append("g");
             $3NodeSelectingBrushGroup.call(brush);
@@ -2593,6 +2594,8 @@ function forceLayoutMemo(initializerObj){
         if(nowEditng){return;}
         
         if(!connectStarted){ // 2回連続で処理しないようにする
+
+            removeBrush(); //brush 選択解除(Brush選択状態かどうかは removeBrush() 内で判定する)
 
             $3svgNodes.each(function(d, i){
                 d.$3bindedSVGElement.on('click', null); // click イベントのunbind
