@@ -982,7 +982,7 @@ function forceLayoutMemo(initializerObj){
     });
 
     // Node以外に対する right click event
-    var clsNameForCntxtMenu = getUniqueClassName('context-menu-');
+    var clsNameForCntxtMenu = getUniqueClassName('context-menu-container-');
     var clsNameInCntxtMenu =  getUniqueClassName('context-menu-');
     $3SVGDrawingAreaElement.classed(clsNameForCntxtMenu, true);
     $.contextMenu({
@@ -1182,6 +1182,11 @@ function forceLayoutMemo(initializerObj){
         return returnThis;
     }
 
+    function isEnableContextMenu(){
+        var isEnable = ($('.' + clsNameInCntxtMenu).css('display') != 'none');
+        return isEnable;
+    }
+
     // SVG領域の Zoom・Pan イベント
     var zoom = d3.zoom()
         .on("zoom", function(){
@@ -1262,7 +1267,6 @@ function forceLayoutMemo(initializerObj){
         
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
 
-        console.log("$(document).on('keydown', function(e){");
         lastUIEvent = 1; //key event が発生した事を記録
 
         switch(e.keyCode){
@@ -1276,10 +1280,6 @@ function forceLayoutMemo(initializerObj){
             default:
             break;
         }
-    });
-
-    $(document).on("click", function(e){
-        console.log("$(document).on('click', function(e){");
     });
 
     var returnThisOnContextMenu = true;
@@ -1375,6 +1375,12 @@ function forceLayoutMemo(initializerObj){
 
         if(nowEditng){ // 編集中の場合
             exitEditing(); //編集モードの終了
+        
+        }else if(connectStarted){ //connect モード中の場合
+            removeConnect(); //connect モード終了
+        
+        }else if($3NodeSelectingBrushGroup !== null){ // brush 選択中の場合
+            removeBrush(); //brush 終了
         }
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
@@ -1474,6 +1480,7 @@ function forceLayoutMemo(initializerObj){
     }, 'keyup');
 
     mousetrapInstance.bind(keySettings.brushSelecting, function(e, combo){
+        if(isEnableContextMenu()){return;}
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         if(nowTyping){return;} //<textarea>の編集中はハジく
         startBrush();
@@ -1487,6 +1494,7 @@ function forceLayoutMemo(initializerObj){
     }, 'keyup');
 
     mousetrapInstance.bind(keySettings.connectDatas, function(e, combo){
+        if(isEnableContextMenu()){return;}
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
         if(nowTyping){return;} //<textarea>の編集中はハジく
         checkStartConnect();
@@ -1494,6 +1502,7 @@ function forceLayoutMemo(initializerObj){
     }, 'keydown');
 
     mousetrapInstance.bind(keySettings.connectDatas, function(e, combo){
+        if(checkIgnoreKeyUp()){return;}
         removeConnect();
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     }, 'keyup');
