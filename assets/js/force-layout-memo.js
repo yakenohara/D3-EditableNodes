@@ -1389,6 +1389,7 @@ function forceLayoutMemo(initializerObj){
     mousetrapInstance.bind(keySettings.deleteNodes, function(e){
 
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowTyping){return;} //<textarea>の編集中はハジく
 
         //External Component が未 load でない場合
         if(checkSucceededLoadOf_ExternalComponent()){
@@ -1407,6 +1408,7 @@ function forceLayoutMemo(initializerObj){
     //arrow key による node 選択イベント
     mousetrapInstance.bind(keySettings.selectNodeRight, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowTyping){return;} //<textarea>の編集中はハジく
         // console.log(">");
         call_getColsestData("right_an90");
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
@@ -1414,6 +1416,7 @@ function forceLayoutMemo(initializerObj){
 
     mousetrapInstance.bind(keySettings.selectNodeLeft, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowTyping){return;} //<textarea>の編集中はハジく
         // console.log("<");
         call_getColsestData("left_an90");
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
@@ -1421,6 +1424,7 @@ function forceLayoutMemo(initializerObj){
 
     mousetrapInstance.bind(keySettings.selectNodeAbove, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowTyping){return;} //<textarea>の編集中はハジく
         // console.log("^");
         call_getColsestData("above_an90");
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
@@ -1428,6 +1432,7 @@ function forceLayoutMemo(initializerObj){
 
     mousetrapInstance.bind(keySettings.selectNodeBelow, function(e, combo){
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
+        if(nowTyping){return;} //<textarea>の編集中はハジく
         // console.log("v");
         call_getColsestData("below_an90");
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
@@ -7069,7 +7074,8 @@ function forceLayoutMemo(initializerObj){
             var toExportObj = {};
             toExportObj.key = d.key;
             toExportObj.type = d.type;
-            toExportObj[d.type] = {};
+            toExportObj[d.type] = {}; // 位置を記録
+            toExportObj.coordinate = d.coordinate;
             mergeObj(d[d.type], toExportObj[d.type], false); // contentコピー
 
             if(typeof toExportObjArr.datas == 'undefined'){ //data property未定義(= 1回目の追加の場合)
