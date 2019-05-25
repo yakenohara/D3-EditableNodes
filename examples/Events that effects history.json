@@ -1,0 +1,447 @@
+{
+    "datas": [
+        {
+            "key": "0",
+            "type": "text",
+            "text": {
+                "text_content": "append"
+            },
+            "coordinate": {
+                "x": 1314.5450326520456,
+                "y": 338.17116417489956
+            }
+        },
+        {
+            "key": "1",
+            "type": "text",
+            "text": {
+                "text_content": "change"
+            },
+            "coordinate": {
+                "x": 1317.3037452309472,
+                "y": 441.43101656855424
+            }
+        },
+        {
+            "key": "2",
+            "type": "text",
+            "text": {
+                "text_content": "delete"
+            },
+            "coordinate": {
+                "x": 1317.2721681154846,
+                "y": 587.7451000570001
+            }
+        },
+        {
+            "key": "5",
+            "type": "text",
+            "text": {
+                "text_content": "context-menu -> add"
+            },
+            "coordinate": {
+                "x": 782.3772685273523,
+                "y": 86.32487818744761
+            }
+        },
+        {
+            "key": "7",
+            "type": "text",
+            "text": {
+                "text_content": "pasteNodesFromClipboard()"
+            },
+            "coordinate": {
+                "x": 1358.5283109093748,
+                "y": 1987.393186020046
+            }
+        },
+        {
+            "key": "8",
+            "type": "text",
+            "text": {
+                "text_content": "changeStyle('start', ['text', 'text_anchor'], 'datas');"
+            },
+            "coordinate": {
+                "x": 262.66438940467634,
+                "y": 269.04370728319975
+            }
+        },
+        {
+            "key": "9",
+            "type": "text",
+            "text": {
+                "text_content": "changeStyle('middle', ['text', 'text_anchor'], 'datas');"
+            },
+            "coordinate": {
+                "x": 295.2940337868865,
+                "y": 368.20746809973656
+            }
+        },
+        {
+            "key": "10",
+            "type": "text",
+            "text": {
+                "text_content": "changeStyle('end', ['text', 'text_anchor'], 'datas');"
+            },
+            "coordinate": {
+                "x": 358.22428539424675,
+                "y": 565.5642867204602
+            }
+        },
+        {
+            "key": "11",
+            "type": "text",
+            "text": {
+                "text_content": "changeStyle('bold', ['text', 'text_font_weight'], 'datas');"
+            },
+            "coordinate": {
+                "x": 294.98230483495877,
+                "y": 169.9784568360388
+            }
+        },
+        {
+            "key": "12",
+            "type": "text",
+            "text": {
+                "text_content": "changeStyle('italic', ['text', 'text_font_style'], 'datas');"
+            },
+            "coordinate": {
+                "x": 302.85818695687277,
+                "y": 473.68063620785864
+            }
+        },
+        {
+            "key": "13",
+            "type": "text",
+            "text": {
+                "text_content": "function changeStyle(useThisVal, structureArr, datasOrLinks)"
+            },
+            "coordinate": {
+                "x": 813.6048692937604,
+                "y": 379.0338506555818
+            }
+        },
+        {
+            "key": "14",
+            "type": "text",
+            "text": {
+                "text_content": "appendHistory()"
+            },
+            "coordinate": {
+                "x": 1494.0075482746859,
+                "y": 439.2162969092838
+            }
+        },
+        {
+            "key": "6",
+            "type": "text",
+            "text": {
+                "text_content": "pasteNodesFromClipboard\n(純粋文字列の paste)"
+            },
+            "coordinate": {
+                "x": 778.3566225497074,
+                "y": 187.08690500650616
+            }
+        },
+        {
+            "key": "15",
+            "type": "text",
+            "text": {
+                "text_content": "// node同士 の link 結合イベント\nfunction nodeConnected(d){",
+                "text_anchor": "start"
+            },
+            "coordinate": {
+                "x": 774.2487296226196,
+                "y": 517.0707063524154
+            }
+        },
+        {
+            "key": "16",
+            "type": "text",
+            "text": {
+                "text_content": "JSON形式の node/link 追加"
+            },
+            "coordinate": {
+                "x": 769.1585487290046,
+                "y": 697.649402977698
+            }
+        },
+        {
+            "key": "17",
+            "type": "text",
+            "text": {
+                "text_content": "node の d3.drag().on('end',~"
+            },
+            "coordinate": {
+                "x": 742.7390316374552,
+                "y": 796.0174978759757
+            }
+        },
+        {
+            "key": "18",
+            "type": "text",
+            "text": {
+                "text_content": "deleteSVGNodes()"
+            },
+            "coordinate": {
+                "x": 756.9807224302009,
+                "y": 895.0385629773142
+            }
+        },
+        {
+            "key": "19",
+            "type": "text",
+            "text": {
+                "text_content": "<textarea>内で Enter event"
+            },
+            "coordinate": {
+                "x": 778.0342522318227,
+                "y": 993.0587501921472
+            }
+        },
+        {
+            "key": "20",
+            "type": "text",
+            "text": {
+                "text_content": "<textarea>"
+            },
+            "coordinate": {
+                "x": 228.15359355827596,
+                "y": 943.5230704514975
+            }
+        },
+        {
+            "key": "21",
+            "type": "text",
+            "text": {
+                "text_content": "<input type=\"text\"> タイプ"
+            },
+            "coordinate": {
+                "x": 223.80737898054514,
+                "y": 1043.547050311346
+            }
+        },
+        {
+            "key": "22",
+            "type": "text",
+            "text": {
+                "text_content": "<input type=\"number\"> タイプ"
+            },
+            "coordinate": {
+                "x": 215.99164994691753,
+                "y": 1143.5469512020286
+            }
+        },
+        {
+            "key": "23",
+            "type": "text",
+            "text": {
+                "text_content": "Radio Buttons タイプ"
+            },
+            "coordinate": {
+                "x": 220.49463062343605,
+                "y": 1243.588604546289
+            }
+        },
+        {
+            "key": "24",
+            "type": "text",
+            "text": {
+                "text_content": "Colopickerとinput要素を使って色指定するタイプ"
+            },
+            "coordinate": {
+                "x": 240.6227219918426,
+                "y": 1341.690861296029
+            }
+        },
+        {
+            "key": "25",
+            "type": "text",
+            "text": {
+                "text_content": "Property Editor 編集確定"
+            },
+            "coordinate": {
+                "x": 781.1767626321912,
+                "y": 1117.4518524233442
+            }
+        }
+    ],
+    "links": [
+        {
+            "source": "8",
+            "target": "13",
+            "type": "line",
+            "line": {
+                "distance": 561.8124633877974
+            }
+        },
+        {
+            "source": "9",
+            "target": "13",
+            "type": "line",
+            "line": {
+                "distance": 518.4238929308558
+            }
+        },
+        {
+            "source": "10",
+            "target": "13",
+            "type": "line",
+            "line": {
+                "distance": 492.1027126221087
+            }
+        },
+        {
+            "source": "11",
+            "target": "13",
+            "type": "line",
+            "line": {
+                "distance": 559.1721756749772
+            }
+        },
+        {
+            "source": "12",
+            "target": "13",
+            "type": "line",
+            "line": {
+                "distance": 519.4421888256479
+            }
+        },
+        {
+            "source": "0",
+            "target": "14",
+            "type": "line",
+            "line": {
+                "distance": 205.95366802148493
+            }
+        },
+        {
+            "source": "1",
+            "target": "14",
+            "type": "line",
+            "line": {
+                "distance": 176.71768157979017
+            }
+        },
+        {
+            "source": "2",
+            "target": "14",
+            "type": "line",
+            "line": {
+                "distance": 230.85969758396018
+            }
+        },
+        {
+            "source": "5",
+            "target": "0",
+            "type": "line",
+            "line": {
+                "distance": 588.7521388006055
+            }
+        },
+        {
+            "source": "6",
+            "target": "0",
+            "type": "line",
+            "line": {
+                "distance": 557.0677378014973
+            }
+        },
+        {
+            "source": "13",
+            "target": "1",
+            "type": "line",
+            "line": {
+                "distance": 507.54897685426806
+            }
+        },
+        {
+            "source": "15",
+            "target": "0",
+            "type": "line",
+            "line": {
+                "distance": 569.1442183315502
+            }
+        },
+        {
+            "source": "16",
+            "target": "0",
+            "type": "line",
+            "line": {
+                "distance": 653.2005978409318
+            }
+        },
+        {
+            "source": "17",
+            "target": "1",
+            "type": "line",
+            "line": {
+                "distance": 675.1712248263917
+            }
+        },
+        {
+            "source": "18",
+            "target": "2",
+            "type": "line",
+            "line": {
+                "distance": 639.0272110528086
+            }
+        },
+        {
+            "source": "19",
+            "target": "0",
+            "type": "line",
+            "line": {
+                "distance": 846.5940986249965
+            }
+        },
+        {
+            "source": "24",
+            "target": "25",
+            "type": "line",
+            "line": {
+                "distance": 585.21944939674
+            }
+        },
+        {
+            "source": "23",
+            "target": "25",
+            "type": "line",
+            "line": {
+                "distance": 574.6955136326783
+            }
+        },
+        {
+            "source": "22",
+            "target": "25",
+            "type": "line",
+            "line": {
+                "distance": 565.7872089230855
+            }
+        },
+        {
+            "source": "21",
+            "target": "25",
+            "type": "line",
+            "line": {
+                "distance": 562.2477653198804
+            }
+        },
+        {
+            "source": "20",
+            "target": "25",
+            "type": "line",
+            "line": {
+                "distance": 579.7291149585863
+            }
+        },
+        {
+            "source": "25",
+            "target": "1",
+            "type": "line",
+            "line": {
+                "distance": 862.8072275824868
+            }
+        }
+    ]
+}
