@@ -3473,6 +3473,7 @@ function forceLayoutMemo(initializerObj){
                     //Dragイベント用Buffer
                     var bufTotalReport;
                     var beforeDragInfo_nodes;
+                    var beforeDragInfo_nodes_other;
                     var beforeDragInfo_mouse;
                     var beforeDragInfo_stretchingLinks;
                     var beforeDragInfo_stretchingNodes;
@@ -3492,6 +3493,7 @@ function forceLayoutMemo(initializerObj){
                             bufTotalReport.reportsArr.links = [];
 
                             beforeDragInfo_nodes = [];
+                            beforeDragInfo_nodes_other = [];
                             beforeDragInfo_stretchingLinks = [];
                             beforeDragInfo_stretchingNodes = [];
 
@@ -3502,32 +3504,52 @@ function forceLayoutMemo(initializerObj){
                                 //選択状態にあるNodeをすべてDrag対象として追加するloop
                                 $3svgNodes.each(function(dataInItr, idxInItr){
                                     var isSelectedInItr = (dataInItr.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() == 'true');
+                                    // transformを取得
+                                    var attrTransformStr = dataInItr.$3bindedSVGElement.attr("transform");
+                                    if(attrTransformStr === null) attrTransformStr = "";
+                                    var transformObj = getTransformObj(attrTransformStr);
+                                    
                                     if(isSelectedInItr){ //選択状態の場合
-                                        // transformを取得
-                                        var attrTransformStr = dataInItr.$3bindedSVGElement.attr("transform");
-                                        if(attrTransformStr === null) attrTransformStr = "";
-                                        var transformObj = getTransformObj(attrTransformStr);
-
                                         // Drag対象Nodeとして追加
                                         beforeDragInfo_nodes.push({toThisData:dataInItr,
                                                                 x:dataInItr.coordinate.x,
                                                                 y:dataInItr.coordinate.y,
                                                                 scale:transformObj.scale});
+                                    }else{
+                                        beforeDragInfo_nodes_other.push({toThisData:dataInItr,
+                                            x:dataInItr.coordinate.x,
+                                            y:dataInItr.coordinate.y,
+                                            scale:transformObj.scale})
+                                        ;
                                     }
                                 });
 
                             }else{ //非選択状態の場合 -> 自分のNodeのみをDrag対象として追加
 
-                                // transformを取得
-                                var attrTransformStr = d.$3bindedSVGElement.attr("transform");
-                                if(attrTransformStr === null) attrTransformStr = "";
-                                var transformObj = getTransformObj(attrTransformStr);
+                                //選択状態にあるNodeをDrag対象として追加するloop
+                                $3svgNodes.each(function(dataInItr, idxInItr){
+                                    // transformを取得
+                                    var attrTransformStr = d.$3bindedSVGElement.attr("transform");
+                                    if(attrTransformStr === null) attrTransformStr = "";
+                                    var transformObj = getTransformObj(attrTransformStr);
+                                    
+                                    if(dataInItr.key == d.key){ //自分の node の場合
+                                        
+                                        beforeDragInfo_nodes.push({toThisData:dataInItr, // Drag対象Nodeとして追加
+                                            x:dataInItr.coordinate.x,
+                                            y:dataInItr.coordinate.y,
+                                            scale:transformObj.scale})
+                                        ;
+                                    
+                                    }else{ //自分の node でない場合
 
-                                // Drag対象Nodeとして追加
-                                beforeDragInfo_nodes.push({toThisData:d,
-                                                        x:d.coordinate.x,
-                                                        y:d.coordinate.y,
-                                                        scale:transformObj.scale});
+                                        beforeDragInfo_nodes_other.push({toThisData:dataInItr, // Drag対象Nodeとして追加
+                                            x:dataInItr.coordinate.x,
+                                            y:dataInItr.coordinate.y,
+                                            scale:transformObj.scale})
+                                        ;
+                                    }
+                                });                    
                             }
 
                             // connect 操作中 &&
@@ -3597,7 +3619,7 @@ function forceLayoutMemo(initializerObj){
 
                             for(var idx = 0 ; idx < beforeDragInfo_nodes.length ; idx++){
 
-                                //座標していObjの生成
+                                //座標指定Objの生成
                                 var renderByThisObj = {
                                     coordinate:{
                                         x: beforeDragInfo_nodes[idx].x
@@ -3695,6 +3717,64 @@ function forceLayoutMemo(initializerObj){
                             }
 
                             if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
+
+                                //<drag 非対象 node に対する move チェック>------------------------------------------------
+
+                                var otherDraggingReports = {};
+                                otherDraggingReports.type = 'change';
+                                otherDraggingReports.allOK = true;
+                                otherDraggingReports.allNG = true;
+                                otherDraggingReports.reportsArr = {};
+                                otherDraggingReports.reportsArr.datas = [];
+                                otherDraggingReports.reportsArr.links = [];
+
+                                beforeDragInfo_nodes_other.forEach(function(anotherNode){
+                                    if(
+                                        (
+                                            Math.abs(anotherNode.toThisData.coordinate.x - anotherNode.x) // x座標上の移動量
+                                            +
+                                            Math.abs(anotherNode.toThisData.coordinate.y - anotherNode.y) // y座標上の移動量
+                                        )
+                                        >= 1
+                                    ){ //x or y 座標上の移動量が 1 以上あった場合
+
+                                        //変更レポートの作成
+                                        var reportObj = {
+                                            key:anotherNode.toThisData.key,
+                                            allOK:true,
+                                            allNG:false,
+                                            PrevObj:{
+                                                coordinate: {
+                                                    x:anotherNode.x,
+                                                    y:anotherNode.y
+                                                }
+                                            },
+                                            RenderedObj:{
+                                                coordinate: {
+                                                    x:anotherNode.toThisData.coordinate.x,
+                                                    y:anotherNode.toThisData.coordinate.y
+                                                }
+                                            },
+                                            FailuredMessages:{
+                                                coordinate: {}
+                                            }
+                                        };
+                                        reportObj.PrevObj[anotherNode.toThisData.type] = {};
+                                        reportObj.RenderedObj[anotherNode.toThisData.type] = {};
+                                        reportObj.FailuredMessages[anotherNode.toThisData.type] = {};
+
+
+                                        otherDraggingReports.allNG = false;
+                                        otherDraggingReports.reportsArr.datas.push(reportObj);
+                                    }   
+                                });
+
+                                if(!otherDraggingReports.allNG){
+                                    overWriteScceededTransaction(otherDraggingReports, bufTotalReport, 'datas');
+                                }
+
+                                //-----------------------------------------------</drag 非対象 node に対する move チェック>
+
                                 historyManager.appendHistory(bufTotalReport);
                             }
                         })
