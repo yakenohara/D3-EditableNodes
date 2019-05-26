@@ -49,7 +49,7 @@ To import node(s) from json file, drag json file you want to import and drop to 
 
 ## 1. Include dependencies
 
-ForceLayoutMemo depends on following.
+force-layout-memo.js depends on following.
 
 - [d3.js](https://github.com/d3/d3)
 - [jQuery](https://jquery.com/)
@@ -88,7 +88,11 @@ So include like following.
 
 ## 2. Include force-layout-memo.js
 
-Here's an example.
+Before include force-layout-memo.js, Deploy `force-layout-memo_compo.html` file to `assets/components/` directory.  
+If you don't like that making the `assets/components/` directory for `force-layout-memo_compo.html`, you can specify other directory to force-layout-memo.js. See next step.  
+
+
+And include `force-layout-memo.css` and `force-layout-memo.js` like following.
 
 ```
 <link rel="stylesheet" href="assets/css/force-layout-memo.css">
@@ -103,8 +107,37 @@ Here's an example
 <div id="force-memo0"></div>
 <script>
     var memo0 = new forceLayoutMemo({
+        elemIdNameToBind:"force-memo0"
+    });
+</script>
+```
+
+If you deployed `force-layout-memo_compo.html` to `xxx/yyy/zzz/` directory instead of `assets/components/`, you have to specify this directory in this instantiate timing.   
+Here's an example
+
+```
+<div id="force-memo0"></div>
+<script>
+    var memo0 = new forceLayoutMemo({
+        elemIdNameToBind:"force-memo0",
+        componentPath:"xxx/yyy/zzz/force-layout-memo_compo.html"
+    });
+</script>
+```
+
+
+## 4. (Optional) Load a saved file
+
+If you have a exported file, You can specify that file to instanciated object of force-layout-memo.js .  
+Here's an example
+
+```
+<div id="force-memo0"></div>
+<script>
+    var memo0 = new forceLayoutMemo({
         elemIdNameToBind:"force-memo0",
     });
+    memo0.loadFile("foo/bar.json");
 </script>
 ```
 
@@ -134,5 +167,10 @@ Here's an example
  - distance 用 property editor
  - ctrl+a で全選択したい
  - alt 単独押下で Browser Menu を出したくない
- - history 追加時に 座標が変化した node の座標情報も保存
  - highlight 時に source / target が存在しなかった場合の message が不親切
+
+# Loap map
+
+ - リファクタリング
+ - 画像表示
+ - グルーピング

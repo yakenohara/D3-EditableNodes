@@ -1263,6 +1263,7 @@ function forceLayoutMemo(initializerObj){
         }
     );
 
+    // jQuery-contextMenu 非対応の event 取得
     $(document).on("keydown", function(e){
         
         if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく
@@ -1282,8 +1283,13 @@ function forceLayoutMemo(initializerObj){
         }
     });
 
+    // キーボードの application key 押下時 or 右クリック時
     var returnThisOnContextMenu = true;
     $(document).on("contextmenu", function(){
+        
+        //キーボードの application key 押下で context menu を表示させていた場合はfalse
+        // -> ブラウザ標準の context menu を表示させない
+        //そうでない場合はブラウザ標準の context menu を表示させる
         var tmp = returnThisOnContextMenu;
         returnThisOnContextMenu = true;
         return tmp;
@@ -1560,6 +1566,13 @@ function forceLayoutMemo(initializerObj){
         disablingKeyEvent(e); //ブラウザにキーイベントを渡さない
     });
 
+    //context menu に対するアクセスキー押下によって context menu が閉じられた場合は、
+    // 'keydown` event -> `keyup` eventで状態を制御する機能の内、
+    //`keyup` event が邪魔してしまう。
+    //その為 context menu に対するアクセスキー押下によって context menu が閉じられたかどうかを
+    // context menu の callback によって記録し、`keyup` event 時にその記録をチェックして
+    // `keyup` event を実行するかどうか判断する。
+    // v その為の function v
     function checkIgnoreKeyUp(){
         var ret;
         if(ignoreKeyUp){
@@ -8976,7 +8989,6 @@ function forceLayoutMemo(initializerObj){
     //失敗の場合はfalseを返却する
     //
     function getComputedStyleOfData(bindedData, computedStyleObj, explicitnessObj){
-
         
         //type指定チェック
         if(typeof (bindedData.type) == 'undefined'){
@@ -9090,7 +9102,6 @@ function forceLayoutMemo(initializerObj){
     //失敗の場合はfalseを返却する
     //
     function getComputedStyleOfLink(bindedData, computedStyleObj, explicitnessObj){
-
         
         //type指定チェック
         if(typeof (bindedData.type) == 'undefined'){
