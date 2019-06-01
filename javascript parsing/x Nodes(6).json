@@ -1,0 +1,3950 @@
+{
+    "datas": [
+        {
+            "key": "n172",
+            "type": "text",
+            "text": {
+                "text_content": "entry"
+            },
+            "coordinate": {
+                "x": 2419.064663945539,
+                "y": 3387.4568273879268
+            }
+        },
+        {
+            "key": "n173",
+            "type": "text",
+            "text": {
+                "text_content": "var keySettings = { \n        \n        // Selecting\n\n        deleteNodes: \"del\", //Nodeの削除\n        selectNodeRight: \"right\",\n        selectNodeLeft: \"left\",\n        selectNodeAbove: \"up\",\n        selectNodeBelow: \"down\",\n        highlightNodesSource: \"s\", //Highlight source node(s)\n        highlightNodesTarget: \"t\", //Highlight target node(s)\n        highlightNodesSourceAndTarget: \"l\",  //Highlight source and target node(s)\n        brushSelecting: \"b\", // selecting node(s) by brush\n        connectDatas: \"c\", //conect nodes\n        undo: \"ctrl+z\", //undo\n        redo: \"ctrl+y\", //redo\n        \n        // Editing\n\n        editSVGNodes: \"f2\", //Node編集モードの開始\n        escapeEditor: \"esc\", // Property Editor の終了\n\n        // Especially for text content\n\n        submitEditingTextTypeSVGNode: \"enter\", //Node編集状態の確定\n        insertLF: \"alt+enter\", //textTypeのNode編集時に改行を挿入する\n        textAnchor_start:     \"alt+l\", //text align left\n        textAnchor_middle:    \"alt+c\", //text align center\n        textAnchor_end:       \"alt+r\", //text align right\n        textFontWeight_bold:  \"alt+b\", //bold\n        textFontStyle_italic: \"alt+i\", //italic\n        \n    };"
+            },
+            "coordinate": {
+                "x": 2428.6816693624046,
+                "y": 3287.4592900490597
+            }
+        },
+        {
+            "key": "n174",
+            "type": "text",
+            "text": {
+                "text_content": "var url_externalComponent = \"assets/components/force-layout-memo_compo.html\";"
+            },
+            "coordinate": {
+                "x": 2439.261374767981,
+                "y": 3186.1916855149925
+            }
+        },
+        {
+            "key": "n175",
+            "type": "text",
+            "text": {
+                "text_content": "var fileName_Export = \"Nodes.json\";"
+            },
+            "coordinate": {
+                "x": 2450.637197099735,
+                "y": 3083.8478438481034
+            }
+        },
+        {
+            "key": "n176",
+            "type": "text",
+            "text": {
+                "text_content": "var fileName_svg_Export = \"Nodes.svg\";"
+            },
+            "coordinate": {
+                "x": 2462.7975520377754,
+                "y": 2980.476429114771
+            }
+        },
+        {
+            "key": "n177",
+            "type": "text",
+            "text": {
+                "text_content": "var defaultTextFrameShape = \"ellipse\";"
+            },
+            "coordinate": {
+                "x": 2475.748097188574,
+                "y": 2876.113118172361
+            }
+        },
+        {
+            "key": "n178",
+            "type": "text",
+            "text": {
+                "text_content": "var defaultLinkhape = \"line\";"
+            },
+            "coordinate": {
+                "x": 2489.4988229572446,
+                "y": 2770.795912048942
+            }
+        },
+        {
+            "key": "n179",
+            "type": "text",
+            "text": {
+                "text_content": "var valOfpadding_frame_text = 5;"
+            },
+            "coordinate": {
+                "x": 2504.060310700472,
+                "y": 2664.572690397435
+            }
+        },
+        {
+            "key": "n180",
+            "type": "text",
+            "text": {
+                "text_content": "var valOfLineHightInText = 1.3;"
+            },
+            "coordinate": {
+                "x": 2519.442727449129,
+                "y": 2557.499889921086
+            }
+        },
+        {
+            "key": "n181",
+            "type": "text",
+            "text": {
+                "text_content": "var className_propertyEditConsoleElement = \"propertyEditConsole\";"
+            },
+            "coordinate": {
+                "x": 2535.6554909708543,
+                "y": 2449.6405230886876
+            }
+        },
+        {
+            "key": "n182",
+            "type": "text",
+            "text": {
+                "text_content": "var className_transactionHistoryElement = \"transactionHistory\";"
+            },
+            "coordinate": {
+                "x": 2552.7070073290706,
+                "y": 2341.0634044988774
+            }
+        },
+        {
+            "key": "n183",
+            "type": "text",
+            "text": {
+                "text_content": "var className_statusMessageElement = \"statusMessage\";"
+            },
+            "coordinate": {
+                "x": 2570.6044398348517,
+                "y": 2231.842804296725
+            }
+        },
+        {
+            "key": "n184",
+            "type": "text",
+            "text": {
+                "text_content": "var className_SVGElementForNodesMapping = \"SVGForNodesMapping\";"
+            },
+            "coordinate": {
+                "x": 2589.3535346693548,
+                "y": 2122.0580093285175
+            }
+        },
+        {
+            "key": "n185",
+            "type": "text",
+            "text": {
+                "text_content": "var className_SVGGroupForNodes = \"nodes\";"
+            },
+            "coordinate": {
+                "x": 2608.9584949398936,
+                "y": 2011.7927567260374
+            }
+        },
+        {
+            "key": "n186",
+            "type": "text",
+            "text": {
+                "text_content": "var className_SVGGroupForLinkes = \"links\";"
+            },
+            "coordinate": {
+                "x": 2629.4218882188475,
+                "y": 1901.134603970087
+            }
+        },
+        {
+            "key": "n187",
+            "type": "text",
+            "text": {
+                "text_content": "var className_SVGGroupForSelectionLayers = \"selectionLayers\";"
+            },
+            "coordinate": {
+                "x": 2650.744580540446,
+                "y": 1790.1742637418197
+            }
+        },
+        {
+            "key": "n188",
+            "type": "text",
+            "text": {
+                "text_content": "var className_nodeIsSelected = \"selected\";"
+            },
+            "coordinate": {
+                "x": 2672.925694844822,
+                "y": 1679.0049124304364
+            }
+        },
+        {
+            "key": "n189",
+            "type": "text",
+            "text": {
+                "text_content": "var firstHistoryMessage = \"New\";"
+            },
+            "coordinate": {
+                "x": 2695.9625937373003,
+                "y": 1567.721480163312
+            }
+        },
+        {
+            "key": "n190",
+            "type": "text",
+            "text": {
+                "text_content": "var classNameInMotherElem = \"force-layout-memo\";"
+            },
+            "coordinate": {
+                "x": 2719.850888185127,
+                "y": 1456.419931092061
+            }
+        },
+        {
+            "key": "n191",
+            "type": "text",
+            "text": {
+                "text_content": "var forSpectrumRegisteringOptionObj = {\n        showAlpha: true,\n        allowEmpty: false,\n        showInitial: true,\n        clickoutFiresChange: true, // <- spectrum (color picker) の範囲外をクリックする or ESC押下時に、\n                                   //    最後に入力されていたtinyColorObjを、\n                                   //    'change'イベント、'hide'イベントそれぞれに渡す(コール順序は'change'→'hide')\n                                   //    最後に入力されていたtinyColorObjがEmptyな場合は、nullを渡す\n        preferredFormat: \"rgb\",\n    }\n\n    "
+            },
+            "coordinate": {
+                "x": 2744.58447620975,
+                "y": 1345.1965436582434
+            }
+        },
+        {
+            "key": "n192",
+            "type": "text",
+            "text": {
+                "text_content": "var defaultLinkDistance = 100;"
+            },
+            "coordinate": {
+                "x": 2770.1556185247728,
+                "y": 1234.147204477519
+            }
+        },
+        {
+            "key": "n193",
+            "type": "text",
+            "text": {
+                "text_content": "var idName_superElement = \"\";"
+            },
+            "coordinate": {
+                "x": 2796.555061052477,
+                "y": 1123.3667380438374
+            }
+        },
+        {
+            "key": "n194",
+            "type": "text",
+            "text": {
+                "text_content": "var dataset = { //Bind用Dataset\n        datas:[],\n        links:[]\n    };"
+            },
+            "coordinate": {
+                "x": 2823.7722170447773,
+                "y": 1012.9483068569564
+            }
+        },
+        {
+            "key": "n195",
+            "type": "text",
+            "text": {
+                "text_content": "var transactionHistory = [];"
+            },
+            "coordinate": {
+                "x": 2851.795424481246,
+                "y": 902.9829260234023
+            }
+        },
+        {
+            "key": "n196",
+            "type": "text",
+            "text": {
+                "text_content": "var nowEditng = false;"
+            },
+            "coordinate": {
+                "x": 2880.6122979507218,
+                "y": 793.5591295075159
+            }
+        },
+        {
+            "key": "n197",
+            "type": "text",
+            "text": {
+                "text_content": "var nowTyping = false;"
+            },
+            "coordinate": {
+                "x": 2910.210194930645,
+                "y": 684.7627907022292
+            }
+        },
+        {
+            "key": "n198",
+            "type": "text",
+            "text": {
+                "text_content": "var editingNodeKeys = [];"
+            },
+            "coordinate": {
+                "x": 2940.576804048217,
+                "y": 576.6770306026756
+            }
+        },
+        {
+            "key": "n199",
+            "type": "text",
+            "text": {
+                "text_content": "var editingLinkKeys = [];"
+            },
+            "coordinate": {
+                "x": 2971.70082964453,
+                "y": 469.3820176773512
+            }
+        },
+        {
+            "key": "n200",
+            "type": "text",
+            "text": {
+                "text_content": "var $3motherElement;"
+            },
+            "coordinate": {
+                "x": 3003.5726963394923,
+                "y": 362.95427973194546
+            }
+        },
+        {
+            "key": "n201",
+            "type": "text",
+            "text": {
+                "text_content": "var $3propertyEditConsoleElement;"
+            },
+            "coordinate": {
+                "x": 3036.185119186476,
+                "y": 257.46519669211244
+            }
+        },
+        {
+            "key": "n202",
+            "type": "text",
+            "text": {
+                "text_content": "var $propertyEditConsoleElement;"
+            },
+            "coordinate": {
+                "x": 3069.533289362502,
+                "y": 152.9791950113656
+            }
+        },
+        {
+            "key": "n203",
+            "type": "text",
+            "text": {
+                "text_content": "var UIisEnable = false;"
+            },
+            "coordinate": {
+                "x": 3103.614571500335,
+                "y": 49.553375665825165
+            }
+        },
+        {
+            "key": "n204",
+            "type": "text",
+            "text": {
+                "text_content": "var isAnimatingPropertyEditConsoleElement = false;"
+            },
+            "coordinate": {
+                "x": 3138.4276876550657,
+                "y": -52.76089350574977
+            }
+        },
+        {
+            "key": "n205",
+            "type": "text",
+            "text": {
+                "text_content": "var $propertyEditConsoleElement_node;"
+            },
+            "coordinate": {
+                "x": 3173.964324862533,
+                "y": -153.91968659935222
+            }
+        },
+        {
+            "key": "n206",
+            "type": "text",
+            "text": {
+                "text_content": "var $propertyEditConsoleElement_link;"
+            },
+            "coordinate": {
+                "x": 3210.1453056083456,
+                "y": -253.9069179981273
+            }
+        },
+        {
+            "key": "n207",
+            "type": "text",
+            "text": {
+                "text_content": "var $3transactionHistoryElement;"
+            },
+            "coordinate": {
+                "x": 3246.572363264116,
+                "y": -352.8098856670243
+            }
+        },
+        {
+            "key": "n208",
+            "type": "text",
+            "text": {
+                "text_content": "var $transactionHistoryElement = null;"
+            },
+            "coordinate": {
+                "x": 3282.448741412604,
+                "y": -450.8707993963268
+            }
+        },
+        {
+            "key": "n209",
+            "type": "text",
+            "text": {
+                "text_content": "var $3statusMessageElement;"
+            },
+            "coordinate": {
+                "x": 3328.052117920856,
+                "y": -548.6762281862859
+            }
+        },
+        {
+            "key": "n210",
+            "type": "text",
+            "text": {
+                "text_content": "var $3statusMessageElement_first;"
+            },
+            "coordinate": {
+                "x": 3407.4398907009013,
+                "y": -609.816691481438
+            }
+        },
+        {
+            "key": "n211",
+            "type": "text",
+            "text": {
+                "text_content": "var $3statusMessageElement_second;"
+            },
+            "coordinate": {
+                "x": 3425.8660170300977,
+                "y": -511.36832230647036
+            }
+        },
+        {
+            "key": "n212",
+            "type": "text",
+            "text": {
+                "text_content": "var $3SVGDrawingAreaElement;"
+            },
+            "coordinate": {
+                "x": 3335.218298746022,
+                "y": -468.59015345924996
+            }
+        },
+        {
+            "key": "n213",
+            "type": "text",
+            "text": {
+                "text_content": "var $SVGDrawingAreaElement;"
+            },
+            "coordinate": {
+                "x": 3237.0599368749736,
+                "y": -507.1896565552182
+            }
+        },
+        {
+            "key": "n214",
+            "type": "text",
+            "text": {
+                "text_content": "var $3svgNodesGroup;"
+            },
+            "coordinate": {
+                "x": 3138.6847607090085,
+                "y": -519.2658388371896
+            }
+        },
+        {
+            "key": "n215",
+            "type": "text",
+            "text": {
+                "text_content": "var $3svgNodes;"
+            },
+            "coordinate": {
+                "x": 3046.7944446133624,
+                "y": -480.46632307856675
+            }
+        },
+        {
+            "key": "n216",
+            "type": "text",
+            "text": {
+                "text_content": "var $3svgLinksGroup;"
+            },
+            "coordinate": {
+                "x": 2954.929292645494,
+                "y": -441.276114926175
+            }
+        },
+        {
+            "key": "n217",
+            "type": "text",
+            "text": {
+                "text_content": "var $3svgLinks;"
+            },
+            "coordinate": {
+                "x": 2863.6054309558094,
+                "y": -400.8989470153177
+            }
+        },
+        {
+            "key": "n218",
+            "type": "text",
+            "text": {
+                "text_content": "var $3selectionLayersGroup;"
+            },
+            "coordinate": {
+                "x": 2772.8608131903757,
+                "y": -359.04108270747633
+            }
+        },
+        {
+            "key": "n219",
+            "type": "text",
+            "text": {
+                "text_content": "var lastTransFormObj_d3style = null;"
+            },
+            "coordinate": {
+                "x": 2681.725053162606,
+                "y": -317.8444802423891
+            }
+        },
+        {
+            "key": "n220",
+            "type": "text",
+            "text": {
+                "text_content": "var lastCoordinate = {\n        rightClick:{x:0, y:0},\n        mouse:{x:0, y:0}\n    }\n    "
+            },
+            "coordinate": {
+                "x": 2590.1840788842214,
+                "y": -277.1504306501244
+            }
+        },
+        {
+            "key": "n221",
+            "type": "text",
+            "text": {
+                "text_content": "var lastUIEvent = 0;"
+            },
+            "coordinate": {
+                "x": 2498.3133004139872,
+                "y": -237.60511374266997
+            }
+        },
+        {
+            "key": "n222",
+            "type": "text",
+            "text": {
+                "text_content": "var ignoreKeyUp = false;"
+            },
+            "coordinate": {
+                "x": 2405.3941979297824,
+                "y": -199.56286401597407
+            }
+        },
+        {
+            "key": "n223",
+            "type": "text",
+            "text": {
+                "text_content": "var binCode_KeyPressing = 0;"
+            },
+            "coordinate": {
+                "x": 2311.7491917596285,
+                "y": -164.30870118031953
+            }
+        },
+        {
+            "key": "n224",
+            "type": "text",
+            "text": {
+                "text_content": "var sourceHilighted = false;"
+            },
+            "coordinate": {
+                "x": 2216.2263967181916,
+                "y": -133.7947200660956
+            }
+        },
+        {
+            "key": "n225",
+            "type": "text",
+            "text": {
+                "text_content": "var targetHilighted = false;"
+            },
+            "coordinate": {
+                "x": 2118.76101049693,
+                "y": -110.41133507927545
+            }
+        },
+        {
+            "key": "n226",
+            "type": "text",
+            "text": {
+                "text_content": "var highlightingStartPointKey = null;"
+            },
+            "coordinate": {
+                "x": 2018.69893040501,
+                "y": -109.55736021347558
+            }
+        },
+        {
+            "key": "n227",
+            "type": "text",
+            "text": {
+                "text_content": "this.loadFile = function(filePath){\n        \n        var xhr = new XMLHttpRequest();\n        xhr.open('GET', filePath, true);\n        xhr.responseType = 'text';\n        xhr.onloadend = function(e){\n\n            if (xhr.readyState === 4 && // 'DONE' の場合   https://developer.mozilla.org/ja/docs/Web/API/XMLHttpRequest/readyState\n                xhr.status === 200){    // '200 OK' の場合 https://developer.mozilla.org/ja/docs/Web/HTTP/Status\n\n                var retObj = appendNodesFromText(xhr.response, true, true);\n                if(!retObj.allOK){\n                    console.warn(\"Following error was occurred while loading `\" + filePath + \"`. This file will be ignored.\");\n                    console.warn(retObj.errObj);\n                }\n\n                \n            }else{\n                console.error('Cannot access to Specified file `' + filePath + \"`\");\n            }\n        };\n        xhr.send();\n\n    }"
+            },
+            "coordinate": {
+                "x": 1232.1682684909924,
+                "y": -503.4215441101298
+            }
+        },
+        {
+            "key": "n228",
+            "type": "text",
+            "text": {
+                "text_content": "var tmpType = typeof initializerObj;"
+            },
+            "coordinate": {
+                "x": 685.7913845568777,
+                "y": 414.1178084241261
+            }
+        },
+        {
+            "key": "n229",
+            "type": "text",
+            "text": {
+                "text_content": "tmpType == 'undefined'"
+            },
+            "coordinate": {
+                "x": 633.6616804631863,
+                "y": 332.01372075389605
+            }
+        },
+        {
+            "key": "n230",
+            "type": "text",
+            "text": {
+                "text_content": "console.error(\"Required argument `initializerObj` is undefined\")"
+            },
+            "coordinate": {
+                "x": 740.1568656481924,
+                "y": 341.4039482380965
+            }
+        },
+        {
+            "key": "n231",
+            "type": "text",
+            "text": {
+                "text_content": "return;"
+            },
+            "coordinate": {
+                "x": 719.1882235162846,
+                "y": 446.4444198669489
+            }
+        },
+        {
+            "key": "n232",
+            "type": "text",
+            "text": {
+                "text_content": "tmpType != 'object'"
+            },
+            "coordinate": {
+                "x": 640.2395035674662,
+                "y": 440.82845717448413
+            }
+        },
+        {
+            "key": "n233",
+            "type": "text",
+            "text": {
+                "text_content": "console.error(\"Required argument `initializerObj` is defined as `\" + tmpType + \"` type. Required type is `object`.\")"
+            },
+            "coordinate": {
+                "x": 724.233002400764,
+                "y": 524.049847414243
+            }
+        },
+        {
+            "key": "n234",
+            "type": "text",
+            "text": {
+                "text_content": "return;"
+            },
+            "coordinate": {
+                "x": 658.556009433917,
+                "y": 609.026487837874
+            }
+        },
+        {
+            "key": "n235",
+            "type": "text",
+            "text": {
+                "text_content": "var tmpType = typeof initializerObj.elemIdNameToBind;"
+            },
+            "coordinate": {
+                "x": 541.2105034095134,
+                "y": 420.3565383825995
+            }
+        },
+        {
+            "key": "n236",
+            "type": "text",
+            "text": {
+                "text_content": "tmpType == 'undefined'"
+            },
+            "coordinate": {
+                "x": 441.2234692727776,
+                "y": 376.7421631085698
+            }
+        },
+        {
+            "key": "n237",
+            "type": "text",
+            "text": {
+                "text_content": "console.error(\"Required argument `initializerObj.elemIdNameToBind` is undefined\")"
+            },
+            "coordinate": {
+                "x": 530.5708027936178,
+                "y": 330.7988097265429
+            }
+        },
+        {
+            "key": "n238",
+            "type": "text",
+            "text": {
+                "text_content": "return;"
+            },
+            "coordinate": {
+                "x": 602.5700598714294,
+                "y": 399.9303480313455
+            }
+        },
+        {
+            "key": "n239",
+            "type": "text",
+            "text": {
+                "text_content": "tmpType != 'string'"
+            },
+            "coordinate": {
+                "x": 507.0017514545912,
+                "y": 297.8110541740048
+            }
+        },
+        {
+            "key": "n240",
+            "type": "text",
+            "text": {
+                "text_content": "console.error(\"Required argument `initializerObj.elemIdNameToBind` is defined as `\" + tmpType + \"` type. Required type is `string`.\")"
+            },
+            "coordinate": {
+                "x": 499.5540943136846,
+                "y": 410.7015047373929
+            }
+        },
+        {
+            "key": "n241",
+            "type": "text",
+            "text": {
+                "text_content": "return;"
+            },
+            "coordinate": {
+                "x": 490.0325428934266,
+                "y": 514.7542117349444
+            }
+        },
+        {
+            "key": "n242",
+            "type": "text",
+            "text": {
+                "text_content": "var tmpElem = document.getElementById(initializerObj.elemIdNameToBind);"
+            },
+            "coordinate": {
+                "x": 139.8404540968717,
+                "y": 625.7714206734769
+            }
+        },
+        {
+            "key": "n243",
+            "type": "text",
+            "text": {
+                "text_content": "tmpElem === null"
+            },
+            "coordinate": {
+                "x": 422.76953845959326,
+                "y": 460.7625842463335
+            }
+        },
+        {
+            "key": "n244",
+            "type": "text",
+            "text": {
+                "text_content": "console.error(\"Specified argment initializerObj.elemIdNameToBind:`\" + initializerObj.elemIdNameToBind + \"` is not exist.\")"
+            },
+            "coordinate": {
+                "x": 512.9457521183522,
+                "y": 534.7851532299165
+            }
+        },
+        {
+            "key": "n245",
+            "type": "text",
+            "text": {
+                "text_content": "return;"
+            },
+            "coordinate": {
+                "x": 608.1022458612741,
+                "y": 558.7788009116022
+            }
+        },
+        {
+            "key": "n246",
+            "type": "text",
+            "text": {
+                "text_content": "tmpElem.classList.contains(classNameInMotherElem)"
+            },
+            "coordinate": {
+                "x": 490.3474157946615,
+                "y": 374.9255083423195
+            }
+        },
+        {
+            "key": "n247",
+            "type": "text",
+            "text": {
+                "text_content": "console.error(\"Specified element (specified by argment initializerObj.elemIdNameToBind:`\" + initializerObj.elemIdNameToBind + \"`) has already class name `\" + classNameInMotherElem + \"`.\")"
+            },
+            "coordinate": {
+                "x": 6.052907216673197,
+                "y": 141.55492001655276
+            }
+        },
+        {
+            "key": "n248",
+            "type": "text",
+            "text": {
+                "text_content": "return;"
+            },
+            "coordinate": {
+                "x": 510.7107069688253,
+                "y": 603.9921425493685
+            }
+        },
+        {
+            "key": "n249",
+            "type": "text",
+            "text": {
+                "text_content": "idName_superElement = initializerObj.elemIdNameToBind"
+            },
+            "coordinate": {
+                "x": 478.3683352412029,
+                "y": 470.64391017850517
+            }
+        },
+        {
+            "key": "n250",
+            "type": "text",
+            "text": {
+                "text_content": "var tmpType = typeof initializerObj.componentPath;"
+            },
+            "coordinate": {
+                "x": 578.380833393169,
+                "y": 514.0913424639979
+            }
+        },
+        {
+            "key": "n251",
+            "type": "text",
+            "text": {
+                "text_content": "tmpType != 'undefined'"
+            },
+            "coordinate": {
+                "x": 673.1057756077478,
+                "y": 563.8062062910169
+            }
+        },
+        {
+            "key": "n252",
+            "type": "text",
+            "text": {
+                "text_content": "tmpType != 'string'"
+            },
+            "coordinate": {
+                "x": 674.6048281135076,
+                "y": 473.4336065708387
+            }
+        },
+        {
+            "key": "n253",
+            "type": "text",
+            "text": {
+                "text_content": "console.error(\"Specified argument `initializerObj.componentPath` is defined as `\" + tmpType + \"` type. Required type is `string`.\")"
+            },
+            "coordinate": {
+                "x": 697.0252701443687,
+                "y": 588.028207629474
+            }
+        },
+        {
+            "key": "n254",
+            "type": "text",
+            "text": {
+                "text_content": "return;"
+            },
+            "coordinate": {
+                "x": 595.2946026854444,
+                "y": 592.6477231472588
+            }
+        },
+        {
+            "key": "n255",
+            "type": "text",
+            "text": {
+                "text_content": "url_externalComponent = initializerObj.componentPath"
+            },
+            "coordinate": {
+                "x": 731.1079300035015,
+                "y": 384.75405676130157
+            }
+        },
+        {
+            "key": "n256",
+            "type": "text",
+            "text": {
+                "text_content": "var mousetrapInstance = new Mousetrap();"
+            },
+            "coordinate": {
+                "x": 760.9351286505712,
+                "y": 486.6166434394011
+            }
+        },
+        {
+            "key": "n257",
+            "type": "text",
+            "text": {
+                "text_content": "var dataSelectionManager = new clsfnc_dataSelectionManager();"
+            },
+            "coordinate": {
+                "x": 657.4876010097804,
+                "y": 498.4328083317154
+            }
+        },
+        {
+            "key": "n258",
+            "type": "text",
+            "text": {
+                "text_content": "var messageManager = new clsfnc_messageManager();"
+            },
+            "coordinate": {
+                "x": 757.2085108808844,
+                "y": 441.93322271860865
+            }
+        },
+        {
+            "key": "n259",
+            "type": "text",
+            "text": {
+                "text_content": "var historyManager = new clsfnc_historyManager();"
+            },
+            "coordinate": {
+                "x": 708.9943344730895,
+                "y": 536.4295820384508
+            }
+        },
+        {
+            "key": "n260",
+            "type": "text",
+            "text": {
+                "text_content": "var propertyEditorsManager;"
+            },
+            "coordinate": {
+                "x": 774.3422261068824,
+                "y": 614.0641545704384
+            }
+        },
+        {
+            "key": "n261",
+            "type": "text",
+            "text": {
+                "text_content": "$3motherElement = d3.select(\"#\" + idName_superElement) //全てのもと\n        .classed(classNameInMotherElem, true)\n        .style(\"font-size\", \"0\")\n        .style(\"overflow\", \"hidden\")\n        .style(\"position\", \"relative\")"
+            },
+            "coordinate": {
+                "x": 1510.6839368015978,
+                "y": 320.44096026500426
+            }
+        },
+        {
+            "key": "n262",
+            "type": "text",
+            "text": {
+                "text_content": "$3propertyEditConsoleElement = $3motherElement.append(\"div\") //Property Edit Console\n        .style(\"position\", \"absolute\")\n        .style(\"z-index\", 10)\n        .style(\"margin\", 0)\n        .style(\"border\", 0)\n        .style(\"padding\", 0)\n        .style(\"display\",\"none\")\n        .classed(className_propertyEditConsoleElement, true)"
+            },
+            "coordinate": {
+                "x": -757.6961856864582,
+                "y": 1802.1958935925609
+            }
+        },
+        {
+            "key": "n263",
+            "type": "text",
+            "text": {
+                "text_content": "$propertyEditConsoleElement = $($3propertyEditConsoleElement.node())"
+            },
+            "coordinate": {
+                "x": 446.7628472340853,
+                "y": 521.851991052472
+            }
+        },
+        {
+            "key": "n264",
+            "type": "text",
+            "text": {
+                "text_content": "$propertyEditConsoleElement.load(url_externalComponent,function(responseText, textStatus, jqXHR) {\n\n        //成功確認\n        if(textStatus === \"error\"){\n            console.error(\"Cannot load `\" + url_externalComponent + \"`. statusText:`\" + jqXHR.statusText + \"`\");\n            return;\n        }\n\n        propertyEditorsManager = new wrapperOfPropertyEditors(); //PropertyEditConsole\n        toggleBeforeLoadEvent(); //ページ移動前確認イベントをaddEvent\n\n    })"
+            },
+            "coordinate": {
+                "x": 71.37535430993265,
+                "y": 1225.5829584926742
+            }
+        },
+        {
+            "key": "n265",
+            "type": "text",
+            "text": {
+                "text_content": "$3transactionHistoryElement = $3motherElement.append(\"div\") //transaction history\n        .style(\"position\", \"absolute\")\n        .style(\"z-index\", 10)\n        .style(\"margin\", 0)\n        .style(\"border\", 0)\n        .style(\"padding\", 0)\n        .style(\"right\",0)\n        .style(\"white-space\",\"nowrap\")\n        .style(\"overflow\",\"auto\")\n        .classed(className_transactionHistoryElement, true)\n        .attr(\"wrap\",\"off\")"
+            },
+            "coordinate": {
+                "x": -1089.4688185437203,
+                "y": -126.30074413142437
+            }
+        },
+        {
+            "key": "n266",
+            "type": "text",
+            "text": {
+                "text_content": "$transactionHistoryElement = $($3transactionHistoryElement.node()).eq(0)"
+            },
+            "coordinate": {
+                "x": 517.7292664621428,
+                "y": 493.09994748432035
+            }
+        },
+        {
+            "key": "n267",
+            "type": "text",
+            "text": {
+                "text_content": "$3statusMessageElement = $3motherElement.append(\"div\") //status message\n        .style(\"position\", \"absolute\")\n        .style(\"z-index\", 10)\n        .style(\"margin\", 0)\n        .style(\"border\", 0)\n        .style(\"padding\", 0)\n        .style(\"width\", \"100%\")\n        .style(\"bottom\", \"30px\")\n        .style(\"text-align\", \"center\")\n        .style(\"pointer-events\", \"none\")\n        .append(\"div\")\n        .style(\"display\", \"inline-block\")\n        .style(\"visibility\", \"hidden\")\n        .style(\"pointer-events\", \"auto\")\n        .classed(className_statusMessageElement, true)"
+            },
+            "coordinate": {
+                "x": -96.01955814363437,
+                "y": 1427.417944515151
+            }
+        },
+        {
+            "key": "n268",
+            "type": "text",
+            "text": {
+                "text_content": "var $3statusMessageElement_div = $3statusMessageElement.append(\"div\")\n        .classed(\"statusMessage_div\", true)\n    "
+            },
+            "coordinate": {
+                "x": 222.51691670671707,
+                "y": 1050.490229872291
+            }
+        },
+        {
+            "key": "n269",
+            "type": "text",
+            "text": {
+                "text_content": "$3statusMessageElement_first = $3statusMessageElement_div.append(\"div\")\n        .classed(\"title\",true)"
+            },
+            "coordinate": {
+                "x": 764.4850138787742,
+                "y": 65.87212756400241
+            }
+        },
+        {
+            "key": "n270",
+            "type": "text",
+            "text": {
+                "text_content": "$3statusMessageElement_second = $3statusMessageElement_div.append(\"p\")\n        .classed(\"description\",true)"
+            },
+            "coordinate": {
+                "x": 1288.536316462201,
+                "y": 1134.316946096718
+            }
+        },
+        {
+            "key": "n271",
+            "type": "text",
+            "text": {
+                "text_content": "$3SVGDrawingAreaElement = $3motherElement.append(\"svg\") //Node描画用SVGの作成\n        .classed(className_SVGElementForNodesMapping, true)\n        .style(\"width\", \"100%\")\n        .style(\"height\", \"100%\")\n        .style(\"overflow\", \"hidden\") // <- ieではこれを指定しないと範囲外の小要素がクリップされない\n        .style(\"vertical-align\", \"bottom\")"
+            },
+            "coordinate": {
+                "x": 1169.6884644302343,
+                "y": 2007.738679300315
+            }
+        },
+        {
+            "key": "n272",
+            "type": "text",
+            "text": {
+                "text_content": "$SVGDrawingAreaElement = $($3SVGDrawingAreaElement.node())"
+            },
+            "coordinate": {
+                "x": 675.2577876583147,
+                "y": 310.9434282746048
+            }
+        },
+        {
+            "key": "n273",
+            "type": "text",
+            "text": {
+                "text_content": "$3SVGDrawingAreaElement.append(\"defs\")\n        .append(\"marker\")\n        .attr(\"id\", \"arrow1\")\n        .attr(\"refX\", 40)\n        .attr(\"refY\", 1)\n        .attr(\"viewBox\", \"0 -10 20 20\")\n        .attr(\"markerWidth\", \"20\")\n        .attr(\"markerHeight\", \"20\")\n        .attr(\"markerUnits\", \"userSpaceOnUse\")\n        .attr(\"orient\", \"auto\")\n        .append(\"path\")\n        .attr(\"d\", \"M0,-10 L20,0 0,10 Z\")\n        .attr(\"fill\", \"#eab942\")"
+            },
+            "coordinate": {
+                "x": 429.79548984619004,
+                "y": -297.8869699449875
+            }
+        },
+        {
+            "key": "n274",
+            "type": "text",
+            "text": {
+                "text_content": "$3svgLinksGroup = $3SVGDrawingAreaElement.append(\"g\") //linkグループの作成\n        .classed(className_SVGGroupForLinkes, true)"
+            },
+            "coordinate": {
+                "x": 1118.0770868938582,
+                "y": 831.9144494110121
+            }
+        },
+        {
+            "key": "n275",
+            "type": "text",
+            "text": {
+                "text_content": "$3svgNodesGroup = $3SVGDrawingAreaElement.append(\"g\") //ノードグループの作成\n        .classed(className_SVGGroupForNodes, true)"
+            },
+            "coordinate": {
+                "x": 931.9167771618146,
+                "y": -70.36031976159548
+            }
+        },
+        {
+            "key": "n276",
+            "type": "text",
+            "text": {
+                "text_content": "$3selectionLayersGroup = $3SVGDrawingAreaElement.append(\"g\") //Selection Layer 用グループの作成\n        .classed(className_SVGGroupForSelectionLayers, true)"
+            },
+            "coordinate": {
+                "x": 993.2153586699578,
+                "y": 712.5778979497109
+            }
+        },
+        {
+            "key": "n277",
+            "type": "text",
+            "text": {
+                "text_content": "$3svgNodes = $3svgNodesGroup.selectAll(\"g.node\") // ノード追加\n        .data(dataset.datas, function(d){return d.key})"
+            },
+            "coordinate": {
+                "x": 157.46396809689054,
+                "y": 714.9887698848762
+            }
+        },
+        {
+            "key": "n278",
+            "type": "text",
+            "text": {
+                "text_content": "$3svgLinks = $3svgLinksGroup.selectAll(\"g.link\") // link追加\n        .data(dataset.links, function(d){return d.key})"
+            },
+            "coordinate": {
+                "x": 227.63609090061658,
+                "y": 786.1586661865874
+            }
+        },
+        {
+            "key": "n279",
+            "type": "text",
+            "text": {
+                "text_content": "$SVGDrawingAreaElement.get(0).addEventListener('dragover', function(e){\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    })"
+            },
+            "coordinate": {
+                "x": 1100.2318196492902,
+                "y": 1621.5585701780801
+            }
+        },
+        {
+            "key": "n280",
+            "type": "text",
+            "text": {
+                "text_content": "var totalReport = null;"
+            },
+            "coordinate": {
+                "x": 381.37859880272157,
+                "y": 576.3263973749373
+            }
+        },
+        {
+            "key": "n281",
+            "type": "text",
+            "text": {
+                "text_content": "$SVGDrawingAreaElement.get(0).addEventListener('drop', function(e){\n\n        //External Componentが未loadの場合はハジく\n        if(!(checkSucceededLoadOf_ExternalComponent())){return;}\n        \n        var files = e.dataTransfer.files;\n        totalReport = null;\n        readFilesSequential(0); //ドロップされた各ファイルへのループ\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n\n        //ドロップされたファイルを順次読み込みする\n        function readFilesSequential(indexOfFiles){\n\n            if(indexOfFiles >= files.length){ //読み込むファイルがない場合\n                \n                if(totalReport !== null){\n                    selectNodesByReport(totalReport);\n                }\n                totalReport = null;\n                return;\n            }\n\n            var droppedFileObj = files[indexOfFiles];\n            var typ = droppedFileObj.type;\n            var nm = droppedFileObj.name;\n            var dots = nm.split('.');\n            var ext = (dots[dots.length - 1]).toLowerCase();\n\n            //ファイル形式判定\n            if((ext == 'json') &&               //\n                ((typ == 'application/json') || //\n                 (typ == '' && ext))){          // -> json形式の場合\n\n                var file_reader = new FileReader();\n                file_reader.onload = function(e){\n                    var retObj = appendNodesFromText(file_reader.result, true, false);\n                    if(!retObj.allOK){\n                        console.warn(\"Following error was occurred while loading `\" + filePath + \"`. This file will be ignored.\");\n                        console.warn(retObj.errObj);\n                    \n                    }else{ //parse 成功の場合\n                        if(totalReport === null){\n                            totalReport = retObj.appendingTotalReport;\n                        \n                        }else{\n\n                            //merge report\n                            var oneTotalReport = retObj.appendingTotalReport;\n                            if(!oneTotalReport.allOK){ //失敗が発生した場合\n                                totalReport.allOK = false;\n                            }\n                            totalReport.reportsArr.datas = totalReport.reportsArr.datas.concat(oneTotalReport.reportsArr.datas);\n                            totalReport.reportsArr.links = totalReport.reportsArr.links.concat(oneTotalReport.reportsArr.links);\n                        }\n                    }\n\n                    readFilesSequential(indexOfFiles+1); //次のファイルを読み込み\n                };\n                file_reader.readAsText(droppedFileObj);\n\n            }else{ //不明なファイル形式の場合\n                console.warn(\"unknown file type `\" + typ + \"` detected in `\" + nm + \"`.\");\n                readFilesSequential(indexOfFiles+1); //次のファイルを読み込み\n            }\n        }\n    })"
+            },
+            "coordinate": {
+                "x": 342.15101055041674,
+                "y": 1481.1613347135883
+            }
+        },
+        {
+            "key": "n282",
+            "type": "text",
+            "text": {
+                "text_content": "$SVGDrawingAreaElement.get(0).addEventListener('dragleave', function(e){\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    })"
+            },
+            "coordinate": {
+                "x": 1149.4517158929311,
+                "y": 260.032626646177
+            }
+        },
+        {
+            "key": "n283",
+            "type": "text",
+            "text": {
+                "text_content": "$(document).on('click', function(e) {\n        checkUIisEnable(e);\n\n    })"
+            },
+            "coordinate": {
+                "x": -758.2283358271688,
+                "y": 977.9319317671554
+            }
+        },
+        {
+            "key": "n284",
+            "type": "text",
+            "text": {
+                "text_content": "$(document).on(\"mousedown\", function(e){\n        checkUIisEnable(e);\n\n    })"
+            },
+            "coordinate": {
+                "x": 1507.6581114168046,
+                "y": 876.4181574106472
+            }
+        },
+        {
+            "key": "n285",
+            "type": "text",
+            "text": {
+                "text_content": "$SVGDrawingAreaElement.on('click', function(e){\n\n        // SVG領域に対する選択でない場合(Node等)はハジく\n        if(!(d3.select(e.target).classed(className_SVGElementForNodesMapping))){return;}\n\n        //External Componentが未loadの場合はハジく\n        if(!(checkSucceededLoadOf_ExternalComponent())){return;}\n        \n        if(nowEditng){ // 編集中の場合\n\n            exitEditing(); //編集モードの終了\n        \n        }else{  // 編集中でない場合\n            \n            dataSelectionManager.clearSelections(); //node選択状態をクリア\n        }\n    })"
+            },
+            "coordinate": {
+                "x": 1533.1532740357102,
+                "y": 542.6046653546568
+            }
+        },
+        {
+            "key": "n286",
+            "type": "text",
+            "text": {
+                "text_content": "var clsNameForCntxtMenu = getUniqueClassName('context-menu-container-');"
+            },
+            "coordinate": {
+                "x": 654.8769663307401,
+                "y": 679.9270036834706
+            }
+        },
+        {
+            "key": "n287",
+            "type": "text",
+            "text": {
+                "text_content": "var clsNameInCntxtMenu =  getUniqueClassName('context-menu-');"
+            },
+            "coordinate": {
+                "x": 244.13329050235367,
+                "y": 959.7677544856904
+            }
+        },
+        {
+            "key": "n288",
+            "type": "text",
+            "text": {
+                "text_content": "$3SVGDrawingAreaElement.classed(clsNameForCntxtMenu, true)"
+            },
+            "coordinate": {
+                "x": 1531.0462739060306,
+                "y": 444.63375943839804
+            }
+        },
+        {
+            "key": "n289",
+            "type": "text",
+            "text": {
+                "text_content": "$.contextMenu({\n        className: clsNameInCntxtMenu,\n        selector: '.' + clsNameForCntxtMenu,\n        items: {\n            add:{\n                name: \"Add (A)\",\n                accesskey: 'a',\n                callback: function(itemKey, opt){\n                    var uniqueDataKeyName;\n                    if(dataset.datas.length == 0){\n                        uniqueDataKeyName = '0';\n                    }else{\n                        uniqueDataKeyName = makeUniqueKey(dataset.datas[(dataset.datas.length-1)].key, isReservedDataKey);\n                    }\n                    var appendingTotalReport = appendNodes({\n                        datas:[\n                            {\n                                key:uniqueDataKeyName,\n                                coordinate: { //右クリック位置に挿入する\n                                    x:lastCoordinate.rightClick.x,\n                                    y:lastCoordinate.rightClick.y\n                                },\n                                type:\"text\",\n                                text: {\n                                    text_content: \"\"\n                                }\n                            }\n                        ]\n                    });\n                    historyManager.appendHistory(appendingTotalReport);\n\n                    var bindedData =  getBindedDataFromKey(appendingTotalReport.reportsArr.datas[0].key);\n                    call_editSVGNode(bindedData);\n                }\n            },\n            edit:{\n                //編集開始\n                name: \"Edit (\" + keySettings.editSVGNodes.toUpperCase() + \")\",\n                //accesskey の handling は keySettings.editSVGNodes に任せる\n                callback: function(itemKey, opt){\n                    call_editSVGNodes(false);\n                }\n            },\n            connect:{\n                name: \"Connect(C)\",\n                accesskey: 'c', //todo keySettings.connectDatasとの競合回避\n                callback: function(itemKey, opt){\n                    if(!connectStarted){\n                        checkStartConnect();\n                    }else{\n                        removeConnect();\n                    }\n                    return callbackFinally(true);\n                }\n            },\n            brush:{\n                name: \"Brush(B)\",\n                accesskey: 'b', //todo keySettings.brushSelectingとの競合回避\n                callback: function(itemKey, opt){\n                    if($3NodeSelectingBrushGroup === null){\n                        startBrush();\n                    }else{\n                        removeBrush();\n                    }\n                    return callbackFinally(true);\n                }\n            },\n            export: {\n                //エクスポート\n                name: \"Export (E)\",\n                accesskey: 'e',\n                items:{\n                    export_all:{\n                        name: \"Export all (A)\",\n                        accesskey: 'a',//todo <- \"Add (A)\"が優先されてしまう\n                        callback: function(itemKey, opt){\n                            //DL確認画面終了後にhide出来ないことがあるので、先にhideする\n                            opt.$menu.trigger(\"contextmenu:hide\");\n\n                            exportNodes(false); //全Node(s)ファイル吐き出し\n                        }\n                    },\n                    export_selected:{\n                        name: \"Export selected (S)\",\n                        accesskey: 's',\n                        callback: function(itemKey, opt){\n                            //DL確認画面終了後にhide出来ないことがあるので、先にhideする\n                            opt.$menu.trigger(\"contextmenu:hide\");\n\n                            exportNodes(true); //選択Node(s)ファイル吐き出し\n                        }\n                    },\n                    export_as_svg_all:{\n                        name: \"Export as SVG (all)\",\n                        // accesskey: 's',\n                        callback: function(itemKey, opt){\n                            //DL確認画面終了後にhide出来ないことがあるので、先にhideする\n                            opt.$menu.trigger(\"contextmenu:hide\");\n\n                            exportSVG(false);\n                        }\n                    },\n                    export_as_svg_view_port_only:{\n                        name: \"Export as SVG (current display range)\",\n                        // accesskey: 's',\n                        callback: function(itemKey, opt){\n                            //DL確認画面終了後にhide出来ないことがあるので、先にhideする\n                            opt.$menu.trigger(\"contextmenu:hide\");\n\n                            exportSVG(true);\n                        }\n                    },\n                }\n                \n            },\n        },\n        position: function (opt, x, y) { //caution! x <- pageX, y <- pageY\n\n            var boundingClientRect = $SVGDrawingAreaElement.get(0).getBoundingClientRect();\n            \n            var transformObj = {\n                translates: {x:0, y:0},\n                scale: 1\n            };\n\n            if(lastTransFormObj_d3style !== null){\n                transformObj.translates.x = lastTransFormObj_d3style.x;\n                transformObj.translates.y = lastTransFormObj_d3style.y;\n                transformObj.scale = lastTransFormObj_d3style.k;\n            }\n\n            //右クリック位置の保存\n            lastCoordinate.rightClick.x = ((x - (boundingClientRect.left + window.pageXOffset)) - transformObj.translates.x) / transformObj.scale;\n            lastCoordinate.rightClick.y = ((y - (boundingClientRect.top + window.pageYOffset)) - transformObj.translates.y) / transformObj.scale;\n\n            var $win = $(window);\n\n            //<Same as jquery.contextMenu-2.7.1.js>-----------------\n\n            var offset;\n            // determine contextMenu position\n            if (!x && !y) {\n                opt.determinePosition.call(this, opt.$menu);\n                return;\n            } else if (x === 'maintain' && y === 'maintain') {\n                // x and y must not be changed (after re-show on command click)\n                offset = opt.$menu.position();\n            } else {\n                // x and y are given (by mouse event)\n                var offsetParentOffset = opt.$menu.offsetParent().offset();\n                offset = {top: y - offsetParentOffset.top, left: x -offsetParentOffset.left};\n            }\n\n            // correct offset if viewport demands it\n            var bottom = $win.scrollTop() + $win.height(),\n                right = $win.scrollLeft() + $win.width(),\n                height = opt.$menu.outerHeight(),\n                width = opt.$menu.outerWidth();\n\n            if (offset.top + height > bottom) {\n                offset.top -= height;\n            }\n\n            if (offset.top < 0) {\n                offset.top = 0;\n            }\n\n            if (offset.left + width > right) {\n                offset.left -= width;\n            }\n\n            if (offset.left < 0) {\n                offset.left = 0;\n            }\n\n            opt.$menu.css(offset);\n\n            //----------------</Same as jquery.contextMenu-2.7.1.js>\n        },\n        callback: function(itemKey, opt){ //keyup event\n            //DL確認画面終了後にhide出来ないことがあるので、先にhideする\n            opt.$menu.trigger(\"contextmenu:hide\");\n            \n            console.warn(\"Unkown Item selected. Itemkey:`\" + itemKey + \"`, DOM: \", opt.$trigger.get(0));\n        }\n    })"
+            },
+            "coordinate": {
+                "x": -1463.8442642108823,
+                "y": 1210.6874304118878
+            }
+        },
+        {
+            "key": "n290",
+            "type": "text",
+            "text": {
+                "text_content": "$('.' + clsNameInCntxtMenu).css('z-index', '20')"
+            },
+            "coordinate": {
+                "x": 117.2363435677972,
+                "y": 991.279644680351
+            }
+        },
+        {
+            "key": "n291",
+            "type": "text",
+            "text": {
+                "text_content": "var zoom = d3.zoom()\n        .on(\"zoom\", function(){\n            lastTransFormObj_d3style = d3.event.transform; //最終状態を保存(Node Append/復活時に利用する)\n\n            $3svgNodes.each(function(d, i){\n                d.$3bindedSVGElement.attr(\"transform\", lastTransFormObj_d3style);\n                d.$3bindedSelectionLayerSVGElement.attr(\"transform\", lastTransFormObj_d3style);\n            });\n\n            $3svgLinks.each(function(d, i){\n                d.$3bindedSVGLinkElement.attr(\"transform\", lastTransFormObj_d3style);\n                d.$3bindedSelectionLayerSVGElement.attr(\"transform\", lastTransFormObj_d3style);\n            });\n\n            if(connectStarted){ // link 追加モードの場合は、preview 表示中のlinkも更新する\n                targetDrawerObj.$3bindedSVGLinkElement.attr(\"transform\", lastTransFormObj_d3style);\n                targetDrawerObj.$3bindedSelectionLayerSVGElement.attr(\"transform\", lastTransFormObj_d3style);\n            }\n\n            if(nowEditng){\n                adjustPropertyEditConsole(true); //Node個別編集機能のみadjustする(heavyすぎる為)\n            }\n        });"
+            },
+            "coordinate": {
+                "x": 533.123815724526,
+                "y": 819.3137752096411
+            }
+        },
+        {
+            "key": "n292",
+            "type": "text",
+            "text": {
+                "text_content": "startZoom()"
+            },
+            "coordinate": {
+                "x": 661.9744318889423,
+                "y": 370.48911457058864
+            }
+        },
+        {
+            "key": "n293",
+            "type": "text",
+            "text": {
+                "text_content": "$(document.body).on(\"contextmenu:focus\", \".context-menu-item\", \n        function(e){\n            //console.log(\"focus:\", this);\n        }\n    )"
+            },
+            "coordinate": {
+                "x": -669.9360775788449,
+                "y": -36.77985865709966
+            }
+        },
+        {
+            "key": "n294",
+            "type": "text",
+            "text": {
+                "text_content": "$(document.body).on(\"contextmenu:blur\", \".context-menu-item\",\n        function(e){ \n            //console.log(\"blur:\", this);\n        }\n    )"
+            },
+            "coordinate": {
+                "x": -133.07774486459468,
+                "y": 25.762810956229885
+            }
+        },
+        {
+            "key": "n295",
+            "type": "text",
+            "text": {
+                "text_content": "$(document).on(\"keydown\", function(e){\n        \n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n\n        lastUIEvent = 1; //key event が発生した事を記録\n\n        switch(e.keyCode){\n\n            case 93: //application key\n            {\n                applicationKeyDwon(e);\n            }\n            break;\n\n            default:\n            break;\n        }\n    })"
+            },
+            "coordinate": {
+                "x": -336.78989491989034,
+                "y": 394.8427152337522
+            }
+        },
+        {
+            "key": "n296",
+            "type": "text",
+            "text": {
+                "text_content": "var returnThisOnContextMenu = true;"
+            },
+            "coordinate": {
+                "x": 439.4020396740547,
+                "y": 230.1329428624567
+            }
+        },
+        {
+            "key": "n297",
+            "type": "text",
+            "text": {
+                "text_content": "$(document).on(\"contextmenu\", function(){\n        \n        //キーボードの application key 押下で context menu を表示させていた場合はfalse\n        // -> ブラウザ標準の context menu を表示させない\n        //そうでない場合はブラウザ標準の context menu を表示させる\n        var tmp = returnThisOnContextMenu;\n        returnThisOnContextMenu = true;\n        return tmp;\n    })"
+            },
+            "coordinate": {
+                "x": -1281.9418581782822,
+                "y": 470.91152909667915
+            }
+        },
+        {
+            "key": "n298",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.editSVGNodes, function(e){\n\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n\n        call_editSVGNodes(true);\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    })"
+            },
+            "coordinate": {
+                "x": -815.1289361198326,
+                "y": 1593.072250478932
+            }
+        },
+        {
+            "key": "n299",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.escapeEditor, function(e, combo){\n\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n\n        if(nowEditng){ // 編集中の場合\n            exitEditing(); //編集モードの終了\n        \n        }else if(connectStarted){ //connect モード中の場合\n            removeConnect(); //connect モード終了\n        \n        }else if($3NodeSelectingBrushGroup !== null){ // brush 選択中の場合\n            removeBrush(); //brush 終了\n        }\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    })"
+            },
+            "coordinate": {
+                "x": -928.226079224658,
+                "y": 664.7610855616703
+            }
+        },
+        {
+            "key": "n300",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.deleteNodes, function(e){\n\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        if(nowTyping){return;} //<textarea>の編集中はハジく\n\n        //External Component が未 load でない場合\n        if(checkSucceededLoadOf_ExternalComponent()){\n            if(nowEditng){ // 編集中の場合\n                //nothing to do\n            \n            }else{ // 編集中でない場合\n    \n                deleteSVGNodes(); //選択状態のNode(s)を削除\n                disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n            }\n        }\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    })"
+            },
+            "coordinate": {
+                "x": -734.4607150845849,
+                "y": -733.9106939146684
+            }
+        },
+        {
+            "key": "n301",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.selectNodeRight, function(e, combo){\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        if(nowTyping){return;} //<textarea>の編集中はハジく\n        // console.log(\">\");\n        call_getColsestData(\"right_an90\");\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    })"
+            },
+            "coordinate": {
+                "x": 1079.7692543376431,
+                "y": 1750.8698209695897
+            }
+        },
+        {
+            "key": "n302",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.selectNodeLeft, function(e, combo){\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        if(nowTyping){return;} //<textarea>の編集中はハジく\n        // console.log(\"<\");\n        call_getColsestData(\"left_an90\");\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    })"
+            },
+            "coordinate": {
+                "x": 2433.0151019617133,
+                "y": -70.89849911690762
+            }
+        },
+        {
+            "key": "n303",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.selectNodeAbove, function(e, combo){\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        if(nowTyping){return;} //<textarea>の編集中はハジく\n        // console.log(\"^\");\n        call_getColsestData(\"above_an90\");\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    })"
+            },
+            "coordinate": {
+                "x": 1134.371491890236,
+                "y": 1272.805335980015
+            }
+        },
+        {
+            "key": "n304",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.selectNodeBelow, function(e, combo){\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        if(nowTyping){return;} //<textarea>の編集中はハジく\n        // console.log(\"v\");\n        call_getColsestData(\"below_an90\");\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    })"
+            },
+            "coordinate": {
+                "x": 395.45289410128595,
+                "y": -19.64941855222262
+            }
+        },
+        {
+            "key": "n305",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.highlightNodesSource, function(e, combo){\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        if(nowTyping){return;} //<textarea>の編集中はハジく\n        binCode_KeyPressing |= 1;\n        call_appendHighlight();\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    }, 'keydown')"
+            },
+            "coordinate": {
+                "x": 1524.9967390646962,
+                "y": 193.2503458905627
+            }
+        },
+        {
+            "key": "n306",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.highlightNodesSource, function(e, combo){\n        binCode_KeyPressing &= (~1);\n        call_removeHighlight();\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    }, 'keyup')"
+            },
+            "coordinate": {
+                "x": -239.24221231299998,
+                "y": 2377.0640389473183
+            }
+        },
+        {
+            "key": "n307",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.highlightNodesTarget, function(e, combo){\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        if(nowTyping){return;} //<textarea>の編集中はハジく\n        binCode_KeyPressing |= 2;\n        call_appendHighlight();\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    }, 'keydown')"
+            },
+            "coordinate": {
+                "x": -238.91942600796526,
+                "y": 2003.6559721903996
+            }
+        },
+        {
+            "key": "n308",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.highlightNodesTarget, function(e, combo){\n        binCode_KeyPressing &= (~2);\n        call_removeHighlight();\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    }, 'keyup')"
+            },
+            "coordinate": {
+                "x": -264.5296736844832,
+                "y": 2200.938789384403
+            }
+        },
+        {
+            "key": "n309",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.highlightNodesSourceAndTarget, function(e, combo){\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        if(nowTyping){return;} //<textarea>の編集中はハジく\n        binCode_KeyPressing |= 4;\n        call_appendHighlight();\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    }, 'keydown')"
+            },
+            "coordinate": {
+                "x": -818.33660228147,
+                "y": 1215.085989305954
+            }
+        },
+        {
+            "key": "n310",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.highlightNodesSourceAndTarget, function(e, combo){\n        binCode_KeyPressing &= (~4);\n        call_removeHighlight();\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    }, 'keyup')"
+            },
+            "coordinate": {
+                "x": 1025.261681388861,
+                "y": 170.77287088235852
+            }
+        },
+        {
+            "key": "n311",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.brushSelecting, function(e, combo){\n        if(isEnableContextMenu()){return;}\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        if(nowTyping){return;} //<textarea>の編集中はハジく\n        startBrush();\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    }, 'keydown')"
+            },
+            "coordinate": {
+                "x": -254.90434489661968,
+                "y": 1853.6848972217629
+            }
+        },
+        {
+            "key": "n312",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.brushSelecting, function(e, combo){\n        if(checkIgnoreKeyUp()){return;}\n        removeBrush();\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    }, 'keyup')"
+            },
+            "coordinate": {
+                "x": 2498.6103719015287,
+                "y": 905.3966709999042
+            }
+        },
+        {
+            "key": "n313",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.connectDatas, function(e, combo){\n        if(isEnableContextMenu()){return;}\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        if(nowTyping){return;} //<textarea>の編集中はハジく\n        checkStartConnect();\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    }, 'keydown')"
+            },
+            "coordinate": {
+                "x": -1655.7937258311356,
+                "y": 205.7222599395642
+            }
+        },
+        {
+            "key": "n314",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.connectDatas, function(e, combo){\n        if(checkIgnoreKeyUp()){return;}\n        removeConnect();\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    }, 'keyup')"
+            },
+            "coordinate": {
+                "x": -350.7213115862338,
+                "y": 1282.400033404642
+            }
+        },
+        {
+            "key": "n315",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.undo, function(e, combo){\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        if(nowTyping){return;} //<textarea>の編集中はハジく\n\n        historyManager.traceHistory(-1);\n        \n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    })"
+            },
+            "coordinate": {
+                "x": -588.1365976185348,
+                "y": 1423.3169533893088
+            }
+        },
+        {
+            "key": "n316",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.redo, function(e, combo){\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        if(nowTyping){return;} //<textarea>の編集中はハジく\n\n        historyManager.traceHistory(1);\n        \n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    })"
+            },
+            "coordinate": {
+                "x": -1264.8829694325493,
+                "y": -406.56178890227494
+            }
+        },
+        {
+            "key": "n317",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.textAnchor_start, function(e, combo){\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        changeStyle('start', ['text', 'text_anchor'], 'datas');\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    })"
+            },
+            "coordinate": {
+                "x": -2094.8573178727806,
+                "y": -90.90978013479476
+            }
+        },
+        {
+            "key": "n318",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.textAnchor_middle, function(e, combo){\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        changeStyle('middle', ['text', 'text_anchor'], 'datas');\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    })"
+            },
+            "coordinate": {
+                "x": -756.6424590185582,
+                "y": 2061.9607760115405
+            }
+        },
+        {
+            "key": "n319",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.textAnchor_end, function(e, combo){\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        changeStyle('end', ['text', 'text_anchor'], 'datas');\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    })"
+            },
+            "coordinate": {
+                "x": 795.8229481814075,
+                "y": -193.65403471516046
+            }
+        },
+        {
+            "key": "n320",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.textFontWeight_bold, function(e, combo){\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        changeStyle('bold', ['text', 'text_font_weight'], 'datas');\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    })"
+            },
+            "coordinate": {
+                "x": 387.64058141742674,
+                "y": -509.2291113461343
+            }
+        },
+        {
+            "key": "n321",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(keySettings.textFontStyle_italic, function(e, combo){\n        if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n        changeStyle('italic', ['text', 'text_font_style'], 'datas');\n        disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n    })"
+            },
+            "coordinate": {
+                "x": 1244.8705767833421,
+                "y": 68.53024305032497
+            }
+        },
+        {
+            "key": "n322",
+            "type": "text",
+            "text": {
+                "text_content": "var browserIsIE11 = (navigator.userAgent.toLowerCase().indexOf('trident/7') > -1);"
+            },
+            "coordinate": {
+                "x": 581.0990402749525,
+                "y": 665.6268697632707
+            }
+        },
+        {
+            "key": "n323",
+            "type": "text",
+            "text": {
+                "text_content": "var clipboardEvent = null;"
+            },
+            "coordinate": {
+                "x": 498.6278768058454,
+                "y": 723.6766137317719
+            }
+        },
+        {
+            "key": "n324",
+            "type": "text",
+            "text": {
+                "text_content": "!browserIsIE11"
+            },
+            "coordinate": {
+                "x": 479.39401830597535,
+                "y": 626.2970038301472
+            }
+        },
+        {
+            "key": "n325",
+            "type": "text",
+            "text": {
+                "text_content": "document.addEventListener('cut', function(e){\n            // console.log(\"browser cut event\");\n            \n            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n            if(nowEditng){return;} //編集中の場合はハジく\n\n            clipboardEvent = e;\n            cutNodesToClipboard();\n            clipboardEvent.preventDefault();\n        })"
+            },
+            "coordinate": {
+                "x": 2598.6327458394408,
+                "y": 517.6060398878317
+            }
+        },
+        {
+            "key": "n326",
+            "type": "text",
+            "text": {
+                "text_content": "document.addEventListener('copy', function(e){\n            // console.log(\"browser copy event\");\n\n            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n            if(nowEditng){return;} //編集中の場合はハジく\n\n            clipboardEvent = e;\n            copyNodesToClipboard();\n            clipboardEvent.preventDefault();\n        })"
+            },
+            "coordinate": {
+                "x": 2087.410062457407,
+                "y": 97.25140198167023
+            }
+        },
+        {
+            "key": "n327",
+            "type": "text",
+            "text": {
+                "text_content": "document.addEventListener('paste', function(e){\n            // console.log(\"browser paste event\");\n\n            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n            if(nowEditng){return;} //編集中の場合はハジく\n\n            clipboardEvent = e;\n            pasteNodesFromClipboard();\n            clipboardEvent.preventDefault();\n        })"
+            },
+            "coordinate": {
+                "x": 1796.8184885419498,
+                "y": -288.1184510512393
+            }
+        },
+        {
+            "key": "n328",
+            "type": "text",
+            "text": {
+                "text_content": "var $3NodeSelectingBrushGroup = null;"
+            },
+            "coordinate": {
+                "x": -1445.5040041512834,
+                "y": -75.23528992508133
+            }
+        },
+        {
+            "key": "n329",
+            "type": "text",
+            "text": {
+                "text_content": "var unbindingBrushMove = false;"
+            },
+            "coordinate": {
+                "x": 602.5162291816243,
+                "y": 484.35088589747215
+            }
+        },
+        {
+            "key": "n330",
+            "type": "text",
+            "text": {
+                "text_content": "var brush = d3.brush()\n        .on(\"start\", function(){\n\n            //.call(brush.move, null); 起因のコールの場合はハジく\n            if(unbindingBrushMove){return;}\n            \n            //brush 開始時の selection 状態を保存\n            $3svgNodes.each(saveSelection);\n            $3svgLinks.each(saveSelection);\n\n            function saveSelection(d ,i){\n\n                var isSelected = (d.$3bindedSelectionLayerSVGElement.attr(\"data-selected\").toLowerCase() == 'true');\n\n                // brush 開始時の選択状態を保存\n                if(isSelected){\n                    d.$3bindedSelectionLayerSVGElement\n                        .attr(\"data-selected_when_brush_started\", \"true\");\n                }else{\n                    d.$3bindedSelectionLayerSVGElement\n                        .attr(\"data-selected_when_brush_started\", \"false\");\n                }\n            }\n        })\n        .on(\"brush\", function(){\n\n            //.call(brush.move, null); 起因のコールの場合は、\n            //d3.event.selection は null になってしまうため、ハジく\n            if(unbindingBrushMove){return;}\n\n            // console.log(\n            //     \"aboveLeft  x [0][0]:\" + d3.event.selection[0][0] + \", \" + \n            //     \"aboveLeft  y [0][1]:\" + d3.event.selection[0][1] + \", \" + \n            //     \"belowRight x [1][0]:\" + d3.event.selection[1][0] + \", \" + \n            //     \"belowRight y [1][1]:\" + d3.event.selection[1][1]\n            // );\n\n            //brush で囲った矩形エリアの SVG 空間内座標取得\n            var transformObj = {\n                translates: {x:0, y:0},\n                scale: 1\n            };\n    \n            if(lastTransFormObj_d3style !== null){\n                transformObj.translates.x = lastTransFormObj_d3style.x;\n                transformObj.translates.y = lastTransFormObj_d3style.y;\n                transformObj.scale = lastTransFormObj_d3style.k;\n            }\n\n            var aboveLeftX = (d3.event.selection[0][0] - transformObj.translates.x) / transformObj.scale;\n            var aboveLeftY =  (d3.event.selection[0][1] - transformObj.translates.y) / transformObj.scale;\n\n            var belowRightX =  (d3.event.selection[1][0] - transformObj.translates.x) / transformObj.scale;\n            var belowRightY =  (d3.event.selection[1][1] - transformObj.translates.y) / transformObj.scale;\n            \n            $3svgNodes.each(function(d ,i){\n\n                var isSelected = (d.$3bindedSelectionLayerSVGElement //brush 開始時の選択状態を取得\n                    .attr(\"data-selected_when_brush_started\").toLowerCase() == 'true');\n\n                var isSelectedBefore = (d.$3bindedSelectionLayerSVGElement //前回の .on(\"brush\" 時の選択状態を取得\n                        .attr(\"data-selected\").toLowerCase() == 'true');\n\n                if(aboveLeftX <= d.coordinate.x &&\n                    aboveLeftY <= d.coordinate.y &&\n                    d.coordinate.x <= belowRightX &&\n                    d.coordinate.y <= belowRightY){ //座標が brush area の範囲内の場合\n\n                    if(isSelected){ //brush 開始時に選択済みだった場合\n                        if(isSelectedBefore){ // 前回の .on(\"brush\" で非選択状態にしていない場合\n                            dataSelectionManager.spliceDataSelection(d); //node選択履歴から削除\n                        }\n\n                    }else{ //brush 開始時は未選択だった場合\n                        if(!isSelectedBefore){ // 前回の .on(\"brush\" で選択状態にしていない場合\n                            dataSelectionManager.pushDataSelection(d); //node選択履歴に追加\n                        }\n                    }\n                \n                }else{ //座標が brush area の範囲外の場合\n\n                    if(isSelected){ //brush 開始時に選択済みだった場合\n                        if(!isSelectedBefore){ // 前回の .on(\"brush\" で選択状態にしていない場合\n                            dataSelectionManager.pushDataSelection(d); //node選択履歴に追加\n                        }\n\n                    }else{ //brush 開始時は未選択だった場合\n                        if(isSelectedBefore){ // 前回の .on(\"brush\" で非選択状態にしていない場合\n                            dataSelectionManager.spliceDataSelection(d); //node選択履歴から削除\n                        }\n                    }\n                }\n            });\n\n            $3svgLinks.each(function(d ,i){\n\n                var isSelected = (d.$3bindedSelectionLayerSVGElement //brush 開始時の選択状態を取得\n                    .attr(\"data-selected_when_brush_started\").toLowerCase() == 'true');\n\n                var isSelectedBefore = (d.$3bindedSelectionLayerSVGElement //前回の .on(\"brush\" 時の選択状態を取得\n                    .attr(\"data-selected\").toLowerCase() == 'true');\n\n                if((aboveLeftX <= d.coordinate.x1 &&\n                    aboveLeftY <= d.coordinate.y1 &&\n                    d.coordinate.x1 <= belowRightX &&\n                    d.coordinate.y1 <= belowRightY) && //1つめの座標が brush area の範囲内の場合\n                    \n                    (aboveLeftX <= d.coordinate.x2 &&\n                        aboveLeftY <= d.coordinate.y2 &&\n                        d.coordinate.x2 <= belowRightX &&\n                        d.coordinate.y2 <= belowRightY)){ //2つめの座標が brush area の範囲内の場合\n\n                    if(isSelected){ //brush 開始時に選択済みだった場合\n                        if(isSelectedBefore){ // 前回の .on(\"brush\" で非選択状態にしていない場合\n                            dataSelectionManager.spliceLinkSelection(d); //node選択履歴から削除\n                        }\n\n                    }else{ //brush 開始時は未選択だった場合\n                        if(!isSelectedBefore){ // 前回の .on(\"brush\" で選択状態にしていない場合\n                            dataSelectionManager.pushLinkSelection(d); //node選択履歴に追加\n                        }\n                    }\n                \n                }else{ //座標が brush area の範囲外の場合\n\n                    if(isSelected){ //brush 開始時に選択済みだった場合\n                        if(!isSelectedBefore){ // 前回の .on(\"brush\" で選択状態にしていない場合\n                            dataSelectionManager.pushLinkSelection(d); //node選択履歴に追加\n                        }\n\n                    }else{ //brush 開始時は未選択だった場合\n                        if(isSelectedBefore){ // 前回の .on(\"brush\" で非選択状態にしていない場合\n                            dataSelectionManager.spliceLinkSelection(d); //node選択履歴から削除\n                        }\n                    }\n                }\n            });            \n        })\n        .on(\"end\", function(){ //選択終了イベント\n            \n            if(!unbindingBrushMove){ //Avoid infinite loop\n                \n                if($3NodeSelectingBrushGroup !== null){ // removeBrush(); していない場合\n\n                    unbindingBrushMove = true;\n                    // ↓ この処理内で、.on(\"??\" に登録した関数(この関数自身)がコールされてしまう ↓\n                    $3NodeSelectingBrushGroup.call(brush.move, null); //Brush 選択範囲表示のクリア\n                    unbindingBrushMove = false;\n                }\n\n                // .on(\"start\", で設定した data-selected_when_brush_started 属性のクリア\n                $3svgNodes.each(removeSavedSelection);\n                $3svgLinks.each(removeSavedSelection);\n\n                function removeSavedSelection(d,i){\n                    d.$3bindedSelectionLayerSVGElement.attr(\"data-selected_when_brush_started\", null);\n                }\n            }\n        })\n    "
+            },
+            "coordinate": {
+                "x": 1766.6835684328353,
+                "y": 822.2865880241786
+            }
+        },
+        {
+            "key": "n331",
+            "type": "text",
+            "text": {
+                "text_content": "$SVGDrawingAreaElement.get(0).addEventListener(\"mousemove\",function(e){\n        \n        var boundingClientRect = $SVGDrawingAreaElement.get(0).getBoundingClientRect();\n\n        var transformObj = {\n            translates: {x:0, y:0},\n            scale: 1\n        };\n\n        if(lastTransFormObj_d3style !== null){\n            transformObj.translates.x = lastTransFormObj_d3style.x;\n            transformObj.translates.y = lastTransFormObj_d3style.y;\n            transformObj.scale = lastTransFormObj_d3style.k;\n        }\n\n        lastCoordinate.mouse.x = ((e.clientX - boundingClientRect.left) - transformObj.translates.x) / transformObj.scale;\n        lastCoordinate.mouse.y = ((e.clientY - boundingClientRect.top) - transformObj.translates.y) / transformObj.scale;\n\n    })"
+            },
+            "coordinate": {
+                "x": -348.232652767357,
+                "y": -354.1362750574503
+            }
+        },
+        {
+            "key": "n332",
+            "type": "text",
+            "text": {
+                "text_content": "var connectStarted = false;"
+            },
+            "coordinate": {
+                "x": 1341.2476608983152,
+                "y": 2351.628888971284
+            }
+        },
+        {
+            "key": "n333",
+            "type": "text",
+            "text": {
+                "text_content": "var targetDrawerObj = {};"
+            },
+            "coordinate": {
+                "x": 861.0338783802421,
+                "y": 293.8571116174631
+            }
+        },
+        {
+            "key": "n334",
+            "type": "text",
+            "text": {
+                "text_content": "var func_checkBeforePageMoving = function(e){\n        e.returnValue = \"Are you sure to leave this page?\"; //仮のメッセージ\n    }\n    "
+            },
+            "coordinate": {
+                "x": 247.79339230694342,
+                "y": -529.1181760324384
+            }
+        },
+        {
+            "key": "n335",
+            "type": "text",
+            "text": {
+                "text_content": "var simulation;"
+            },
+            "coordinate": {
+                "x": 600.2608042252704,
+                "y": 253.98710471803804
+            }
+        },
+        {
+            "key": "n336",
+            "type": "text",
+            "text": {
+                "text_content": "var widthOfScrollBar;"
+            },
+            "coordinate": {
+                "x": 583.1043146879281,
+                "y": 355.0011972777764
+            }
+        },
+        {
+            "key": "n337",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(\"ctrl+x\", function(e, combo){\n            // console.log(\"Mousetrap cut event\");\n            \n            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n            if(nowEditng){return;} //編集中の場合はハジく\n\n            cutNodesToClipboard();\n            \n            disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n        })"
+            },
+            "coordinate": {
+                "x": -875.0866410723673,
+                "y": 315.0616677755932
+            }
+        },
+        {
+            "key": "n338",
+            "type": "text",
+            "text": {
+                "text_content": "document.addEventListener('cut', function(e){\n            // console.log(\"browser cut event\");\n            \n            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n            if(nowEditng){return;} //編集中の場合はハジく\n\n            disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n        })"
+            },
+            "coordinate": {
+                "x": 1123.9163019840655,
+                "y": 971.0466869510971
+            }
+        },
+        {
+            "key": "n339",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(\"ctrl+c\", function(e, combo){\n            // console.log(\"Mousetrap copy event\");\n            \n            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n            if(nowEditng){return;} //編集中の場合はハジく\n\n            copyNodesToClipboard();\n            \n            disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n        })"
+            },
+            "coordinate": {
+                "x": 1153.1963067857375,
+                "y": 1388.912030110485
+            }
+        },
+        {
+            "key": "n340",
+            "type": "text",
+            "text": {
+                "text_content": "document.addEventListener('copy', function(e){\n            // console.log(\"browser copy event\");\n\n            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n            if(nowEditng){return;} //編集中の場合はハジく\n\n            disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n        })"
+            },
+            "coordinate": {
+                "x": -418.00225957501215,
+                "y": 1044.9684268622907
+            }
+        },
+        {
+            "key": "n341",
+            "type": "text",
+            "text": {
+                "text_content": "mousetrapInstance.bind(\"ctrl+v\", function(e, combo){\n            // console.log(\"Mousetrap paste event\");\n            \n            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n            if(nowEditng){return;} //編集中の場合はハジく\n\n            pasteNodesFromClipboard();\n            \n            disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n        })"
+            },
+            "coordinate": {
+                "x": -270.87450494359194,
+                "y": 806.4349224354282
+            }
+        },
+        {
+            "key": "n342",
+            "type": "text",
+            "text": {
+                "text_content": "document.addEventListener('paste', function(e){\n            // console.log(\"browser paste event\");\n\n            if(!UIisEnable){return;} //UIエリア範囲外で mouse event を発生させていた場合はハジく\n            if(nowEditng){return;} //編集中の場合はハジく\n\n            disablingKeyEvent(e); //ブラウザにキーイベントを渡さない\n        })"
+            },
+            "coordinate": {
+                "x": -72.28726178199179,
+                "y": 223.79762829182295
+            }
+        },
+        {
+            "key": "n343",
+            "type": "text",
+            "text": {
+                "text_content": "exit"
+            },
+            "coordinate": {
+                "x": 1473.854338446563,
+                "y": -1202.4214171927465
+            }
+        }
+    ],
+    "links": [
+        {
+            "source": "n172",
+            "target": "n173",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n173",
+            "target": "n174",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n174",
+            "target": "n175",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n175",
+            "target": "n176",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n176",
+            "target": "n177",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n177",
+            "target": "n178",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n178",
+            "target": "n179",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n179",
+            "target": "n180",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n180",
+            "target": "n181",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n181",
+            "target": "n182",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n182",
+            "target": "n183",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n183",
+            "target": "n184",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n184",
+            "target": "n185",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n185",
+            "target": "n186",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n186",
+            "target": "n187",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n187",
+            "target": "n188",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n188",
+            "target": "n189",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n189",
+            "target": "n190",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n190",
+            "target": "n191",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n191",
+            "target": "n192",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n192",
+            "target": "n193",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n193",
+            "target": "n194",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n194",
+            "target": "n195",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n195",
+            "target": "n196",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n196",
+            "target": "n197",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n197",
+            "target": "n198",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n198",
+            "target": "n199",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n199",
+            "target": "n200",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n200",
+            "target": "n201",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n201",
+            "target": "n202",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n202",
+            "target": "n203",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n203",
+            "target": "n204",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n204",
+            "target": "n205",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n205",
+            "target": "n206",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n206",
+            "target": "n207",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n207",
+            "target": "n208",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n208",
+            "target": "n209",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n209",
+            "target": "n210",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n210",
+            "target": "n211",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n211",
+            "target": "n212",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n212",
+            "target": "n213",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n213",
+            "target": "n214",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n214",
+            "target": "n215",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n215",
+            "target": "n216",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n216",
+            "target": "n217",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n217",
+            "target": "n218",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n218",
+            "target": "n219",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n219",
+            "target": "n220",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n220",
+            "target": "n221",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n221",
+            "target": "n222",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n222",
+            "target": "n223",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n223",
+            "target": "n224",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n224",
+            "target": "n225",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n225",
+            "target": "n226",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n226",
+            "target": "n227",
+            "type": "line",
+            "line": {
+                "distance": 879.7207522802287
+            }
+        },
+        {
+            "source": "n227",
+            "target": "n228",
+            "type": "line",
+            "line": {
+                "distance": 1069.2934016577149
+            }
+        },
+        {
+            "source": "n227",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 740.255499021583
+            }
+        },
+        {
+            "source": "n228",
+            "target": "n229",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n228",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1799.9367944900591
+            }
+        },
+        {
+            "source": "n229",
+            "target": "n230",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n229",
+            "target": "n232",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n229",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1753.5117145898216
+            }
+        },
+        {
+            "source": "n230",
+            "target": "n231",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n230",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1714.9765955349985
+            }
+        },
+        {
+            "source": "n231",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1817.7995307207675
+            }
+        },
+        {
+            "source": "n232",
+            "target": "n233",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n232",
+            "target": "n235",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n232",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1843.7170667882626
+            }
+        },
+        {
+            "source": "n233",
+            "target": "n234",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n233",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1884.6982432034097
+            }
+        },
+        {
+            "source": "n234",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1986.7291188494341
+            }
+        },
+        {
+            "source": "n235",
+            "target": "n236",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n235",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1873.0998036881172
+            }
+        },
+        {
+            "source": "n236",
+            "target": "n237",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n236",
+            "target": "n239",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n236",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1886.9490226247594
+            }
+        },
+        {
+            "source": "n237",
+            "target": "n238",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n237",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1805.1176553453372
+            }
+        },
+        {
+            "source": "n238",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1823.0396929146286
+            }
+        },
+        {
+            "source": "n239",
+            "target": "n240",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n239",
+            "target": "n242",
+            "type": "line",
+            "line": {
+                "distance": 498.18550606508165
+            }
+        },
+        {
+            "source": "n239",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1784.5313293206214
+            }
+        },
+        {
+            "source": "n240",
+            "target": "n241",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n240",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1888.3055183109464
+            }
+        },
+        {
+            "source": "n241",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1978.9440791879815
+            }
+        },
+        {
+            "source": "n242",
+            "target": "n243",
+            "type": "line",
+            "line": {
+                "distance": 327.973247600461
+            }
+        },
+        {
+            "source": "n242",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2260.776520967956
+            }
+        },
+        {
+            "source": "n243",
+            "target": "n244",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n243",
+            "target": "n246",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n243",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1967.0758431598722
+            }
+        },
+        {
+            "source": "n244",
+            "target": "n245",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n244",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1982.9622982178546
+            }
+        },
+        {
+            "source": "n245",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1959.9956792721487
+            }
+        },
+        {
+            "source": "n246",
+            "target": "n247",
+            "type": "line",
+            "line": {
+                "distance": 544.6610666105278
+            }
+        },
+        {
+            "source": "n246",
+            "target": "n249",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n246",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1854.1691328948505
+            }
+        },
+        {
+            "source": "n247",
+            "target": "n248",
+            "type": "line",
+            "line": {
+                "distance": 681.6145468335089
+            }
+        },
+        {
+            "source": "n247",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1987.9606930364341
+            }
+        },
+        {
+            "source": "n248",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2048.615431851035
+            }
+        },
+        {
+            "source": "n249",
+            "target": "n250",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n249",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1944.5613865020061
+            }
+        },
+        {
+            "source": "n250",
+            "target": "n251",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n250",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1935.3785212465207
+            }
+        },
+        {
+            "source": "n251",
+            "target": "n252",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n251",
+            "target": "n256",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n251",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1937.8043132087923
+            }
+        },
+        {
+            "source": "n252",
+            "target": "n253",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n252",
+            "target": "n255",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n252",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1860.924924733679
+            }
+        },
+        {
+            "source": "n253",
+            "target": "n254",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n253",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1953.7552240738114
+            }
+        },
+        {
+            "source": "n254",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1995.7415844279064
+            }
+        },
+        {
+            "source": "n255",
+            "target": "n256",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n255",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1749.0056342935682
+            }
+        },
+        {
+            "source": "n256",
+            "target": "n257",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n256",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1823.7251345728955
+            }
+        },
+        {
+            "source": "n257",
+            "target": "n258",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n257",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1889.6071820880913
+            }
+        },
+        {
+            "source": "n258",
+            "target": "n259",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n258",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1793.1886654395698
+            }
+        },
+        {
+            "source": "n259",
+            "target": "n260",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n259",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1899.9345364465355
+            }
+        },
+        {
+            "source": "n260",
+            "target": "n261",
+            "type": "line",
+            "line": {
+                "distance": 795.8818801995806
+            }
+        },
+        {
+            "source": "n261",
+            "target": "n262",
+            "type": "line",
+            "line": {
+                "distance": 2704.29562200801
+            }
+        },
+        {
+            "source": "n261",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1522.3726732057012
+            }
+        },
+        {
+            "source": "n262",
+            "target": "n263",
+            "type": "line",
+            "line": {
+                "distance": 1768.2596060615328
+            }
+        },
+        {
+            "source": "n262",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3739.9107583375703
+            }
+        },
+        {
+            "source": "n263",
+            "target": "n264",
+            "type": "line",
+            "line": {
+                "distance": 802.5147111842249
+            }
+        },
+        {
+            "source": "n263",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2005.6232899368379
+            }
+        },
+        {
+            "source": "n264",
+            "target": "n265",
+            "type": "line",
+            "line": {
+                "distance": 1783.308562030259
+            }
+        },
+        {
+            "source": "n264",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2800.599887698171
+            }
+        },
+        {
+            "source": "n265",
+            "target": "n266",
+            "type": "line",
+            "line": {
+                "distance": 1716.5255682768704
+            }
+        },
+        {
+            "source": "n265",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2781.3462383881133
+            }
+        },
+        {
+            "source": "n266",
+            "target": "n267",
+            "type": "line",
+            "line": {
+                "distance": 1109.0624993520391
+            }
+        },
+        {
+            "source": "n266",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1949.7930326584715
+            }
+        },
+        {
+            "source": "n267",
+            "target": "n268",
+            "type": "line",
+            "line": {
+                "distance": 498.45345202134627
+            }
+        },
+        {
+            "source": "n267",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3065.0503572088273
+            }
+        },
+        {
+            "source": "n268",
+            "target": "n269",
+            "type": "line",
+            "line": {
+                "distance": 1123.9764173806052
+            }
+        },
+        {
+            "source": "n268",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2577.696586090959
+            }
+        },
+        {
+            "source": "n269",
+            "target": "n270",
+            "type": "line",
+            "line": {
+                "distance": 1190.3718842464539
+            }
+        },
+        {
+            "source": "n269",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1453.3009124841292
+            }
+        },
+        {
+            "source": "n270",
+            "target": "n271",
+            "type": "line",
+            "line": {
+                "distance": 883.073883047037
+            }
+        },
+        {
+            "source": "n270",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2344.8794760556916
+            }
+        },
+        {
+            "source": "n271",
+            "target": "n272",
+            "type": "line",
+            "line": {
+                "distance": 1765.7303999434139
+            }
+        },
+        {
+            "source": "n271",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3225.135997307434
+            }
+        },
+        {
+            "source": "n272",
+            "target": "n273",
+            "type": "line",
+            "line": {
+                "distance": 659.9948338768529
+            }
+        },
+        {
+            "source": "n272",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1716.5786770524612
+            }
+        },
+        {
+            "source": "n273",
+            "target": "n274",
+            "type": "line",
+            "line": {
+                "distance": 1320.1228552609366
+            }
+        },
+        {
+            "source": "n273",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1381.9364722331504
+            }
+        },
+        {
+            "source": "n274",
+            "target": "n275",
+            "type": "line",
+            "line": {
+                "distance": 923.96087763446
+            }
+        },
+        {
+            "source": "n274",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2065.1450362810156
+            }
+        },
+        {
+            "source": "n275",
+            "target": "n276",
+            "type": "line",
+            "line": {
+                "distance": 783.7321879753132
+            }
+        },
+        {
+            "source": "n275",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1255.756752274035
+            }
+        },
+        {
+            "source": "n276",
+            "target": "n277",
+            "type": "line",
+            "line": {
+                "distance": 836.1648549985433
+            }
+        },
+        {
+            "source": "n276",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1975.2466186057643
+            }
+        },
+        {
+            "source": "n277",
+            "target": "n278",
+            "type": "line",
+            "line": {
+                "distance": 99.02677600184717
+            }
+        },
+        {
+            "source": "n277",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2324.184846557648
+            }
+        },
+        {
+            "source": "n278",
+            "target": "n279",
+            "type": "line",
+            "line": {
+                "distance": 1210.5266525689085
+            }
+        },
+        {
+            "source": "n278",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2346.6217095541106
+            }
+        },
+        {
+            "source": "n279",
+            "target": "n280",
+            "type": "line",
+            "line": {
+                "distance": 1266.7097764675361
+            }
+        },
+        {
+            "source": "n279",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2848.619660678844
+            }
+        },
+        {
+            "source": "n280",
+            "target": "n281",
+            "type": "line",
+            "line": {
+                "distance": 907.8122506214214
+            }
+        },
+        {
+            "source": "n281",
+            "target": "n282",
+            "type": "line",
+            "line": {
+                "distance": 1463.5953998425964
+            }
+        },
+        {
+            "source": "n281",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2911.194437237112
+            }
+        },
+        {
+            "source": "n282",
+            "target": "n283",
+            "type": "line",
+            "line": {
+                "distance": 2038.316489558605
+            }
+        },
+        {
+            "source": "n282",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1497.7379281721762
+            }
+        },
+        {
+            "source": "n283",
+            "target": "n284",
+            "type": "line",
+            "line": {
+                "distance": 2268.1644453871727
+            }
+        },
+        {
+            "source": "n283",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3120.2944446987967
+            }
+        },
+        {
+            "source": "n284",
+            "target": "n285",
+            "type": "line",
+            "line": {
+                "distance": 334.76209398926693
+            }
+        },
+        {
+            "source": "n284",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2078.9367643537576
+            }
+        },
+        {
+            "source": "n285",
+            "target": "n286",
+            "type": "line",
+            "line": {
+                "distance": 892.9777848683094
+            }
+        },
+        {
+            "source": "n285",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1744.03071501994
+            }
+        },
+        {
+            "source": "n286",
+            "target": "n287",
+            "type": "line",
+            "line": {
+                "distance": 501.2807541646673
+            }
+        },
+        {
+            "source": "n286",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2051.4026599774006
+            }
+        },
+        {
+            "source": "n287",
+            "target": "n288",
+            "type": "line",
+            "line": {
+                "distance": 1381.9519282772699
+            }
+        },
+        {
+            "source": "n287",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2488.527393930897
+            }
+        },
+        {
+            "source": "n288",
+            "target": "n289",
+            "type": "line",
+            "line": {
+                "distance": 3094.9008168743662
+            }
+        },
+        {
+            "source": "n288",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1649.803925093032
+            }
+        },
+        {
+            "source": "n289",
+            "target": "n290",
+            "type": "line",
+            "line": {
+                "distance": 1594.64864296116
+            }
+        },
+        {
+            "source": "n289",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3800.718512989804
+            }
+        },
+        {
+            "source": "n290",
+            "target": "n291",
+            "type": "line",
+            "line": {
+                "distance": 449.12983335461143
+            }
+        },
+        {
+            "source": "n290",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2579.048105080384
+            }
+        },
+        {
+            "source": "n291",
+            "target": "n292",
+            "type": "line",
+            "line": {
+                "distance": 465.6975127111746
+            }
+        },
+        {
+            "source": "n291",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2230.188483023535
+            }
+        },
+        {
+            "source": "n292",
+            "target": "n293",
+            "type": "line",
+            "line": {
+                "distance": 1396.1044657463242
+            }
+        },
+        {
+            "source": "n292",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1770.1815406983512
+            }
+        },
+        {
+            "source": "n293",
+            "target": "n294",
+            "type": "line",
+            "line": {
+                "distance": 538.3258317380547
+            }
+        },
+        {
+            "source": "n293",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2439.400733010174
+            }
+        },
+        {
+            "source": "n294",
+            "target": "n295",
+            "type": "line",
+            "line": {
+                "distance": 421.25240455624885
+            }
+        },
+        {
+            "source": "n294",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2021.409134922959
+            }
+        },
+        {
+            "source": "n295",
+            "target": "n296",
+            "type": "line",
+            "line": {
+                "distance": 794.0142531138864
+            }
+        },
+        {
+            "source": "n295",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2414.3077453475585
+            }
+        },
+        {
+            "source": "n296",
+            "target": "n297",
+            "type": "line",
+            "line": {
+                "distance": 1738.3491028488759
+            }
+        },
+        {
+            "source": "n297",
+            "target": "n298",
+            "type": "line",
+            "line": {
+                "distance": 1215.4398992845033
+            }
+        },
+        {
+            "source": "n297",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3224.154260532867
+            }
+        },
+        {
+            "source": "n298",
+            "target": "n299",
+            "type": "line",
+            "line": {
+                "distance": 935.2002437173315
+            }
+        },
+        {
+            "source": "n298",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3613.0093092018324
+            }
+        },
+        {
+            "source": "n299",
+            "target": "n300",
+            "type": "line",
+            "line": {
+                "distance": 1412.1058936691752
+            }
+        },
+        {
+            "source": "n299",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3042.3917930230846
+            }
+        },
+        {
+            "source": "n300",
+            "target": "n301",
+            "type": "line",
+            "line": {
+                "distance": 3076.6255928025803
+            }
+        },
+        {
+            "source": "n300",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2257.5446489925253
+            }
+        },
+        {
+            "source": "n301",
+            "target": "n302",
+            "type": "line",
+            "line": {
+                "distance": 2269.348834509118
+            }
+        },
+        {
+            "source": "n301",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2979.4343940102235
+            }
+        },
+        {
+            "source": "n302",
+            "target": "n303",
+            "type": "line",
+            "line": {
+                "distance": 1868.8795155118305
+            }
+        },
+        {
+            "source": "n302",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1483.2226864984696
+            }
+        },
+        {
+            "source": "n303",
+            "target": "n304",
+            "type": "line",
+            "line": {
+                "distance": 1488.9147444933817
+            }
+        },
+        {
+            "source": "n303",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2498.1543969211984
+            }
+        },
+        {
+            "source": "n304",
+            "target": "n305",
+            "type": "line",
+            "line": {
+                "distance": 1149.4455937783928
+            }
+        },
+        {
+            "source": "n304",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1600.6404133739848
+            }
+        },
+        {
+            "source": "n305",
+            "target": "n306",
+            "type": "line",
+            "line": {
+                "distance": 2807.4995206459193
+            }
+        },
+        {
+            "source": "n305",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1396.5456281914585
+            }
+        },
+        {
+            "source": "n306",
+            "target": "n307",
+            "type": "line",
+            "line": {
+                "distance": 373.35004362851924
+            }
+        },
+        {
+            "source": "n306",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3968.240538068573
+            }
+        },
+        {
+            "source": "n307",
+            "target": "n308",
+            "type": "line",
+            "line": {
+                "distance": 198.9932814728156
+            }
+        },
+        {
+            "source": "n307",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3634.851950914495
+            }
+        },
+        {
+            "source": "n308",
+            "target": "n309",
+            "type": "line",
+            "line": {
+                "distance": 1130.8526179335274
+            }
+        },
+        {
+            "source": "n308",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3821.504402294085
+            }
+        },
+        {
+            "source": "n309",
+            "target": "n310",
+            "type": "line",
+            "line": {
+                "distance": 2118.40869143824
+            }
+        },
+        {
+            "source": "n309",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3331.7418600170295
+            }
+        },
+        {
+            "source": "n310",
+            "target": "n311",
+            "type": "line",
+            "line": {
+                "distance": 2115.04205151589
+            }
+        },
+        {
+            "source": "n310",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1444.6711304803698
+            }
+        },
+        {
+            "source": "n311",
+            "target": "n312",
+            "type": "line",
+            "line": {
+                "distance": 2912.201201426628
+            }
+        },
+        {
+            "source": "n311",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3510.812700936012
+            }
+        },
+        {
+            "source": "n312",
+            "target": "n313",
+            "type": "line",
+            "line": {
+                "distance": 4213.138936210727
+            }
+        },
+        {
+            "source": "n312",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2343.5479086256014
+            }
+        },
+        {
+            "source": "n313",
+            "target": "n314",
+            "type": "line",
+            "line": {
+                "distance": 1691.8343810231802
+            }
+        },
+        {
+            "source": "n313",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3431.799308070645
+            }
+        },
+        {
+            "source": "n314",
+            "target": "n315",
+            "type": "line",
+            "line": {
+                "distance": 276.12673721752816
+            }
+        },
+        {
+            "source": "n314",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3082.749346427086
+            }
+        },
+        {
+            "source": "n315",
+            "target": "n316",
+            "type": "line",
+            "line": {
+                "distance": 1951.0593187436466
+            }
+        },
+        {
+            "source": "n315",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3338.541675386932
+            }
+        },
+        {
+            "source": "n316",
+            "target": "n317",
+            "type": "line",
+            "line": {
+                "distance": 887.9742374162225
+            }
+        },
+        {
+            "source": "n316",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2852.075944523338
+            }
+        },
+        {
+            "source": "n317",
+            "target": "n318",
+            "type": "line",
+            "line": {
+                "distance": 2534.9473144168696
+            }
+        },
+        {
+            "source": "n317",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3737.8371963378186
+            }
+        },
+        {
+            "source": "n318",
+            "target": "n319",
+            "type": "line",
+            "line": {
+                "distance": 2738.2617390370688
+            }
+        },
+        {
+            "source": "n318",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 3953.5868513223245
+            }
+        },
+        {
+            "source": "n319",
+            "target": "n320",
+            "type": "line",
+            "line": {
+                "distance": 515.4391751274441
+            }
+        },
+        {
+            "source": "n319",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1215.4831916278117
+            }
+        },
+        {
+            "source": "n320",
+            "target": "n321",
+            "type": "line",
+            "line": {
+                "distance": 1034.2426611245578
+            }
+        },
+        {
+            "source": "n320",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1288.4814238925655
+            }
+        },
+        {
+            "source": "n321",
+            "target": "n322",
+            "type": "line",
+            "line": {
+                "distance": 889.4075900114864
+            }
+        },
+        {
+            "source": "n321",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1289.882096255517
+            }
+        },
+        {
+            "source": "n322",
+            "target": "n323",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n322",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2066.630159585206
+            }
+        },
+        {
+            "source": "n323",
+            "target": "n324",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n324",
+            "target": "n325",
+            "type": "line",
+            "line": {
+                "distance": 2118.07763841655
+            }
+        },
+        {
+            "source": "n324",
+            "target": "n337",
+            "type": "line",
+            "line": {
+                "distance": 1389.6584348853041
+            }
+        },
+        {
+            "source": "n324",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2074.5491077738534
+            }
+        },
+        {
+            "source": "n325",
+            "target": "n326",
+            "type": "line",
+            "line": {
+                "distance": 666.513701011695
+            }
+        },
+        {
+            "source": "n325",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2054.7562842454845
+            }
+        },
+        {
+            "source": "n326",
+            "target": "n327",
+            "type": "line",
+            "line": {
+                "distance": 484.84560301092773
+            }
+        },
+        {
+            "source": "n326",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1438.5359174099765
+            }
+        },
+        {
+            "source": "n327",
+            "target": "n328",
+            "type": "line",
+            "line": {
+                "distance": 3249.221834392024
+            }
+        },
+        {
+            "source": "n327",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 970.7366802203751
+            }
+        },
+        {
+            "source": "n328",
+            "target": "n329",
+            "type": "line",
+            "line": {
+                "distance": 2124.3930070581273
+            }
+        },
+        {
+            "source": "n329",
+            "target": "n330",
+            "type": "line",
+            "line": {
+                "distance": 1209.7892967845955
+            }
+        },
+        {
+            "source": "n330",
+            "target": "n331",
+            "type": "line",
+            "line": {
+                "distance": 2422.0166545320726
+            }
+        },
+        {
+            "source": "n330",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2045.824905721768
+            }
+        },
+        {
+            "source": "n331",
+            "target": "n332",
+            "type": "line",
+            "line": {
+                "distance": 3189.328102146129
+            }
+        },
+        {
+            "source": "n331",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2009.2682846124571
+            }
+        },
+        {
+            "source": "n332",
+            "target": "n333",
+            "type": "line",
+            "line": {
+                "distance": 2113.1543996993128
+            }
+        },
+        {
+            "source": "n333",
+            "target": "n334",
+            "type": "line",
+            "line": {
+                "distance": 1025.3102265985178
+            }
+        },
+        {
+            "source": "n334",
+            "target": "n335",
+            "type": "line",
+            "line": {
+                "distance": 861.2650162245138
+            }
+        },
+        {
+            "source": "n335",
+            "target": "n336",
+            "type": "line",
+            "line": {}
+        },
+        {
+            "source": "n336",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 1798.2007990500183
+            }
+        },
+        {
+            "source": "n337",
+            "target": "n338",
+            "type": "line",
+            "line": {
+                "distance": 2104.1359868184954
+            }
+        },
+        {
+            "source": "n337",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2796.7171204422684
+            }
+        },
+        {
+            "source": "n338",
+            "target": "n339",
+            "type": "line",
+            "line": {
+                "distance": 419.4169974226897
+            }
+        },
+        {
+            "source": "n338",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2201.561603126399
+            }
+        },
+        {
+            "source": "n339",
+            "target": "n340",
+            "type": "line",
+            "line": {
+                "distance": 1608.350712960848
+            }
+        },
+        {
+            "source": "n339",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2610.702963568286
+            }
+        },
+        {
+            "source": "n340",
+            "target": "n341",
+            "type": "line",
+            "line": {
+                "distance": 280.1303996142423
+            }
+        },
+        {
+            "source": "n340",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2937.732750960293
+            }
+        },
+        {
+            "source": "n341",
+            "target": "n342",
+            "type": "line",
+            "line": {
+                "distance": 615.3199001853666
+            }
+        },
+        {
+            "source": "n341",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2660.749924123063
+            }
+        },
+        {
+            "source": "n342",
+            "target": "n328",
+            "type": "line",
+            "line": {
+                "distance": 1404.3837620790193
+            }
+        },
+        {
+            "source": "n342",
+            "target": "n343",
+            "type": "line",
+            "line": {
+                "distance": 2103.1023617543797
+            }
+        }
+    ]
+}
