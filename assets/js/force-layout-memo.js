@@ -892,7 +892,7 @@ function forceLayoutMemo(initializerObj){
                 file_reader.onload = function(e){
                     var retObj = appendNodesFromText(file_reader.result, true, false);
                     if(!retObj.allOK){
-                        console.warn("Following error was occurred while loading `" + filePath + "`. This file will be ignored.");
+                        console.warn("Following error was occurred while loading `" + nm + "`. This file will be ignored.");
                         console.warn(retObj.errObj);
                     
                     }else{ //parse 成功の場合
