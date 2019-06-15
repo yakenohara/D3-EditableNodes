@@ -690,8 +690,6 @@ function clsfunc_a(){
 instatiated.method1;
 ```
 
-
-
 ### prototype を使った方法 //todo 動かない
 ```
 var instatiated = new clsfunc_a();
@@ -702,9 +700,7 @@ instatiated.prototype.method1 = function(){console.log('str');}
 instatiated.method1;
 ```
 
-### prototype chain //todo
-
-### 
+### prototype chain //todo ここまで
 
 ## IIFE (Immediately Invoked Function Expression; 即時実行関数式) 
 
@@ -800,18 +796,20 @@ FunctionExpression の `id` property が `nuul` になるだけ。
 
 ->Not compatible
 
-# Getter and setter functions
-
-->Not compatible
-
-
-//todo
 # Function parameters
 
 ## Default parameters
 
+->Not compatible
+
 ## Rest parameters
 
+->Not compatible
+
 # The arguments object
+
+->Not compatible
+
+# Getter and setter functions
 
 ->Not compatible
