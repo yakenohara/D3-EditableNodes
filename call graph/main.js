@@ -102,34 +102,28 @@ console.log("# Adding scope info");
                 
                 //---------------------------------</現在の node の位置を arr_depth_stack[] に保存する>
 
+                var bool_is_scope_node = false;
+                
                 switch(obj_current_node.type){
                     case 'Program':
-                    case 'VariableDeclarator':
                     case 'FunctionExpression':
                     case 'FunctionDeclaration':
+                    {
+                        bool_is_scope_node = true;
+                    }
+                    case 'VariableDeclarator':
                     case 'AssignmentExpression':
                     case 'CallExpression':
                     case 'ReturnStatement':
                     {
-                        switch(obj_current_node.type){
-                            case 'Program':
-                            case 'FunctionExpression':
-                            case 'FunctionDeclaration':
-                            {
-                                if((typeof obj_current_node.TraversedObj_BelongingObjects) == 'undefined'){
-                                    obj_current_node.TraversedObj_BelongingObjects = [];
-                                    obj_current_node.TraversedObj_NestedFunctions = [];
-                                    obj_current_node.TraversedObj_Closurings = [];
-                                }
-                                break;
-                            }
-                            default:
-                            {
-                                //nothing to do
-                                break;
+                        if(bool_is_scope_node){
+                            if((typeof obj_current_node.TraversedObj_BelongingObjects) == 'undefined'){
+                                obj_current_node.TraversedObj_BelongingObjects = [];
+                                obj_current_node.TraversedObj_NestedFunctions = [];
+                                obj_current_node.TraversedObj_Closurings = [];
                             }
                         }
-
+                        
                         var obj_parent_function = null;
                         for(var i =arr_depth_stack.length-2 ; i >= 0 ; i--){
                             switch(arr_depth_stack[i].type){
@@ -180,20 +174,9 @@ console.log("# Adding scope info");
                                 }
                             }
                         }
-
-                        switch(obj_current_node.type){
-                            case 'Program':
-                            case 'FunctionExpression':
-                            case 'FunctionDeclaration':
-                            {
-                                obj_current_node.TraversedObj_ParentFunction = obj_parent_function;
-                                break;
-                            }
-                            default:
-                            {
-                                //nothing to do
-                                break;
-                            }
+                        
+                        if(bool_is_scope_node){
+                            obj_current_node.TraversedObj_ParentFunction = obj_parent_function;
                         }
 
                         break;
