@@ -257,18 +257,31 @@ console.log("\n# Closurings");
                                     switch(obj_closuring.left.type){
                                         case 'Identifier':
                                         {
-                                            for(var j = 0 ; j < obj_current_node.TraversedObj_BelongingObjects.length ; j++){
+                                            var obj_found = findObject(obj_closuring.left.name, obj_current_node);
+                                            if(typeof obj_found.id.TraversedObj_Closures == 'undefined'){
+                                                obj_found.id.TraversedObj_Closures = [];
                                             }
+                                            obj_found.id.TraversedObj_Closures.push(obj_closuring.right);
                                             break;
                                         }
                                         default:
                                         {
-                                            //todo 別のパターンがないかどうか
+                                            console.warn("Unkown type");
+                                            break;
                                         }
                                     }
                                     break;
                                 }
                                 case 'CallExpression':
+                                {
+                                    if(obj_closuring.arguments.length > 0){ //引数指定がある場合
+                                        var obj_found = findObject(obj_closuring.callee.name, obj_current_node);
+                                        //todo
+                                        //'FunctionExpression' か 'FunctionDeclaration'になるまで、
+                                        //.TraversedObj_Closures[]を探索する
+                                    }
+                                    break;
+                                }
                                 case 'ReturnStatement':
                             }
                         }
@@ -283,4 +296,34 @@ console.log("\n# Closurings");
             }
         }
     );
+
+    //見つからない場合は undefined を返す
+    function findObject(str_identifier, obj_start_node){
+        var obj_found;
+
+        for(var j = 0 ; j < obj_start_node.TraversedObj_BelongingObjects.length ; j++){
+            
+            if(obj_start_node.TraversedObj_BelongingObjects[j].id.name == str_identifier){ //検索ヒットの場合
+                obj_found = obj_start_node.TraversedObj_BelongingObjects[j];
+                break;
+            }
+        }
+        if(typeof obj_found == 'undefined'){
+            if(
+                obj_start_node.type == 'FunctionExpression' ||
+                obj_start_node.type == 'FunctionDeclaration'
+            ){
+                if(obj_start_node.id.name == str_identifier){ //再帰コールの場合
+                    obj_found = obj_start_node;
+                
+                }else{ //再帰コールではない場合
+                    obj_found = findObject(str_identifier, obj_start_node.TraversedObj_ParentFunction); //1つ上のスコープを検索
+                }
+            }
+        }
+        return obj_found;
+    }
+
 }());
+
+console.log("done");
