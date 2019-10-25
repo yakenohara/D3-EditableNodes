@@ -181,6 +181,178 @@ function forceLayoutMemo(initializerObj){
 
     }
 
+    //test
+    this.vvv = function(){
+
+        if(dataset.datas.length < 1){ // 処理データが存在しない場合
+            return; //終了
+        }
+
+        // <make dot code for graphviz>----------------------------------------
+
+        var dotCode = '';
+        var indent = '    ';
+        var digraphTitle = 'tmp';
+
+        // diagraph 宣言
+        dotCode += 'digraph ' + digraphTitle + '{' + '\n';
+        
+        dotCode += indent + '\n';
+
+        // data 生成
+        dotCode += indent + '// Nodes declarations' + '\n';
+        for(var indexOfDatas = 0 ; indexOfDatas < dataset.datas.length ; indexOfDatas++){
+            var elemObj = dataset.datas[indexOfDatas];
+            var nodeDeclaration = elemObj.key + ' [label="' + elemObj.text.text_content + '"];';
+            dotCode += '\n' + indent + nodeDeclaration;
+        }
+
+        dotCode += indent + '\n';
+        dotCode += indent + '\n';
+
+        // link 生成
+        dotCode += indent + '// Edges declarations' + '\n';
+        for(var indexOfLinks = 0 ; indexOfLinks < dataset.links.length ; indexOfLinks++){
+            var elemObj = dataset.links[indexOfLinks];
+            var nodeDeclaration = elemObj.source.key + ' -> ' + elemObj.target.key + ';';
+            dotCode += '\n' + indent + nodeDeclaration;
+        }
+        
+        dotCode += indent + '\n';
+        dotCode += indent + '\n';
+
+        dotCode += '}' + '\n';
+
+        console.log(dotCode);
+
+        // ---------------------------------------</make dot code for graphviz>
+
+        // <make svg using graphviz>-------------------------------------------
+
+        function inspect(s) {
+            return "<pre>" + s.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;") + "</pre>"
+        }
+        function createFromDot(dotCode, format) {
+            var result;
+            try {
+                result = Viz(dotCode, format);
+                if (format === "svg") {
+                    return result;
+                }
+                else {
+                    return inspect(result);
+                }
+            } catch (e) {
+                return inspect(e.toString());
+            }
+        }
+
+        var svgString = createFromDot(dotCode, "svg"); // graphviz で
+
+        console.log(svgString);
+
+        // ------------------------------------------</make svg using graphviz>
+
+        // <reprotting>--------------------------------------------------------
+
+        var onlyForCalcDiv = document.createElement('div');
+        onlyForCalcDiv.style.display = 'none';
+        onlyForCalcDiv.innerHTML = svgString;
+
+        // svg 内で 複数の nodes が配置される <g> 要素の検索
+        var gElemOfAllNodes;
+        var svgElem = onlyForCalcDiv.getElementsByTagName('svg')[0];
+        var childrenOfSvgElem = svgElem.children;
+        for(var indexOfChildren = 0 ; indexOfChildren < childrenOfSvgElem.length ; indexOfChildren++){
+            var elem = childrenOfSvgElem[indexOfChildren];
+            if(elem.nodeName.toLowerCase() == 'g'){
+
+                // viz.js が生成する digraph を表す <g> 要素には、
+                // `digraph (graph name){~` で指定した (graph name) が `<g><title>(graph name)</title></g>` のように生成される
+                // この条件に一致する <g> 要素かどうかをチェックする
+                var childrenOfGElem = elem.children;
+                for(var indexOfChildrenL2 = 0 ; indexOfChildrenL2 < childrenOfGElem.length ; indexOfChildrenL2++){
+                    var elemOfG = childrenOfGElem[indexOfChildrenL2];
+                    if(elemOfG.nodeName.toLowerCase() == 'title' && elemOfG.innerHTML == digraphTitle){
+                        gElemOfAllNodes = elem;
+                    }
+                }
+            }
+        }
+
+        var ch = gElemOfAllNodes.children;
+
+        function findGbyTitle(titleName){
+
+            var toReturnElem;
+
+            for(var i = 0 ; i < ch.length ; i++){
+
+                var gElem = ch[i];
+
+                // viz.js が生成する node を表す <g> 要素には、
+                // `(node name) [~` で指定した (node name) が `<g><title>(node name)</title></g>` のように生成される
+                // この条件に一致する <g> 要素かどうかをチェックする
+                if(gElem.nodeName.toLowerCase() == 'g'){
+
+                    var gChildren = ch[i].children;
+                    for(var j = 0 ; j < gChildren.length ; j++){
+                        var elemOfG = gChildren[j];
+                        if(elemOfG.nodeName.toLowerCase() == 'title' && elemOfG.innerHTML == titleName){
+                            toReturnElem = gElem;
+                        }
+                    }
+                }
+            }
+
+            return toReturnElem;
+        }
+
+        // data
+        for(var indexOfDatas = 0 ; indexOfDatas < dataset.datas.length ; indexOfDatas++){
+            var elemObj = dataset.datas[indexOfDatas];
+            var foundG = findGbyTitle(elemObj.key);
+            var foundTextElem = foundG.getElementsByTagName('text')[0];
+            
+            var xval;
+            var yval;
+            if(typeof foundTextElem == 'undefined'){ // label が空文字列の node には<text></text>が生成されない
+                var foundEllipseElem = foundG.getElementsByTagName('ellipse')[0];
+                xval = parseFloat(foundEllipseElem.getAttribute('cx'));
+                yval = parseFloat(foundEllipseElem.getAttribute('cy'));
+            }else{
+                xval = parseFloat(foundTextElem.getAttribute('x'));
+                yval = parseFloat(foundTextElem.getAttribute('y'));
+            }
+
+            
+
+            //座標指定Objの生成
+            var renderByThisObj = {
+                coordinate:{
+                    x: xval,
+                    y: yval
+                }
+            }
+
+            var renderReport = renderSVGNode(elemObj, renderByThisObj);
+        }
+
+        console.log("dummy");
+
+        // // link
+        // for(var indexOfLinks = 0 ; indexOfLinks < dataset.links.length ; indexOfLinks++){
+        //     var elemObj = dataset.links[indexOfLinks];
+            
+        // }
+
+        
+
+        // -------------------------------------------------------</reprotting>
+
+        return;
+    }
+
     // <check initializerObj>------------------------------------------------
 
     var tmpType = typeof initializerObj;

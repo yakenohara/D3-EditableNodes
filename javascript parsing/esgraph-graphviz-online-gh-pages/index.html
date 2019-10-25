@@ -55,13 +55,15 @@ try {
     }
 
     function convert() {
-        var source = document.getElementById("js-code-text").value;
-        if (source.length == 0) {
-            return;
-        }
-        dotCode = esgraph(source);
+        // var source = document.getElementById("js-code-text").value;
+        // if (source.length == 0) {
+        //     return;
+        // }
+        // dotCode = esgraph(source);
         
-        document.getElementById("dot-code-text").value = dotCode;
+        // document.getElementById("dot-code-text").value = dotCode;
+
+        dotCode = document.getElementById("dot-code-text").value;
 
         var svgElement = createFromDot(dotCode, "svg");
         document.getElementById("svg-draw").innerHTML = svgElement;
