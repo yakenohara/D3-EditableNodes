@@ -46,6 +46,12 @@ function forceLayoutMemo(initializerObj){
     //ファイル出力(Export as SVG)時に設定するファイル名
     var fileName_svg_Export = "Nodes.svg";
 
+    //ファイル出力(Export as DOT)時に設定するファイル名
+    var fileName_dot_Export = "Nodes.gv";
+
+    //DOTコード内の `digraph (graph name){ ~ ` に指定する (graph name)
+    var digraphTitle_in_dot = "Nodes";
+
     // frameType 未指定時に設定する Default Shape
     var defaultTextFrameShape = "ellipse";
 
@@ -181,54 +187,19 @@ function forceLayoutMemo(initializerObj){
 
     }
 
+    this.dot = function(){
+        exportDOT();
+    }
+
     //test
     this.viz = function(){
 
-        if(dataset.datas.length < 1){ // 処理データが存在しない場合
+        var dotCode = getToExportDotCode(); // make dot code for graphviz
+        if(typeof dotCode == 'undefined'){ // 処理データが存在しない場合
             return; //終了
         }
 
-        // <make dot code for graphviz>----------------------------------------
-
-        var dotCode = '';
-        var indent = '    ';
-        var digraphTitle = 'tmp';
-
-        // diagraph 宣言
-        dotCode += 'digraph ' + digraphTitle + '{' + '\n';
-        
-        dotCode += indent + '\n';
-
-        // data 生成
-        dotCode += indent + '// Nodes declarations' + '\n';
-        for(var indexOfDatas = 0 ; indexOfDatas < dataset.datas.length ; indexOfDatas++){
-            var elemObj = dataset.datas[indexOfDatas];
-            var nodeDeclaration = elemObj.key + ' [label="' + elemObj.text.text_content + '"];';
-            dotCode += '\n' + indent + nodeDeclaration;
-        }
-
-        dotCode += indent + '\n';
-        dotCode += indent + '\n';
-
-        // link 生成
-        dotCode += indent + '// Edges declarations' + '\n';
-        for(var indexOfLinks = 0 ; indexOfLinks < dataset.links.length ; indexOfLinks++){
-            var elemObj = dataset.links[indexOfLinks];
-            var nodeDeclaration = elemObj.source.key + ' -> ' + elemObj.target.key + ';';
-            dotCode += '\n' + indent + nodeDeclaration;
-        }
-        
-        dotCode += indent + '\n';
-        dotCode += indent + '\n';
-
-        dotCode += '}' + '\n';
-
-        console.log(dotCode);
-
-        // ---------------------------------------</make dot code for graphviz>
-
         // <make svg using graphviz>-------------------------------------------
-
         function inspect(s) {
             return "<pre>" + s.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;") + "</pre>"
         }
@@ -246,13 +217,10 @@ function forceLayoutMemo(initializerObj){
                 return inspect(e.toString());
             }
         }
-
         var svgString = createFromDot(dotCode, "svg"); // graphviz で
-
-        console.log(svgString);
-
         // ------------------------------------------</make svg using graphviz>
 
+        console.log(svgString);
         // <reprotting>--------------------------------------------------------
 
         //Dragイベント用Buffer
@@ -283,7 +251,7 @@ function forceLayoutMemo(initializerObj){
                 var childrenOfGElem = elem.children;
                 for(var indexOfChildrenL2 = 0 ; indexOfChildrenL2 < childrenOfGElem.length ; indexOfChildrenL2++){
                     var elemOfG = childrenOfGElem[indexOfChildrenL2];
-                    if(elemOfG.nodeName.toLowerCase() == 'title' && elemOfG.innerHTML == digraphTitle){
+                    if(elemOfG.nodeName.toLowerCase() == 'title' && elemOfG.innerHTML == digraphTitle_in_dot){
                         gElemOfAllNodes = elem;
                     }
                 }
@@ -7482,6 +7450,59 @@ function forceLayoutMemo(initializerObj){
             
             return clone;
         }
+    }
+
+    function exportDOT(){
+        var dotCode = getToExportDotCode();
+
+        if(typeof dotCode == 'undefined'){ //吐き出すNodeが存在しない場合
+            console.warn("No Node and Link to Export");
+        
+        }else{ //吐き出すNodeが存在する場合
+            exportTextFile(dotCode, fileName_dot_Export);
+        }
+    }
+
+    function getToExportDotCode(){
+        var dotCode;
+        var indent = '    ';
+        
+        if(dataset.datas.length < 1){ // 処理データが存在しない場合
+            return dotCode; // 'undefined' を返す
+        }
+
+        dotCode = '';
+        
+        // diagraph 宣言
+        dotCode += 'digraph ' + digraphTitle_in_dot + '{' + '\n';
+        
+        dotCode += indent + '\n';
+
+        // data 生成
+        dotCode += indent + '// Nodes declarations' + '\n';
+        for(var indexOfDatas = 0 ; indexOfDatas < dataset.datas.length ; indexOfDatas++){
+            var elemObj = dataset.datas[indexOfDatas];
+            var nodeDeclaration = elemObj.key + ' [label="' + elemObj.text.text_content + '"];';
+            dotCode += '\n' + indent + nodeDeclaration;
+        }
+
+        dotCode += indent + '\n';
+        dotCode += indent + '\n';
+
+        // link 生成
+        dotCode += indent + '// Edges declarations' + '\n';
+        for(var indexOfLinks = 0 ; indexOfLinks < dataset.links.length ; indexOfLinks++){
+            var elemObj = dataset.links[indexOfLinks];
+            var nodeDeclaration = elemObj.source.key + ' -> ' + elemObj.target.key + ';';
+            dotCode += '\n' + indent + nodeDeclaration;
+        }
+        
+        dotCode += indent + '\n';
+        dotCode += indent + '\n';
+
+        dotCode += '}' + '\n';
+
+        return dotCode;
     }
 
     function exportTextFile(content, fileName){
