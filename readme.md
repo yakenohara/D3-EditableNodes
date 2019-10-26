@@ -160,6 +160,8 @@ Here's an example
 
 # Todo
 
+ - contextmenu 表示中に 矢印キーで ノード選択が変わってしまう
+
  - highlight, brush, connect/stretch の競合判定 and 判定結果による status message control
   
 # Wish
