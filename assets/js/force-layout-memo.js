@@ -182,7 +182,7 @@ function forceLayoutMemo(initializerObj){
     }
 
     //test
-    this.vvv = function(){
+    this.viz = function(){
 
         if(dataset.datas.length < 1){ // 処理データが存在しない場合
             return; //終了
@@ -255,6 +255,16 @@ function forceLayoutMemo(initializerObj){
 
         // <reprotting>--------------------------------------------------------
 
+        //Dragイベント用Buffer
+        var bufTotalReport;
+        bufTotalReport = {};
+        bufTotalReport.type = 'change';
+        bufTotalReport.allOK = true;
+        bufTotalReport.allNG = true;
+        bufTotalReport.reportsArr = {};
+        bufTotalReport.reportsArr.datas = [];
+        bufTotalReport.reportsArr.links = [];
+
         var onlyForCalcDiv = document.createElement('div');
         onlyForCalcDiv.style.display = 'none';
         onlyForCalcDiv.innerHTML = svgString;
@@ -309,6 +319,15 @@ function forceLayoutMemo(initializerObj){
         }
 
         // data
+
+        var draggingReports = {};
+        draggingReports.type = 'change';
+        draggingReports.allOK = true;
+        draggingReports.allNG = true;
+        draggingReports.reportsArr = {};
+        draggingReports.reportsArr.datas = [];
+        draggingReports.reportsArr.links = [];
+
         for(var indexOfDatas = 0 ; indexOfDatas < dataset.datas.length ; indexOfDatas++){
             var elemObj = dataset.datas[indexOfDatas];
             var foundG = findGbyTitle(elemObj.key);
@@ -325,8 +344,6 @@ function forceLayoutMemo(initializerObj){
                 yval = parseFloat(foundTextElem.getAttribute('y'));
             }
 
-            
-
             //座標指定Objの生成
             var renderByThisObj = {
                 coordinate:{
@@ -336,21 +353,68 @@ function forceLayoutMemo(initializerObj){
             }
 
             var renderReport = renderSVGNode(elemObj, renderByThisObj);
+            if(!renderReport.allOK){ //失敗が発生した場合
+                draggingReports.allOK = false;
+            }
+            if(!renderReport.allNG){ //成功が1つ以上ある場合
+                draggingReports.allNG = false;
+            }
+            draggingReports.reportsArr.datas.push(renderReport);
         }
 
-        console.log("dummy");
+        if(!draggingReports.allNG){ //1つ以上適用成功の場合
+            draggingReports.message = draggingReports.reportsArr.datas.length + " node(s) moved.";
+            overWriteScceededTransaction(draggingReports, bufTotalReport, 'datas');
+        }
 
-        // // link
-        // for(var indexOfLinks = 0 ; indexOfLinks < dataset.links.length ; indexOfLinks++){
-        //     var elemObj = dataset.links[indexOfLinks];
-            
-        // }
+        // link
 
-        
+        draggingReports = {};
+        draggingReports.type = 'change';
+        draggingReports.allOK = true;
+        draggingReports.allNG = true;
+        draggingReports.reportsArr = {};
+        draggingReports.reportsArr.datas = [];
+        draggingReports.reportsArr.links = [];
+
+        for(var indexOfLinks = 0 ; indexOfLinks < dataset.links.length ; indexOfLinks++){
+            var elemObj = dataset.links[indexOfLinks];
+
+            //node 間距離を求める
+            var tmpDistance = Math.sqrt(
+                Math.pow(Math.abs(elemObj.target.coordinate.y - elemObj.source.coordinate.y) , 2) + 
+                Math.pow(Math.abs(elemObj.target.coordinate.x - elemObj.source.coordinate.x) , 2)
+            );
+
+            var renderReport = renderSVGLink(elemObj, {
+                line:{
+                    distance: tmpDistance
+                }
+            });
+
+            if(!renderReport.allOK){ //失敗が発生した場合
+                draggingReports.allOK = false;
+            }
+            if(!renderReport.allNG){ //成功が1つ以上ある場合
+                draggingReports.allNG = false;
+            }
+            draggingReports.reportsArr.links.push(renderReport);
+        }
+
+        if(!draggingReports.allNG){ //1つ以上適用成功の場合
+
+            // history message は直接編集する。(`~ node(s) moved` を残すため)
+            bufTotalReport.message += " " + draggingReports.reportsArr.links.length + " link(s) stretched.";
+            overWriteScceededTransaction(draggingReports, bufTotalReport, 'links');
+        }
+
+        if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
+            historyManager.appendHistory(bufTotalReport);
+        }
+
+        startForce();
 
         // -------------------------------------------------------</reprotting>
-
-        return;
     }
 
     // <check initializerObj>------------------------------------------------
