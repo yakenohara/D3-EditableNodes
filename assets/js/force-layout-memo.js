@@ -7493,7 +7493,13 @@ function forceLayoutMemo(initializerObj){
         dotCode += indent + '// Nodes declarations' + '\n';
         for(var indexOfDatas = 0 ; indexOfDatas < dataset.datas.length ; indexOfDatas++){
             var elemObj = dataset.datas[indexOfDatas];
-            var nodeDeclaration = elemObj.key + ' [label="' + elemObj.text.text_content + '"];'; //todo エスケープが必要な文字対応
+
+            //改行などの特殊文字をエスケープした状態の文字列を JSON.stringify を使って得る
+            var tmpObj = {'tmpkey':elemObj.text.text_content};
+            var tmpStr = JSON.stringify(tmpObj);
+            var escapedStr = tmpStr.replace(/^.+?tmpkey\":\"/, '').replace(/\".+?$/,''); // `先頭の{"tmpkey":"` と 末尾の`"}` を削除
+
+            var nodeDeclaration = elemObj.key + ' [label="' + escapedStr + '"];';
             dotCode += '\n' + indent + nodeDeclaration;
         }
 
