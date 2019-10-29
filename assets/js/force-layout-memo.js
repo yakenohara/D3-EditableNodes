@@ -1061,9 +1061,21 @@ function forceLayoutMemo(initializerObj){
             replot:{
                 name: "Replot(R)",
                 accesskey: 'r',
-                callback: function(itemKey, opt){
-                    replotUsingGraphviz();
-                    return callbackFinally(true);
+                items:{
+                    replot_all:{
+                        name: "Replot all",
+                        callback: function(itemKey, opt){
+                            replotUsingGraphviz(false);
+                            return callbackFinally(true);
+                        }
+                    },
+                    replot_selected:{
+                        name: "Replot selected",
+                        callback: function(itemKey, opt){
+                            replotUsingGraphviz(true);
+                            return callbackFinally(true);
+                        }
+                    }
                 }
             },
             export: {
@@ -1111,13 +1123,22 @@ function forceLayoutMemo(initializerObj){
                             exportSVG(true);
                         }
                     },
-                    export_as_dot:{
-                        name: "Export as DOT",
+                    export_as_dot_all:{
+                        name: "Export as DOT (all)",
                         callback: function(itemKey, opt){
                             //DL確認画面終了後にhide出来ないことがあるので、先にhideする
                             opt.$menu.trigger("contextmenu:hide");
 
-                            exportDOT();
+                            exportDOT(false);
+                        }
+                    },
+                    export_as_dot_selected:{
+                        name: "Export as DOT (selected)",
+                        callback: function(itemKey, opt){
+                            //DL確認画面終了後にhide出来ないことがあるので、先にhideする
+                            opt.$menu.trigger("contextmenu:hide");
+
+                            exportDOT(true);
                         }
                     },
                 }
@@ -2436,18 +2457,21 @@ function forceLayoutMemo(initializerObj){
         }
     }
 
-    function replotUsingGraphviz(){
+    function replotUsingGraphviz(selectedOnly){
 
-        var dotCode = getToExportDotCode(); // make dot code for graphviz
+        var dotCode = getToExportDotCode(selectedOnly); // make dot code for graphviz //todo selected only
         if(typeof dotCode == 'undefined'){ // 処理データが存在しない場合
+            console.warn("No node selected");
             return; //終了
         }
 
         // make svg using graphviz
         var svgString;
+        
         try {
             svgString = Viz(dotCode, 'svg');
-        } catch (e) {
+        
+        } catch (e) { //note メモリ不足でこの例外が発生する事がある
             console.error(e.toString());
             return;
         }
@@ -2519,19 +2543,28 @@ function forceLayoutMemo(initializerObj){
 
         // data
 
-        var draggingReports = {};
-        draggingReports.type = 'change';
-        draggingReports.allOK = true;
-        draggingReports.allNG = true;
-        draggingReports.reportsArr = {};
-        draggingReports.reportsArr.datas = [];
-        draggingReports.reportsArr.links = [];
+        // key と座標指定 Obj の生成
+        var coordinatesByGraphviz = {};
+        var usedRangeObj_viz = {
+            aboveLeft:{},
+            aboveRight:{}, //unused
+            belowLeft:{},  //unused
+            belowRight:{}
+        }
+        var is1st = true;
 
-        for(var indexOfDatas = 0 ; indexOfDatas < dataset.datas.length ; indexOfDatas++){
-            var elemObj = dataset.datas[indexOfDatas];
-            var foundG = findGbyTitle(elemObj.key);
-            var foundTextElem = foundG.getElementsByTagName('text')[0];
+        $3svgNodes.each(function(d,i){
             
+            //選択ノードチェック
+            if(selectedOnly &&
+                (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() != 'true')){ //選択していない場合
+                return; //対象から除外
+            }
+
+            // svg 内に定義された node の x, y 座標を取得
+            var foundG = findGbyTitle(d.key);
+            var foundTextElem = foundG.getElementsByTagName('text')[0];
+
             var xval;
             var yval;
             if(typeof foundTextElem == 'undefined'){ // label が空文字列の node には<text></text>が生成されない
@@ -2543,15 +2576,81 @@ function forceLayoutMemo(initializerObj){
                 yval = parseFloat(foundTextElem.getAttribute('y'));
             }
 
-            //座標指定Objの生成
-            var renderByThisObj = {
+            // 座標を保存
+            coordinatesByGraphviz[d.key] = {
                 coordinate:{
-                    x: xval,
-                    y: yval
+                    x:xval,
+                    y:yval,
+                }
+            }
+            
+            if(is1st){ //一度目の保存の場合
+
+                usedRangeObj_viz.aboveLeft.x = xval;
+                usedRangeObj_viz.aboveLeft.y = yval;
+                usedRangeObj_viz.belowRight.x = xval;
+                usedRangeObj_viz.belowRight.y = yval;
+
+                is1st = false;
+            
+            }else{ //2度目以降の保存の場合
+
+                // X軸チェック
+                if(xval < usedRangeObj_viz.aboveLeft.x){
+                    usedRangeObj_viz.aboveLeft.x = xval;
+                }else if(usedRangeObj_viz.belowRight.x < xval){
+                    usedRangeObj_viz.belowRight.x = xval;
+                }
+
+                // Y軸チェック
+                if(yval < usedRangeObj_viz.aboveLeft.y){
+                    usedRangeObj_viz.aboveLeft.y = yval;
+                }else if(usedRangeObj_viz.belowRight.y < yval){
+                    usedRangeObj_viz.belowRight.y = yval;
                 }
             }
 
-            var renderReport = renderSVGNode(elemObj, renderByThisObj);
+        });
+
+        // coordinatesByGraphviz の中央を算出
+        var centerX_viz = (usedRangeObj_viz.aboveLeft.x + usedRangeObj_viz.belowRight.x) / 2;
+        var centerY_viz = (usedRangeObj_viz.aboveLeft.y + usedRangeObj_viz.belowRight.y) / 2;
+
+        // 現在の中央を算出
+        var usedRangeObj_now = getUsedRange(selectedOnly);
+        var centerX_now = (usedRangeObj_now.aboveLeft.x + usedRangeObj_now.belowRight.x) / 2;
+        var centerY_now = (usedRangeObj_now.aboveLeft.y + usedRangeObj_now.belowRight.y) / 2;
+
+        // 現在の中央と graphviz によって生成された svg の中央との差分を算出
+        var centerX_diff = (centerX_now - centerX_viz);
+        var centerY_diff = (centerY_now - centerY_viz);
+
+
+        var draggingReports = {};
+        draggingReports.type = 'change';
+        draggingReports.allOK = true;
+        draggingReports.allNG = true;
+        draggingReports.reportsArr = {};
+        draggingReports.reportsArr.datas = [];
+        draggingReports.reportsArr.links = [];
+
+        $3svgNodes.each(function(d,i){
+            
+            //選択ノードチェック
+            if(selectedOnly &&
+                (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() != 'true')){ //選択していない場合
+                return; //対象から除外
+            }
+
+            //座標指定Objの生成
+            var renderByThisObj = {
+                coordinate:{
+                    x: (coordinatesByGraphviz[d.key].coordinate.x) + centerX_diff,
+                    y: (coordinatesByGraphviz[d.key].coordinate.y) + centerY_diff
+                }
+            }
+
+            var renderReport = renderSVGNode(d, renderByThisObj);
             if(!renderReport.allOK){ //失敗が発生した場合
                 draggingReports.allOK = false;
             }
@@ -2559,7 +2658,8 @@ function forceLayoutMemo(initializerObj){
                 draggingReports.allNG = false;
             }
             draggingReports.reportsArr.datas.push(renderReport);
-        }
+
+        });
 
         if(!draggingReports.allNG){ //1つ以上適用成功の場合
             draggingReports.message = draggingReports.reportsArr.datas.length + " node(s) moved.";
@@ -2576,16 +2676,26 @@ function forceLayoutMemo(initializerObj){
         draggingReports.reportsArr.datas = [];
         draggingReports.reportsArr.links = [];
 
-        for(var indexOfLinks = 0 ; indexOfLinks < dataset.links.length ; indexOfLinks++){
-            var elemObj = dataset.links[indexOfLinks];
+        $3svgLinks.each(function(d, i){
 
+            //選択ノードチェック
+            if( //選択 node(s) のみを対象にして生成するオプション有効
+                selectedOnly &&
+                (   // link の source も target も replot されていない場合
+                    (d.source.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() != 'true') &&
+                    (d.target.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() != 'true')
+                )
+            ){
+                return; // rerender しない
+            }
+            
             //node 間距離を求める
             var tmpDistance = Math.sqrt(
-                Math.pow(Math.abs(elemObj.target.coordinate.y - elemObj.source.coordinate.y) , 2) + 
-                Math.pow(Math.abs(elemObj.target.coordinate.x - elemObj.source.coordinate.x) , 2)
+                Math.pow(Math.abs(d.target.coordinate.y - d.source.coordinate.y) , 2) + 
+                Math.pow(Math.abs(d.target.coordinate.x - d.source.coordinate.x) , 2)
             );
 
-            var renderReport = renderSVGLink(elemObj, {
+            var renderReport = renderSVGLink(d, {
                 line:{
                     distance: tmpDistance
                 }
@@ -2598,7 +2708,7 @@ function forceLayoutMemo(initializerObj){
                 draggingReports.allNG = false;
             }
             draggingReports.reportsArr.links.push(renderReport);
-        }
+        });
 
         if(!draggingReports.allNG){ //1つ以上適用成功の場合
 
@@ -7451,8 +7561,8 @@ function forceLayoutMemo(initializerObj){
         }
     }
 
-    function exportDOT(){
-        var dotCode = getToExportDotCode();
+    function exportDOT(selectedOnly){
+        var dotCode = getToExportDotCode(selectedOnly);
 
         if(typeof dotCode == 'undefined'){ //吐き出すNodeが存在しない場合
             console.warn("No Node and Link to Export");
@@ -7462,14 +7572,11 @@ function forceLayoutMemo(initializerObj){
         }
     }
 
-    function getToExportDotCode(){
+    function getToExportDotCode(selectedOnly){
+
         var dotCode;
         var indent = '    ';
         
-        if(dataset.datas.length < 1){ // 処理データが存在しない場合
-            return dotCode; // 'undefined' を返す
-        }
-
         dotCode = '';
         
         // diagraph 宣言
@@ -7479,29 +7586,55 @@ function forceLayoutMemo(initializerObj){
 
         // data 生成
         dotCode += indent + '// Nodes declarations' + '\n';
-        for(var indexOfDatas = 0 ; indexOfDatas < dataset.datas.length ; indexOfDatas++){
-            var elemObj = dataset.datas[indexOfDatas];
+
+        var generatedAtLeastOne = false;
+
+        $3svgNodes.each(function(d,i){
+
+            //選択ノードチェック
+            if(selectedOnly &&
+                (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() != 'true')){ //選択していない場合
+                return; //対象から除外
+            }
 
             //改行などの特殊文字をエスケープした状態の文字列を JSON.stringify を使って得る
-            var tmpObj = {'tmpkey':elemObj.text.text_content};
+            var tmpObj = {'tmpkey':d.text.text_content};
             var tmpStr = JSON.stringify(tmpObj);
-            var escapedStr = tmpStr.replace(/^.+?tmpkey\":\"/, '').replace(/\".+?$/,''); // `先頭の{"tmpkey":"` と 末尾の`"}` を削除
+            var escapedStr = tmpStr.replace(/^.+?tmpkey\":\"/, '').replace(/\"}$/,''); // 先頭の `{"tmpkey":"` と 末尾の `"}` を削除
 
-            var nodeDeclaration = elemObj.key + ' [label="' + escapedStr + '"];';
+            var nodeDeclaration = d.key + ' [label="' + escapedStr + '"];';
             dotCode += '\n' + indent + nodeDeclaration;
+
+            generatedAtLeastOne = true;
+
+        });
+
+        if(!generatedAtLeastOne){ // 1つも生成されなかった場合
+            return undefined; // 'undefined' を返す
         }
 
         dotCode += indent + '\n';
         dotCode += indent + '\n';
 
-        // link 生成
+        // edge 生成
         dotCode += indent + '// Edges declarations' + '\n';
-        for(var indexOfLinks = 0 ; indexOfLinks < dataset.links.length ; indexOfLinks++){
-            var elemObj = dataset.links[indexOfLinks];
-            var nodeDeclaration = elemObj.source.key + ' -> ' + elemObj.target.key + ';';
+        $3svgLinks.each(function(d, i){
+
+            //選択ノードチェック
+            if( //選択 node(s) のみを対象にして生成するオプション有効
+                selectedOnly &&
+                (   // link の source or target が 選択されていない場合
+                    (d.source.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() != 'true') ||
+                    (d.target.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() != 'true')
+                )
+            ){
+                return; //edge を生成しない
+            }
+
+            var nodeDeclaration = d.source.key + ' -> ' + d.target.key + ';';
             dotCode += '\n' + indent + nodeDeclaration;
-        }
-        
+        });
+
         dotCode += indent + '\n';
         dotCode += indent + '\n';
 
@@ -9500,6 +9633,78 @@ function forceLayoutMemo(initializerObj){
         viewPortObj.belowLeft.y = viewPortObj.belowRight.y;
 
         return viewPortObj;
+    }
+
+    // data(s) の占有する領域を返す
+    function getUsedRange(selectedOnly){
+
+        var usedRangeObj = {
+            aboveLeft:{},
+            aboveRight:{},
+            belowLeft:{},
+            belowRight:{}
+        }
+
+        var is1st = true;
+
+        //範囲チェックループ
+        $3svgNodes.each(function(d,i){
+            
+            //選択ノードチェック
+            if(selectedOnly &&
+                (d.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() != 'true')){ //選択していない場合
+                return; //対象から除外
+            }
+
+            if(is1st){ //1つ目の範囲チェックの場合
+                usedRangeObj.aboveLeft.x = d.coordinate.x;
+                usedRangeObj.aboveLeft.y = d.coordinate.y;
+                usedRangeObj.belowRight.x = d.coordinate.x;
+                usedRangeObj.belowRight.y = d.coordinate.y;
+
+                is1st = false;
+
+            }else{ //2つ目以降の範囲チェックの場合
+                
+                // X軸チェック
+                if(d.coordinate.x < usedRangeObj.aboveLeft.x){
+                    usedRangeObj.aboveLeft.x = d.coordinate.x;
+                }else if(usedRangeObj.belowRight.x < d.coordinate.x){
+                    usedRangeObj.belowRight.x = d.coordinate.x;
+                }
+
+                // Y軸チェック
+                if(d.coordinate.y < usedRangeObj.aboveLeft.y){
+                    usedRangeObj.aboveLeft.y = d.coordinate.y;
+                }else if(usedRangeObj.belowRight.y < d.coordinate.y){
+                    usedRangeObj.belowRight.y = d.coordinate.y;
+                }
+                
+            }
+        });
+
+        if(is1st){ //チェックを1つも行わなかった場合( = 選択 data がない or data が存在しない)
+
+            //表示画面中央を返す
+
+            var viewPortOjbj = getCoordinatesOfViewPort();
+
+            var centerX = (viewPortOjbj.aboveLeft.x + viewPortOjbj.belowRight.x) / 2;
+            var centerY = (viewPortOjbj.aboveLeft.y + viewPortOjbj.belowRight.y) / 2;
+
+            usedRangeObj.aboveLeft.x = centerX;
+            usedRangeObj.aboveLeft.y = centerY;
+            usedRangeObj.belowRight.x = centerX;
+            usedRangeObj.belowRight.y = centerY;
+        }
+
+        // 右上と左下の設定
+        usedRangeObj.aboveRight.x = usedRangeObj.belowRight.x;
+        usedRangeObj.aboveRight.y = usedRangeObj.aboveLeft.y;
+        usedRangeObj.belowLeft.x = usedRangeObj.aboveLeft.x;
+        usedRangeObj.belowLeft.y = usedRangeObj.belowRight.y;
+
+        return usedRangeObj;
     }
 
     //
