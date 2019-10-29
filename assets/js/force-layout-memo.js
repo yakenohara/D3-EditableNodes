@@ -2480,62 +2480,34 @@ function forceLayoutMemo(initializerObj){
             return;
         }
 
-        // <reprotting>--------------------------------------------------------
+        // <SVG -> node(s) 毎の座標指定 Obj の生成>------------------------------------------------
 
-        //Dragイベント用Buffer
-        var bufTotalReport;
-        bufTotalReport = {};
-        bufTotalReport.type = 'change';
-        bufTotalReport.allOK = true;
-        bufTotalReport.allNG = true;
-        bufTotalReport.reportsArr = {};
-        bufTotalReport.reportsArr.datas = [];
-        bufTotalReport.reportsArr.links = [];
-
-        var onlyForCalcDiv = document.createElement('div');
-        onlyForCalcDiv.style.display = 'none';
-        onlyForCalcDiv.innerHTML = svgString;
-
-        // svg 内で 複数の nodes が配置される <g> 要素の検索
-        var gElemOfAllNodes;
-        var svgElem = onlyForCalcDiv.getElementsByTagName('svg')[0];
-        var childrenOfSvgElem = svgElem.children;
-        for(var indexOfChildren = 0 ; indexOfChildren < childrenOfSvgElem.length ; indexOfChildren++){
-            var elem = childrenOfSvgElem[indexOfChildren];
-            if(elem.nodeName.toLowerCase() == 'g'){
-
-                // viz.js が生成する digraph を表す <g> 要素には、
-                // `digraph (graph name){~` で指定した (graph name) が `<g><title>(graph name)</title></g>` のように生成される
-                // この条件に一致する <g> 要素かどうかをチェックする
-                var childrenOfGElem = elem.children;
-                for(var indexOfChildrenL2 = 0 ; indexOfChildrenL2 < childrenOfGElem.length ; indexOfChildrenL2++){
-                    var elemOfG = childrenOfGElem[indexOfChildrenL2];
-                    if(elemOfG.nodeName.toLowerCase() == 'title' && elemOfG.innerHTML == digraphTitle_in_dot){
-                        gElemOfAllNodes = elem;
-                    }
-                }
-            }
+        var coordinatesByGraphviz = {}; //node(s) 毎の座標指定 Obj
+        var usedRangeObj_viz = {        //SVG 内にプロットされた node(s) が占有する領域
+            aboveLeft:{},
+            aboveRight:{}, //unused
+            belowLeft:{},  //unused
+            belowRight:{}
         }
+        var is1stRegisteringToUsedRange = true;
 
-        var ch = gElemOfAllNodes.children;
-
-        function findGbyTitle(titleName){
+        function findGElemByTitle(titleName){
 
             var toReturnElem;
 
-            for(var i = 0 ; i < ch.length ; i++){
+            for(var i = 0 ; i < childrenOfGelem.length ; i++){
 
-                var gElem = ch[i];
+                var gElem = childrenOfGelem[i];
 
                 // viz.js が生成する node を表す <g> 要素には、
                 // `(node name) [~` で指定した (node name) が `<g><title>(node name)</title></g>` のように生成される
                 // この条件に一致する <g> 要素かどうかをチェックする
                 if(gElem.nodeName.toLowerCase() == 'g'){
 
-                    var gChildren = ch[i].children;
+                    var gChildren = childrenOfGelem[i].childNodes;
                     for(var j = 0 ; j < gChildren.length ; j++){
                         var elemOfG = gChildren[j];
-                        if(elemOfG.nodeName.toLowerCase() == 'title' && elemOfG.innerHTML == titleName){
+                        if(elemOfG.nodeName.toLowerCase() == 'title' && getJSONUnescapedString(elemOfG.textContent) == titleName){
                             toReturnElem = gElem;
                         }
                     }
@@ -2545,17 +2517,41 @@ function forceLayoutMemo(initializerObj){
             return toReturnElem;
         }
 
-        // data
+        var onlyForCalcDiv = document.createElement('div');
+        onlyForCalcDiv.style.display = 'none';
+        onlyForCalcDiv.innerHTML = svgString;
 
-        // key と座標指定 Obj の生成
-        var coordinatesByGraphviz = {};
-        var usedRangeObj_viz = {
-            aboveLeft:{},
-            aboveRight:{}, //unused
-            belowLeft:{},  //unused
-            belowRight:{}
+        // svg 内で 複数の nodes が配置される <g> 要素の検索
+        var gElemOfAllNodes;
+        var childrenOfGElem;
+        var svgElem = onlyForCalcDiv.getElementsByTagName('svg')[0];
+
+        //SVG 内の `<g><title>(graph name)</title></g>` 要素を検索するループ
+        //note ie11 の場合は <svg> 配下の DOM 要素では `children` が取得できないので、 `childNodes` を使用する
+        var childrenOfSvgElem = svgElem.childNodes;
+        for(var indexOfChildren = 0 ; indexOfChildren < childrenOfSvgElem.length ; indexOfChildren++){
+            
+            var elem = childrenOfSvgElem[indexOfChildren];
+            
+            if(elem.nodeName.toLowerCase() == 'g'){ //<g> 要素の場合
+
+                // viz.js が生成する digraph を表す <g> 要素には、
+                // `digraph (graph name){~` で指定した (graph name) が `<g><title>(graph name)</title></g>` のように生成される
+                // この条件に一致する <g> 要素かどうかをチェックする
+                var tmpChildren = elem.childNodes;
+                for(var indexOfChildrenL2 = 0 ; indexOfChildrenL2 < tmpChildren.length ; indexOfChildrenL2++){
+                    var elemOfG = tmpChildren[indexOfChildrenL2];
+
+                    //ヒットした場合
+                    if(elemOfG.nodeName.toLowerCase() == 'title' && getJSONUnescapedString(elemOfG.textContent) == digraphTitle_in_dot){
+                        gElemOfAllNodes = elem;
+                        childrenOfGelem = gElemOfAllNodes.childNodes;
+                        indexOfChildren = childrenOfSvgElem.length;
+                        break;
+                    }
+                }
+            }
         }
-        var is1st = true;
 
         $3svgNodes.each(function(d,i){
             
@@ -2566,7 +2562,7 @@ function forceLayoutMemo(initializerObj){
             }
 
             // svg 内に定義された node の x, y 座標を取得
-            var foundG = findGbyTitle(d.key);
+            var foundG = findGElemByTitle(d.key);
             var foundTextElem = foundG.getElementsByTagName('text')[0];
 
             var xval;
@@ -2588,14 +2584,14 @@ function forceLayoutMemo(initializerObj){
                 }
             }
             
-            if(is1st){ //一度目の保存の場合
+            if(is1stRegisteringToUsedRange){ //一度目の保存の場合
 
                 usedRangeObj_viz.aboveLeft.x = xval;
                 usedRangeObj_viz.aboveLeft.y = yval;
                 usedRangeObj_viz.belowRight.x = xval;
                 usedRangeObj_viz.belowRight.y = yval;
 
-                is1st = false;
+                is1stRegisteringToUsedRange = false;
             
             }else{ //2度目以降の保存の場合
 
@@ -2629,14 +2625,29 @@ function forceLayoutMemo(initializerObj){
         var centerX_diff = (centerX_now - centerX_viz);
         var centerY_diff = (centerY_now - centerY_viz);
 
+        // -----------------------------------------------</SVG -> node(s) 毎の座標指定 Obj の生成>
 
-        var draggingReports = {};
-        draggingReports.type = 'change';
-        draggingReports.allOK = true;
-        draggingReports.allNG = true;
-        draggingReports.reportsArr = {};
-        draggingReports.reportsArr.datas = [];
-        draggingReports.reportsArr.links = [];
+        // <reprotting>--------------------------------------------------------
+
+        //Dragイベント用Buffer
+        var bufTotalReport;
+        bufTotalReport = {};
+        bufTotalReport.type = 'change';
+        bufTotalReport.allOK = true;
+        bufTotalReport.allNG = true;
+        bufTotalReport.reportsArr = {};
+        bufTotalReport.reportsArr.datas = [];
+        bufTotalReport.reportsArr.links = [];
+
+        // data
+
+        var replottingReports = {};
+        replottingReports.type = 'change';
+        replottingReports.allOK = true;
+        replottingReports.allNG = true;
+        replottingReports.reportsArr = {};
+        replottingReports.reportsArr.datas = [];
+        replottingReports.reportsArr.links = [];
 
         $3svgNodes.each(function(d,i){
             
@@ -2656,29 +2667,29 @@ function forceLayoutMemo(initializerObj){
 
             var renderReport = renderSVGNode(d, renderByThisObj);
             if(!renderReport.allOK){ //失敗が発生した場合
-                draggingReports.allOK = false;
+                replottingReports.allOK = false;
             }
             if(!renderReport.allNG){ //成功が1つ以上ある場合
-                draggingReports.allNG = false;
+                replottingReports.allNG = false;
             }
-            draggingReports.reportsArr.datas.push(renderReport);
+            replottingReports.reportsArr.datas.push(renderReport);
 
         });
 
-        if(!draggingReports.allNG){ //1つ以上適用成功の場合
-            draggingReports.message = draggingReports.reportsArr.datas.length + " node(s) moved.";
-            overWriteScceededTransaction(draggingReports, bufTotalReport, 'datas');
+        if(!replottingReports.allNG){ //1つ以上適用成功の場合
+            replottingReports.message = replottingReports.reportsArr.datas.length + " node(s) moved.";
+            overWriteScceededTransaction(replottingReports, bufTotalReport, 'datas');
         }
 
         // link
 
-        draggingReports = {};
-        draggingReports.type = 'change';
-        draggingReports.allOK = true;
-        draggingReports.allNG = true;
-        draggingReports.reportsArr = {};
-        draggingReports.reportsArr.datas = [];
-        draggingReports.reportsArr.links = [];
+        replottingReports = {};
+        replottingReports.type = 'change';
+        replottingReports.allOK = true;
+        replottingReports.allNG = true;
+        replottingReports.reportsArr = {};
+        replottingReports.reportsArr.datas = [];
+        replottingReports.reportsArr.links = [];
 
         $3svgLinks.each(function(d, i){
 
@@ -2706,28 +2717,29 @@ function forceLayoutMemo(initializerObj){
             });
 
             if(!renderReport.allOK){ //失敗が発生した場合
-                draggingReports.allOK = false;
+                replottingReports.allOK = false;
             }
             if(!renderReport.allNG){ //成功が1つ以上ある場合
-                draggingReports.allNG = false;
+                replottingReports.allNG = false;
             }
-            draggingReports.reportsArr.links.push(renderReport);
+            replottingReports.reportsArr.links.push(renderReport);
         });
 
-        if(!draggingReports.allNG){ //1つ以上適用成功の場合
+        if(!replottingReports.allNG){ //1つ以上適用成功の場合
 
             // history message は直接編集する。(`~ node(s) moved` を残すため)
-            bufTotalReport.message += " " + draggingReports.reportsArr.links.length + " link(s) stretched.";
-            overWriteScceededTransaction(draggingReports, bufTotalReport, 'links');
+            bufTotalReport.message += " " + replottingReports.reportsArr.links.length + " link(s) stretched.";
+            overWriteScceededTransaction(replottingReports, bufTotalReport, 'links');
         }
 
         if(!bufTotalReport.allNG){ //ログに記録するべきレポートが存在する場合
             historyManager.appendHistory(bufTotalReport);
         }
 
+        // -------------------------------------------------------</reprotting>
+        
         startForce();
 
-        // -------------------------------------------------------</reprotting>
     }
 
     var $3NodeSelectingBrushGroup = null;
@@ -7588,11 +7600,9 @@ function forceLayoutMemo(initializerObj){
         
         dotCode += indent + '\n';
 
-        // data 生成
+        // node 生成
         dotCode += indent + '// Nodes declarations' + '\n';
-
-        var generatedAtLeastOne = false;
-
+        var generatedAtLeastOnce = false;
         $3svgNodes.each(function(d,i){
 
             //選択ノードチェック
@@ -7601,19 +7611,18 @@ function forceLayoutMemo(initializerObj){
                 return; //対象から除外
             }
 
-            //改行などの特殊文字をエスケープした状態の文字列を JSON.stringify を使って得る
-            var tmpObj = {'tmpkey':d.text.text_content};
-            var tmpStr = JSON.stringify(tmpObj);
-            var escapedStr = tmpStr.replace(/^.+?tmpkey\":\"/, '').replace(/\"}$/,''); // 先頭の `{"tmpkey":"` と 末尾の `"}` を削除
+            //改行などの特殊文字をエスケープした状態の文字列を得る
+            var escapedContent = getJSONEscapedString(d.text.text_content);
+            var escapedKey = getJSONEscapedString(d.key);
 
-            var nodeDeclaration = d.key + ' [label="' + escapedStr + '"];';
+            var nodeDeclaration = '"' + escapedKey + '" [label="' + escapedContent + '"];';
             dotCode += '\n' + indent + nodeDeclaration;
 
-            generatedAtLeastOne = true;
+            generatedAtLeastOnce = true;
 
         });
 
-        if(!generatedAtLeastOne){ // 1つも生成されなかった場合
+        if(!generatedAtLeastOnce){ // 1つも生成されなかった場合
             return undefined; // 'undefined' を返す
         }
 
@@ -7632,11 +7641,14 @@ function forceLayoutMemo(initializerObj){
                     (d.target.$3bindedSelectionLayerSVGElement.attr("data-selected").toLowerCase() != 'true')
                 )
             ){
-                return; //edge を生成しない
+                return; //edge を生成しない (source or target の node 定義が存在しない edge は定義しない)
             }
 
-            var nodeDeclaration = d.source.key + ' -> ' + d.target.key + ';';
-            dotCode += '\n' + indent + nodeDeclaration;
+            var escapedSourceKey = getJSONEscapedString(d.source.key);
+            var escapedTargetKey = getJSONEscapedString(d.target.key);
+
+            var edgeDeclaration = '"' + escapedSourceKey + '" -> "' + escapedTargetKey + '";';
+            dotCode += '\n' + indent + edgeDeclaration;
         });
 
         dotCode += indent + '\n';
@@ -9649,7 +9661,7 @@ function forceLayoutMemo(initializerObj){
             belowRight:{}
         }
 
-        var is1st = true;
+        var is1stRegisteringToUsedRange = true;
 
         //範囲チェックループ
         $3svgNodes.each(function(d,i){
@@ -9660,13 +9672,13 @@ function forceLayoutMemo(initializerObj){
                 return; //対象から除外
             }
 
-            if(is1st){ //1つ目の範囲チェックの場合
+            if(is1stRegisteringToUsedRange){ //1つ目の範囲チェックの場合
                 usedRangeObj.aboveLeft.x = d.coordinate.x;
                 usedRangeObj.aboveLeft.y = d.coordinate.y;
                 usedRangeObj.belowRight.x = d.coordinate.x;
                 usedRangeObj.belowRight.y = d.coordinate.y;
 
-                is1st = false;
+                is1stRegisteringToUsedRange = false;
 
             }else{ //2つ目以降の範囲チェックの場合
                 
@@ -9687,7 +9699,7 @@ function forceLayoutMemo(initializerObj){
             }
         });
 
-        if(is1st){ //チェックを1つも行わなかった場合( = 選択 data がない or data が存在しない)
+        if(is1stRegisteringToUsedRange){ //チェックを1つも行わなかった場合( = 選択 data がない or data が存在しない)
 
             //表示画面中央を返す
 
@@ -10003,6 +10015,36 @@ function forceLayoutMemo(initializerObj){
         }
 
         return bindedData;
+    }
+
+    //
+    // 改行などの特殊文字をエスケープした状態の文字列を、 JSON.stringify() を使って得る
+    //
+    function getJSONEscapedString(fromThisString){
+        
+        var tmpObj = {'tmpkey':fromThisString};
+        var tmpStr = JSON.stringify(tmpObj);
+        var escapedStr = tmpStr.replace(/^.+?tmpkey\":\"/, '').replace(/\"}$/,''); // 先頭の `{"tmpkey":"` と 末尾の `"}` を削除
+
+        return escapedStr;
+    }
+
+    //
+    // 改行などの特殊文字をエスケープした状態の文字列から、
+    // エスケープしない状態の文字列を得る
+    // syntax error の場合は 'undefined' を返す
+    //
+    function getJSONUnescapedString(fromThisString){
+        var tmpStr = '{"tmpkey":"' + fromThisString + '"}';
+        var parsedObj = {};
+        try{
+            parsedObj = JSON.parse(tmpStr); //SyntaxErrorをthrowする可能性がある
+        }catch (e){ //SyntaxErrorの場合
+            console.error(e.toString());
+            return undefined;
+        }
+        
+        return parsedObj.tmpkey;
     }
 
     //
