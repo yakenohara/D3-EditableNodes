@@ -2443,26 +2443,14 @@ function forceLayoutMemo(initializerObj){
             return; //終了
         }
 
-        // <make svg using graphviz>-------------------------------------------
-        function inspect(s) {
-            return "<pre>" + s.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;") + "</pre>"
+        // make svg using graphviz
+        var svgString;
+        try {
+            svgString = Viz(dotCode, 'svg');
+        } catch (e) {
+            console.error(e.toString());
+            return;
         }
-        function createFromDot(dotCode, format) {
-            var result;
-            try {
-                result = Viz(dotCode, format);
-                if (format === "svg") {
-                    return result;
-                }
-                else {
-                    return inspect(result);
-                }
-            } catch (e) {
-                return inspect(e.toString());
-            }
-        }
-        var svgString = createFromDot(dotCode, "svg"); // graphviz で
-        // ------------------------------------------</make svg using graphviz>
 
         // <reprotting>--------------------------------------------------------
 
