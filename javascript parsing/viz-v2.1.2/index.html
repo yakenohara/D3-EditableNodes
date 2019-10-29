@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JS Code to graphviz</title>
+    <style>
+        #convert-button {
+            display: block;
+        }
+
+        .editor {
+            float: left;
+
+        }
+
+        #svg-draw {
+            float: left;
+        }
+    </style>
+</head>
+<body>
+<div class="editor">
+    <label for="js-code-text"></label><textarea id="js-code-text" rows="20" cols="40">
+openMyFile()
+try {
+    writeMyFile(theData);
+}finally {
+    closeMyFile();
+}
+</textarea>
+    <button id="convert-button">Convert!</button>
+    
+    <textarea id="dot-code-text" rows="20" cols="40"></textarea>
+
+</div>
+<div id="svg-draw"></div>
+<script src="esgraph_browserify.js"></script>
+<script src="viz-v2.1.2.js"></script>
+<script src="full.render-v2.1.2.js"></script>
+<script>
+
+    function convert() {
+        
+        var source = document.getElementById("js-code-text").value;
+        if (source.length == 0) {
+            return;
+        }
+        dotCode = esgraph(source);
+        document.getElementById("dot-code-text").value = dotCode;
+
+        var viz = new Viz();
+
+        viz.renderSVGElement(dotCode)
+        .then(function(elem){
+            var area = document.getElementById("svg-draw");
+            var chld = area.firstChild;
+            if(chld !== null){
+                area.removeChild(chld);
+            }
+            document.getElementById("svg-draw").appendChild(elem);
+        });
+        
+    }
+    document.getElementById("convert-button").addEventListener("click", convert);
+
+    
+</script>
+</body>
+</html>
