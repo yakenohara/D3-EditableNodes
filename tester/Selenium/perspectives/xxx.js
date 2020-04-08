@@ -9,8 +9,8 @@ module.exports.func_doTest = async function(obj_webDriver){
 
     var str_clsNameInCntxtMenu = 'context-menu-0' // コンテキストメニューに付加される class 名
     // caution
-    // force-layout-memo.js により DOMツリー内でユニークな `context-menu-(number)` が生成されるので、
-    // 生成後に文字列を指定する必要がある(※ (number) は 0 から始まり 1 ずつ増える自然数の内どれか)
+    // force-layout-memo.js により DOMツリー内でユニークな `context-menu-(number)` が生成される。
+    // なので生成後の文字列は予想するしかない。(※ (number) は 0 から始まり 1 ずつ増える自然数の内どれか)
 
     // -----------------------------------------------------------</settings>
 

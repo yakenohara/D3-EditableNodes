@@ -1,9 +1,10 @@
-const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
+const {logging} = require('selenium-webdriver');
 
-(async function(){
+module.exports.func_doTest = async function(obj_webDriver){
 
-    var str_navigateTo = 'http://localhost:8000/';
-    var str_pathOfToLoadFile = 'tester/Selenium/001.json';
+    // <settings>------------------------------------------------------------
+
+    var str_pathOfToLoadFile = 'tester/Selenium/perspectives/001.json';
     var str_toExecScript = `memo0.loadFile(\'${str_pathOfToLoadFile}\');`
 
     var str_expectedMessage = 
@@ -13,29 +14,9 @@ const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
 
     var int_waitMS = 3000;
 
-    var str_browserName = Browser.CHROME;
+    // -----------------------------------------------------------</settings>
 
-    var obj_logPrefs = new logging.Preferences();
-    obj_logPrefs.setLevel(logging.Type.BROWSER, logging.Level.ALL);
-
-    var obj_webDriver = await new Builder()
-        .withCapabilities(
-            new Capabilities()
-                .setBrowserName(str_browserName)
-                .setLoggingPrefs(obj_logPrefs)
-        )
-        .build()
-    ;
-
-    // Set screen resolution as XGA size
-    await obj_webDriver.manage().window().setRect({
-        width:1024,
-        height:768
-    });
-
-    // Navigate
-    await obj_webDriver.get(str_navigateTo); // todo キャッシュを読まずにジャンプする
-    // todo alert が表示された場合は無視する
+    var bl_testResult;
 
     // Execute script
     await obj_webDriver.executeScript(str_toExecScript);
@@ -58,7 +39,7 @@ const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
                         // .message には、以下のように console に渡した文字列以外も付加されている。
                         // `console-api 2:32 "hello console"`
                         if(entry.message.indexOf(str_expectedMessage) != (-1)){
-                            console.log("OK");
+                            bl_testResult = true;
                             bl_gotLog = true;
                         }
                     });
@@ -76,7 +57,7 @@ const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
             // 実際は`Class TimeoutError`(<- `Class WebDriverError` の sub class)。
             // なのでこのエラーを判定を判定する方法は ↓↓ になる
             if( (typeof e) === 'object' && e.constructor.name === "TimeoutError"){
-                console.log("NG");
+                bl_testResult = false;
             
             }else{
                 throw e;
@@ -84,4 +65,7 @@ const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
         })
     ;
 
-})();
+    return new Promise(resolve => {
+        resolve(bl_testResult);
+    });
+}

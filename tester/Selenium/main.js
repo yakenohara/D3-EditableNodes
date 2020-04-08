@@ -1,11 +1,13 @@
+const fs = require('fs');
 const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
 
 (async function(){
 
     var str_navigateTo = 'http://localhost:8000/';
-    var strary_testModules = [
-        // './002sub',
-        './002sub2',
+    var str_testModDirName = 'perspectives';
+    var strary_prefixIdsOfTestMods = [
+        '001',
+        'xxx',
     ];
     var str_browserName = Browser.CHROME;
 
@@ -14,9 +16,19 @@ const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
 
     // Iterator for each test
     var obj_webDriver;
-    for(let int_idxOfTestMods = 0 ; int_idxOfTestMods < strary_testModules.length ; int_idxOfTestMods++){
+    for(let int_idxOfTestMods = 0 ; int_idxOfTestMods < strary_prefixIdsOfTestMods.length ; int_idxOfTestMods++){
+        
+        let str_toFindTestModName = strary_prefixIdsOfTestMods[int_idxOfTestMods];
+        let str_foundModName = getModNameFromPrefixID(str_toFindTestModName, str_testModDirName);
 
-        let str_testMod = strary_testModules[int_idxOfTestMods];
+        if(typeof str_foundModName == 'undefined'){ // テストモジュールが見つからない場合
+            console.error(`Script file not found what is name like \`${str_toFindTestModName}\` in \`${str_testModDirName}\` directory.`);
+            throw new Error('ScriptNotFoundError')
+        }
+
+        let str_testMod = `./${str_testModDirName}/${str_foundModName}`;
+
+        console.log(`<Testing\`${str_testMod}\`>`)
 
         // note
         //
@@ -64,9 +76,9 @@ const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
             .then(function(bl_result){
 
                 if(bl_result){ // OK
-                    console.log(`${str_testMod}:OK`);
+                    console.log('RESULT:OK');
                 }else{ // NG
-                    console.error(`${str_testMod}:NG`);
+                    console.error('RESULT:NG');
                 }
                 
             })
@@ -76,6 +88,38 @@ const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
 
             })
         ;
+
+        console.log(`</Testing\`${str_testMod}\`>`)
     }
     
 })();
+
+//
+// 指定文字列から始まる script を指定ディレクトリから検索して拡張子なしのファイル名を返す
+// 見つからない場合は undefined を返す
+//
+function getModNameFromPrefixID(str_prefixID, str_dirName){
+
+    var str_toRetModName;
+    var str_ext = '.js';
+    
+    const objarr_dirEntries = fs.readdirSync(str_dirName, {withFileTypes: true});
+    
+    for(let int_idxOfFileDirEntries = 0 ; int_idxOfFileDirEntries < objarr_dirEntries.length ; int_idxOfFileDirEntries++){
+
+        let obj_dirEntry = objarr_dirEntries[int_idxOfFileDirEntries];
+
+        if(obj_dirEntry.isFile()){
+
+            let str_entryName = obj_dirEntry.name;
+            let bl_hit = new RegExp(`^${str_prefixID}.*${str_ext}$`).test(str_entryName);
+
+            if(bl_hit){
+                str_toRetModName = str_entryName.substr(0, str_entryName.length - str_ext.length);
+                break;
+            }
+        }
+    }
+
+    return str_toRetModName;
+}
