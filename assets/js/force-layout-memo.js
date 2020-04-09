@@ -227,6 +227,23 @@ function forceLayoutMemo(initializerObj){
         }
         url_externalComponent = initializerObj.componentPath;
     }
+
+    if(initializerObj.debugMode){ // debug mode 指定の場合
+
+        // history の clone を返す
+        this.getCloneOfHistory = function(){
+            
+            var toRetHistory = [];
+
+            for(var int_idxOfHistory = 0 ; int_idxOfHistory < transactionHistory.length ; int_idxOfHistory++){
+                var tmpobj = {};
+                mergeObj(transactionHistory[int_idxOfHistory], tmpobj, true);
+                toRetHistory.push(tmpobj);
+            }
+            
+            return toRetHistory;
+        }
+    }
     
     // -----------------------------------------------</check initializerObj>
 
