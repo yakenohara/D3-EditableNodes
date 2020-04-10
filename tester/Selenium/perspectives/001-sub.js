@@ -32,13 +32,14 @@ module.exports.func_doTest = async function(obj_webDriver){
                 .logs()
                 .get(logging.Type.BROWSER)
                 .then(function(entries){
-                    entries.forEach( entry => {
-                        console.log('[%s] %s', entry.level.name, entry.message);
+                    entries.forEach( obj_entty => {
+                        // console.log('[%s] %s', obj_entty.level.name, obj_entty.message);
+                        console.log(`[${obj_entty.level.name}(Lv:${obj_entty.level.value})] ${obj_entty.message}`);
 
                         // note
                         // .message には、以下のように console に渡した文字列以外も付加されている。
                         // `console-api 2:32 "hello console"`
-                        if(entry.message.indexOf(str_expectedMessage) != (-1)){
+                        if(obj_entty.message.indexOf(str_expectedMessage) != (-1)){
                             bl_testResult = true;
                             bl_gotLog = true;
                         }

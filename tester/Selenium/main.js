@@ -68,6 +68,14 @@ const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
         // Navigate
         await obj_webDriver.get(str_navigateTo);
 
+        console.log('<Waiting for page initializing>');
+        let obj_ckecker = require('./common/check-isconstructed');
+        let bl_isLaunched = await obj_ckecker.func_doTest(obj_webDriver);
+        if(!bl_isLaunched){
+            console.error('constructor of force-layout-memo.js ends in fail.');
+            throw new Error('pageInitializingError');
+        }
+        console.log('</Waiting for page initializing>');
         
         let obj_testMod = require(str_testMod);
         await obj_testMod
