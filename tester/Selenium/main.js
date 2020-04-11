@@ -7,7 +7,8 @@ const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
     var str_testModDirName = 'perspectives';
     var strary_prefixIdsOfTestMods = [
         // '001',
-        '002'
+        // '002',
+        '003',
         // 'xxx',
     ];
     var str_browserName = Browser.CHROME;
