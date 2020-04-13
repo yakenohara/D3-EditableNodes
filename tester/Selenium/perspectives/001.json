@@ -1,0 +1,15 @@
+{
+    "datas": [
+        {
+            "key": "0",
+            "type": "text",
+            "text": {
+                "text_content": 2
+            },
+            "coordinate": {
+                "x": 300,
+                "y": 300
+            }
+        }
+    ]
+}
