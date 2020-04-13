@@ -6,9 +6,9 @@ const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
     var str_navigateTo = 'http://localhost:8000/';
     var str_testModDirName = 'perspectives';
     var strary_prefixIdsOfTestMods = [
-        // '001',
-        // '002',
-        '003',
+        '001',
+        '002',
+        // '003',
         // 'xxx',
     ];
     var str_browserName = Browser.CHROME;
@@ -18,6 +18,8 @@ const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
 
     // Iterator for each test
     var obj_webDriver;
+    var int_numOfOK = 0;
+    var int_numOfNG = 0;
     for(let int_idxOfTestMods = 0 ; int_idxOfTestMods < strary_prefixIdsOfTestMods.length ; int_idxOfTestMods++){
         
         let str_toFindTestModName = strary_prefixIdsOfTestMods[int_idxOfTestMods];
@@ -30,19 +32,8 @@ const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
 
         let str_testMod = `./${str_testModDirName}/${str_foundModName}`;
 
+        console.log(`Starting ${int_idxOfTestMods+1} of ${strary_prefixIdsOfTestMods.length}`)
         console.log(`<Testing\`${str_testMod}\`>`)
-
-        // note
-        //
-        // `.build()` で帰ってくる WebDriver object は、
-        // 毎回新しいプロファイルでブラウザを起動した事と同じになる。
-        // これは、ブラウジング履歴も、cache も、cookie もまっさらな状態で起動するという事。
-        // https://groups.google.com/forum/#!topic/selenium-users/UX1Znrrb98Q
-        //
-        // 現状(ChromeDriver 81.0.4044.69) では、
-        // ページのリロード時に cache, cookie を無視するオプションが存在しないので、
-        // 代わりに WebDriver object を破棄して再び `.build()` するしかない。
-
 
         // すでにブラウザを開いていたら、閉じる
         if((typeof obj_webDriver) === 'object' && obj_webDriver.constructor.name === 'Driver'){
@@ -87,8 +78,10 @@ const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
 
                 if(bl_result){ // OK
                     console.log('RESULT:OK');
+                    int_numOfOK++;
                 }else{ // NG
                     console.error('RESULT:NG');
+                    int_numOfNG++;
                 }
                 
             })
@@ -101,6 +94,14 @@ const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
 
         console.log(`</Testing\`${str_testMod}\`>`)
     }
+
+    console.log('');
+    console.log('Done!');
+    console.log('');
+    console.log(`--------------<RESULT>--------------`);
+    console.log(`TOTAL:${int_numOfOK+int_numOfNG}`);
+    console.log(`OK:${int_numOfOK}`);
+    console.log(`NG:${int_numOfNG}`);
     
 })();
 

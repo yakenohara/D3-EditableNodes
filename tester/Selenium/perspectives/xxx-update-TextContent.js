@@ -1,4 +1,4 @@
-const {Button, By, logging} = require('selenium-webdriver');
+const {Button, By, Key, logging} = require('selenium-webdriver');
 
 module.exports.func_doTest = async function(obj_webDriver){
 
@@ -6,6 +6,7 @@ module.exports.func_doTest = async function(obj_webDriver){
 
     var str_pathOfToLoadFile = 'tester/Selenium/perspectives/002.json';
     var str_toExecScript_1 = `memo0.loadFile(\'${str_pathOfToLoadFile}\');`
+    var str_toExecScript_2 = `return (memo0.getCloneOfHistory());`;
 
     var int_waitMS = 3000;
 
@@ -42,17 +43,11 @@ module.exports.func_doTest = async function(obj_webDriver){
     //             </text>
     //         </g>
     //     </g>
-    await obj_webDriver
+    var obj_expectedAsSVGNode = await obj_webDriver
         .wait(async function(){
             
-            var bl_passed = false;
-
-            var obj_nodes = await obj_webDriver
+            var objarr_expectedAsSVGNode = await obj_webDriver
                 .findElements(
-
-                    // note
-                    // The <svg> elements are not from the XHTML namespace but belongs to SVG namespace.
-                    // .findElement(By.xpath('//div[@id=\'force-memo0\']/*[name()=\'svg\' and contains(concat(" ",@class," "), " SVGForNodesMapping ")]/*[name()="g" and '))
                     By.xpath(
                         `//div[@id=\'force-memo0\']` +
                             `/*[name()=\'svg\' and ${mekeXPathQuery_existsInClassList('SVGForNodesMapping')}]` +
@@ -62,39 +57,20 @@ module.exports.func_doTest = async function(obj_webDriver){
                 )
             ;
 
-            console.log("Elements found.");
-            console.log(`obj_nodes.length:${obj_nodes.length}`);
+            console.log(`objarr_expectedAsSVGNode.length:${objarr_expectedAsSVGNode.length}`);
 
-            // note
-            // `.findElements()` とは違い、Element が見つからない時は NoSuchElementError を返すのではなく、要素数 0 の Array を返す。
-            if(obj_nodes.length != 0){
-
-                await obj_webDriver
-                    .actions()
-                    .move({
-                        origin:obj_nodes[0]
-                    })
-                    .press(Button.LEFT)
-                    .release(Button.LEFT)
-                    .press(Button.LEFT)
-                    .release(Button.LEFT)
-                    .perform()
-                ;
-
-                bl_passed = true;
+            if(objarr_expectedAsSVGNode.length != 1){
+                console.log('Expected SVG node not found. Retry...');
+                return false;
             }
 
-            return bl_passed;
+            return objarr_expectedAsSVGNode[0];
 
         },int_waitMS)
         .catch(function(e){
 
-            // note 
-            // https://www.selenium.dev/selenium/docs/api/javascript/module/selenium-webdriver/index_exports_ThenableWebDriver.html
-            // ↑ Interface ThenableWebDriver の説明↑ では time out 時に TypeError が throw されるとあるが、
-            // 実際は`Class TimeoutError`(<- `Class WebDriverError` の sub class)。
-            // なのでこのエラーを判定を判定する方法は ↓↓ になる
             if( (typeof e) === 'object' && e.constructor.name === "TimeoutError"){
+                console.error('Expected SVG node not found.');
                 bl_testResult = false;
             
             }else{
@@ -103,40 +79,80 @@ module.exports.func_doTest = async function(obj_webDriver){
         })
     ;
 
+    if(!bl_testResult){
+        console.error(`Unable to continue next manipulate.`);
+        return bl_testResult;
+    }
+
+    // Double click node
+    await obj_webDriver
+        .actions()
+        .move({
+            origin:obj_expectedAsSVGNode
+        })
+        .press(Button.LEFT)
+        .release(Button.LEFT)
+        .press(Button.LEFT)
+        .release(Button.LEFT)
+        .perform()
+    ;
+    
+    // Double click で表示される <textarea> を取得。DOM 構造は以下を想定
+    //
+    // <div id="force-memo0" ~~~~omitting~~~~ >
+    //     <textarea class="mousetrap" ~~~~omitting~~~~></textarea>
+    //
+    var obj_textareaElem = await obj_webDriver
+        .wait(async function(){
+
+            var objarr_expectedAsTextarea = await obj_webDriver
+                .findElements(
+                    By.xpath(
+                        `//div[@id=\'force-memo0\']` +
+                            `/textarea`
+                    )
+                )
+            ;
+
+            console.log(`objarr_expectedAsTextarea.length:${objarr_expectedAsTextarea.length}`);
+
+            if(objarr_expectedAsTextarea.length != 1){
+                console.log('Expected <textarea> not found. Retry...');
+                return false;
+            }
+
+            return objarr_expectedAsTextarea[0];
+
+        },int_waitMS)
+        .catch(function(e){
+
+            if( (typeof e) === 'object' && e.constructor.name === "TimeoutError"){
+                bl_testResult = false;
+            
+            }else{
+                throw e;
+            }
+        })
+    ;
+    
+    if(!bl_testResult){
+        console.error(`Unable to continue next manipulate.`);
+        return bl_testResult;
+    }
+
+    // Clear <textarea>
     await obj_webDriver
         .wait(async function(){
-            
-            var bl_passed = false;
-
-            var obj_element = await obj_webDriver
-                .switchTo()
-                .activeElement()
-            ;
-            
-            var str_tagName = await obj_element
-                .getTagName()
-            ;
-
-            console.log(`str_tagName:${str_tagName}`);
-
-            if( str_tagName.toLowerCase() == 'textarea'){
-
-                await obj_element.clear();
-                await obj_element.sendKeys("Updated text");
-                console.log(await obj_element.getText());
-                bl_passed = true;
+            await obj_textareaElem.clear();
+            var str_expedtedAsVacantText = await obj_textareaElem.getAttribute('value');
+            console.log(`str_expedtedAsVacantText:"${str_expedtedAsVacantText}"`);
+            if(str_expedtedAsVacantText !== ''){
+                console.log('\`.clear()\` does not effective. Retry...');
+                return false;
             }
-
-            return bl_passed;
-
+            return true;
         },int_waitMS)
         .catch(function(e){
-
-            // note 
-            // https://www.selenium.dev/selenium/docs/api/javascript/module/selenium-webdriver/index_exports_ThenableWebDriver.html
-            // ↑ Interface ThenableWebDriver の説明↑ では time out 時に TypeError が throw されるとあるが、
-            // 実際は`Class TimeoutError`(<- `Class WebDriverError` の sub class)。
-            // なのでこのエラーを判定を判定する方法は ↓↓ になる
             if( (typeof e) === 'object' && e.constructor.name === "TimeoutError"){
                 bl_testResult = false;
             
@@ -145,6 +161,18 @@ module.exports.func_doTest = async function(obj_webDriver){
             }
         })
     ;
+
+    if(!bl_testResult){
+        console.error(`Unable to continue next manipulate.`);
+        return bl_testResult;
+    }
+
+    await obj_textareaElem.sendKeys('Updated text');
+    await obj_textareaElem.sendKeys(Key.ESCAPE);
+
+    var objarr_expectedAsHistries = await obj_webDriver.executeScript(str_toExecScript_2);
+    
+    console.log(`objarr_expectedAsHistries:${objarr_expectedAsHistries}`);
 
     return bl_testResult;
 }
