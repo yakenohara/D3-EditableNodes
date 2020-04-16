@@ -108,123 +108,64 @@ module.exports.func_doTest = async function(obj_webDriver){
         })
     ;
 
-    // 以下 DOM tree になっている事を確認することで、history が追加された事を検知する
-    //
-    // <div id="force-memo0" ~~~~omitting~~~~ >
-    //     <div class="transactionHistory" wrap="off">
-    //         <div class="transaction selected" data-history_index="1" style=""> // <- 最後の <div> 要素
-    //             <small style="font-size: small;">1 node(s) appended.</small>   // <- <small></small>内が `1 node(s) appended.` となること
-    //
-    await obj_webDriver
-        .wait(async function(){
-            
-            var obj_nodes = await obj_webDriver
-                .findElements(
-                    By.xpath(
-                        `//div[@id=\'force-memo0\']` +
-                            `/div[${mekeXPathQuery_existsInClassList('transactionHistory')}]` +
-                                `/div[${mekeXPathQuery_existsInClassList('transaction')} and last() and ${mekeXPathQuery_existsInClassList('selected')}]`
-                    )
-                )
-            ;
+//     var str_scr = `
+//     var x = ${func_xxx(
+//         `//div[@id=\'force-memo0\']` +
+//             `/*[name()=\'svg\' and ${mekeXPathQuery_existsInClassList('SVGForNodesMapping')}]` +
+//                 `/*[name()="g" and ${mekeXPathQuery_existsInClassList('nodes')}]` + 
+//                     `/*[name()="g" and ${mekeXPathQuery_existsInClassList('node')}]` +
+//                         `/*[name()="text" and ${mekeXPathQuery_existsInClassList('textContent')}]`
+//     )};
+//     return x;
+// `;
 
-            if(obj_nodes.length != 1){
-                console.log('Expected history not found. Retry...');
-                return false;
-            }
+    var str_scr = `
+        return (${func_xxx(
+            `//div[@id=\'force-memo0\']` +
+                `/*[name()=\'svg\' and ${mekeXPathQuery_existsInClassList('SVGForNodesMapping')}]` +
+                    `/*[name()="g" and ${mekeXPathQuery_existsInClassList('nodes')}]` + 
+                        `/*[name()="g" and ${mekeXPathQuery_existsInClassList('node')}]` +
+                            `/*[name()="text" and ${mekeXPathQuery_existsInClassList('textContent')}]`
+        )});
+    `;
 
-            let str_HistoryTitle = await obj_nodes[0].getText();
+    console.log(`str_scr:${str_scr}`);
 
-            console.log(`str_HistoryTitle:${str_HistoryTitle}`);
+    var obj_exeResult = await obj_webDriver.executeScript(str_scr);
 
-            if(str_HistoryTitle !== '1 node(s) appended.'){
-                console.log('Expected history message not found. Retry...');
-                return false;
-            }
-
-            return true;
-
-        },int_waitMS)
-        .catch(function(e){
-
-            if( (typeof e) === 'object' && e.constructor.name === "TimeoutError"){
-                console.error('Expected history message not found.');
-                bl_testResult = false;
-            
-            }else{
-                throw e;
-            }
-        })
-    ;
-
-    // console log に warn or error が出力されて *** いない *** 事を確認することで、node がエラーなく追加されたことを確認する
-    var objarr_entries = await obj_webDriver
-        .manage()
-        .logs()
-        .get(logging.Type.BROWSER)
-    ;
-    for(let int_idxOfEntries = 0 ; int_idxOfEntries < objarr_entries.length ; int_idxOfEntries++){
-        let obj_entry = objarr_entries[int_idxOfEntries];
-        console.log(`[${obj_entry.level.name}(Lv:${obj_entry.level.value})] ${obj_entry.message}`);
-        
-        if( logging.Level.WARNING.value <= obj_entry.level.value ){ // Waring 以上のレベルのログなら
-            console.error('Unexpected log message found.');
-            bl_testResult = false;
-        }
-    }
-
-    // Double click node
-    await obj_webDriver
-        .actions()
-        .move({
-            origin:obj_ellipseAndText.text
-        })
-        .press(Button.LEFT)
-        .release(Button.LEFT)
-        .press(Button.LEFT)
-        .release(Button.LEFT)
-        .perform()
-    ;
-
-    // [CHECK]   property edit console の slidedown 
-    // [PERFORM] text_anchor の `default` ボタンを　hover
-    // [CHECK]   <text> の 表示の右寄せが解除される
-    // [PERFORM] text_anchor の `default` ボタンを　click
-    // [CHECK]   history に `text/text_anchor:default` が追加される
-    // [CHECK]   <text> の 表示の右寄せが解除されたまま
-    // [EXECUTE] get history
-    // [CHECK]   最後のhistory が text_anchor:end -> null になる
-
-    // [CHECK]   property edit console の slidedown 
-    await obj_webDriver
-        .wait(function(){
-            until.elementLocated(By.xpath('//div[@id="force-memo0"'))
-        })
-
-    await obj_webDriver
-        .wait(function(){
-
-        }, int_waitMS)
-        .catch(function(e){
-
-        })
-    ;
-
-    // History 内の 当該 Transaction の Previous object で前回値を保存できてているかどうか
-    //
-    var objarr_expectedAsHistries = await obj_webDriver.executeScript(str_toExecScript_2);
-    console.log(`objarr_expectedAsHistries:${objarr_expectedAsHistries}`);
-
-    var str_expectedAsPrevText = objarr_expectedAsHistries[objarr_expectedAsHistries.length-1]['reportsArr']['datas'][0]['PrevObj']['text']['text_content'];
-    console.log(`str_expectedAsPrevText:${str_expectedAsPrevText}`);
-    if(str_expectedAsPrevText !== ''){
-        console.error('Expected previous history not found.');
-        bl_testResult = false;
-    }
+    console.log(`obj_exeResult:${obj_exeResult}`);
     
     return bl_testResult;
 }
 
 function mekeXPathQuery_existsInClassList(str_className){
     return `contains(concat(" ",@class," "), " ${str_className} ")`;
+}
+
+function func_xxx(sss){
+    return (`
+        (
+            (function(){
+                
+                var obj_toRet = [];
+            
+                var iterator = document.evaluate(
+                    \`${sss}\`,
+                    document,
+                    null,
+                    XPathResult.ORDERED_NODE_ITERATOR_TYPE,
+                    null
+                );
+            
+                var thisNode = iterator.iterateNext();
+                while (thisNode) {
+                    obj_toRet.push(window.getComputedStyle(thisNode));
+                    thisNode = iterator.iterateNext();
+                }
+                
+                return obj_toRet;
+            
+            })()
+        )
+    `);
 }
