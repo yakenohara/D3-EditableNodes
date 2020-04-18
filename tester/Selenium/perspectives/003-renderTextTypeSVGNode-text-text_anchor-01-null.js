@@ -1,4 +1,5 @@
-const {By, logging, until} = require('selenium-webdriver');
+const {Button, By, logging, until} = require('selenium-webdriver');
+const {DEPENDS_ON_USER_IMPLI, XPATH_DEF} = require('../ini');
 
 module.exports.func_doTest = async function(obj_webDriver){
 
@@ -47,26 +48,13 @@ module.exports.func_doTest = async function(obj_webDriver){
             
             var objarr_expectedAsEllipse = await obj_webDriver
                 .findElements(
-                    By.xpath(
-                        `//div[@id=\'force-memo0\']` +
-                            `/*[name()=\'svg\' and ${mekeXPathQuery_existsInClassList('SVGForNodesMapping')}]` +
-                                `/*[name()="g" and ${mekeXPathQuery_existsInClassList('nodes')}]` + 
-                                    `/*[name()="g" and ${mekeXPathQuery_existsInClassList('node')}]` +
-                                        `/*[name()="g" and ${mekeXPathQuery_existsInClassList('frame')}]` +
-                                            `/*[name()="ellipse"]`
-                    )
+                    By.xpath(XPATH_DEF.NODE_ELLIPSE)
                 )
             ;
 
             var objarr_expectedAsText = await obj_webDriver
                 .findElements(
-                    By.xpath(
-                        `//div[@id=\'force-memo0\']` +
-                            `/*[name()=\'svg\' and ${mekeXPathQuery_existsInClassList('SVGForNodesMapping')}]` +
-                                `/*[name()="g" and ${mekeXPathQuery_existsInClassList('nodes')}]` + 
-                                    `/*[name()="g" and ${mekeXPathQuery_existsInClassList('node')}]` +
-                                        `/*[name()="text" and ${mekeXPathQuery_existsInClassList('textContent')}]`
-                    )
+                    By.xpath(XPATH_DEF.NODE_TEXT)
                 )
             ;
 
@@ -120,11 +108,7 @@ module.exports.func_doTest = async function(obj_webDriver){
             
             var obj_nodes = await obj_webDriver
                 .findElements(
-                    By.xpath(
-                        `//div[@id=\'force-memo0\']` +
-                            `/div[${mekeXPathQuery_existsInClassList('transactionHistory')}]` +
-                                `/div[${mekeXPathQuery_existsInClassList('transaction')} and last() and ${mekeXPathQuery_existsInClassList('selected')}]`
-                    )
+                    By.xpath(XPATH_DEF.HISTORY_LAST_AND_SELECTED)
                 )
             ;
 
@@ -196,19 +180,19 @@ module.exports.func_doTest = async function(obj_webDriver){
     // [CHECK]   最後のhistory が text_anchor:end -> null になる
 
     // [CHECK]   property edit console の slidedown 
-    await obj_webDriver
-        .wait(function(){
-            until.elementLocated(By.xpath('//div[@id="force-memo0"'))
-        })
+    // await obj_webDriver
+    //     .wait(function(){
+    //         until.elementLocated(By.xpath('//div[@id="force-memo0"'))
+    //     })
 
-    await obj_webDriver
-        .wait(function(){
+    // await obj_webDriver
+    //     .wait(function(){
 
-        }, int_waitMS)
-        .catch(function(e){
+    //     }, int_waitMS)
+    //     .catch(function(e){
 
-        })
-    ;
+    //     })
+    // ;
 
     // History 内の 当該 Transaction の Previous object で前回値を保存できてているかどうか
     //
@@ -223,8 +207,4 @@ module.exports.func_doTest = async function(obj_webDriver){
     }
     
     return bl_testResult;
-}
-
-function mekeXPathQuery_existsInClassList(str_className){
-    return `contains(concat(" ",@class," "), " ${str_className} ")`;
 }

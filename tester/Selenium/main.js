@@ -8,8 +8,8 @@ const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
     var strary_prefixIdsOfTestMods = [
         // '001',
         // '002',
-        // '003',
-        '004',
+        '003',
+        // '004',
         // 'xxx',
     ];
     var str_browserName = Browser.CHROME;

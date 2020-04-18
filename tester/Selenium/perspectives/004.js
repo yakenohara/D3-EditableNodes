@@ -1,4 +1,6 @@
 const {By, logging, until} = require('selenium-webdriver');
+var ooo = require('../common/xpath-util');
+var xxx = require('../common/executable-scripts');
 
 module.exports.func_doTest = async function(obj_webDriver){
 
@@ -42,31 +44,37 @@ module.exports.func_doTest = async function(obj_webDriver){
     //                     <tspan x="300" dy="0em">test content</tspan>
     //                 </text>
     //
+
+    var str_ellipseXPath =
+        `//div[@id=\'force-memo0\']` +
+            `/*[name()=\'svg\' and ${ooo.func_genPredcateExpr_isExistsInClassList('SVGForNodesMapping')}]` +
+                `/*[name()="g" and ${ooo.func_genPredcateExpr_isExistsInClassList('nodes')}]` + 
+                    `/*[name()="g" and ${ooo.func_genPredcateExpr_isExistsInClassList('node')}]` +
+                        `/*[name()="g" and ${ooo.func_genPredcateExpr_isExistsInClassList('frame')}]` +
+                            `/*[name()="ellipse"]`
+    ;
+
+    var str_textXPath =
+        `//div[@id=\'force-memo0\']` +
+            `/*[name()=\'svg\' and ${mekeXPathQuery_existsInClassList('SVGForNodesMapping')}]` +
+                `/*[name()="g" and ${mekeXPathQuery_existsInClassList('nodes')}]` + 
+                    `/*[name()="g" and ${mekeXPathQuery_existsInClassList('node')}]` +
+                        `/*[name()="text" and ${mekeXPathQuery_existsInClassList('textContent')}]`
+    ;
+
+
     var obj_ellipseAndText = await obj_webDriver
         .wait(async function(){
-            
+
             var objarr_expectedAsEllipse = await obj_webDriver
                 .findElements(
-                    By.xpath(
-                        `//div[@id=\'force-memo0\']` +
-                            `/*[name()=\'svg\' and ${mekeXPathQuery_existsInClassList('SVGForNodesMapping')}]` +
-                                `/*[name()="g" and ${mekeXPathQuery_existsInClassList('nodes')}]` + 
-                                    `/*[name()="g" and ${mekeXPathQuery_existsInClassList('node')}]` +
-                                        `/*[name()="g" and ${mekeXPathQuery_existsInClassList('frame')}]` +
-                                            `/*[name()="ellipse"]`
-                    )
+                    By.xpath(str_ellipseXPath)
                 )
             ;
 
             var objarr_expectedAsText = await obj_webDriver
                 .findElements(
-                    By.xpath(
-                        `//div[@id=\'force-memo0\']` +
-                            `/*[name()=\'svg\' and ${mekeXPathQuery_existsInClassList('SVGForNodesMapping')}]` +
-                                `/*[name()="g" and ${mekeXPathQuery_existsInClassList('nodes')}]` + 
-                                    `/*[name()="g" and ${mekeXPathQuery_existsInClassList('node')}]` +
-                                        `/*[name()="text" and ${mekeXPathQuery_existsInClassList('textContent')}]`
-                    )
+                    By.xpath(str_textXPath)
                 )
             ;
 
@@ -108,64 +116,18 @@ module.exports.func_doTest = async function(obj_webDriver){
         })
     ;
 
-//     var str_scr = `
-//     var x = ${func_xxx(
-//         `//div[@id=\'force-memo0\']` +
-//             `/*[name()=\'svg\' and ${mekeXPathQuery_existsInClassList('SVGForNodesMapping')}]` +
-//                 `/*[name()="g" and ${mekeXPathQuery_existsInClassList('nodes')}]` + 
-//                     `/*[name()="g" and ${mekeXPathQuery_existsInClassList('node')}]` +
-//                         `/*[name()="text" and ${mekeXPathQuery_existsInClassList('textContent')}]`
-//     )};
-//     return x;
-// `;
+    
 
-    var str_scr = `
-        return (${func_xxx(
-            `//div[@id=\'force-memo0\']` +
-                `/*[name()=\'svg\' and ${mekeXPathQuery_existsInClassList('SVGForNodesMapping')}]` +
-                    `/*[name()="g" and ${mekeXPathQuery_existsInClassList('nodes')}]` + 
-                        `/*[name()="g" and ${mekeXPathQuery_existsInClassList('node')}]` +
-                            `/*[name()="text" and ${mekeXPathQuery_existsInClassList('textContent')}]`
-        )});
-    `;
-
+    var str_scr = `return (${xxx.func_genScript_getComputedStyleByXPath(str_textXPath)});`;
     console.log(`str_scr:${str_scr}`);
-
     var obj_exeResult = await obj_webDriver.executeScript(str_scr);
 
-    console.log(`obj_exeResult:${obj_exeResult}`);
+    console.log(`obj_exeResult:`);
+    console.log(JSON.stringify(obj_exeResult, null, '    '));
     
     return bl_testResult;
 }
 
 function mekeXPathQuery_existsInClassList(str_className){
     return `contains(concat(" ",@class," "), " ${str_className} ")`;
-}
-
-function func_xxx(sss){
-    return (`
-        (
-            (function(){
-                
-                var obj_toRet = [];
-            
-                var iterator = document.evaluate(
-                    \`${sss}\`,
-                    document,
-                    null,
-                    XPathResult.ORDERED_NODE_ITERATOR_TYPE,
-                    null
-                );
-            
-                var thisNode = iterator.iterateNext();
-                while (thisNode) {
-                    obj_toRet.push(window.getComputedStyle(thisNode));
-                    thisNode = iterator.iterateNext();
-                }
-                
-                return obj_toRet;
-            
-            })()
-        )
-    `);
 }
