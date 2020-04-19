@@ -5,6 +5,10 @@ const obj_user_impli = {
     ELEM_ID_BINDED:'force-memo0'
 };
 
+const obj_policies = {
+    WAIT_MS_FIND_ELEMENTS:3000
+};
+
 const obj_xpath_defs = {
     
     // <text>
@@ -30,9 +34,16 @@ const obj_xpath_defs = {
     HISTORY_LAST_AND_SELECTED:
         `//div[@id="${obj_user_impli.ELEM_ID_BINDED}"]` +
             `/div[${obj_xPathUtil.func_genPredcateExpr_isExistsInClassList('transactionHistory')}]` +
-                `/div[${obj_xPathUtil.func_genPredcateExpr_isExistsInClassList('transaction')} and last() and ${obj_xPathUtil.func_genPredcateExpr_isExistsInClassList('selected')}]`
+                `/div[${obj_xPathUtil.func_genPredcateExpr_isExistsInClassList('transaction')} and last()]`
+    ,
+
+    PROP_EDITOR:
+        `//div[@id="${obj_user_impli.ELEM_ID_BINDED}"]` +
+            `/div[${obj_xPathUtil.func_genPredcateExpr_isExistsInClassList('propertyEditConsole')}]`
+    ,
 
 }
 
 module.exports.DEPENDS_ON_USER_IMPLI = obj_user_impli;
+module.exports.POLICIES = obj_policies;
 module.exports.XPATH_DEF = obj_xpath_defs;
