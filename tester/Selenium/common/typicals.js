@@ -76,6 +76,7 @@ module.exports.func_isExitInClassList = async function(obj_element, str_classNam
     return false;
 }
 
+// Double click
 module.exports.func_doubleClickElement = async function(obj_webDriver, obj_element){
 
     // Double click Element
@@ -88,6 +89,19 @@ module.exports.func_doubleClickElement = async function(obj_webDriver, obj_eleme
         .release(Button.LEFT)
         .press(Button.LEFT)
         .release(Button.LEFT)
+        .perform()
+    ;
+
+}
+
+// hover
+module.exports.func_hoverElement = async function(obj_webDriver, obj_element){
+
+    await obj_webDriver
+        .actions()
+        .move({
+            origin:obj_element
+        })
         .perform()
     ;
 
