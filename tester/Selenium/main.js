@@ -6,8 +6,8 @@ const {Builder, Browser, Capabilities, logging} = require('selenium-webdriver');
     var str_navigateTo = 'http://localhost:8000/';
     var str_testModDirName = 'perspectives';
     var strary_prefixIdsOfTestMods = [
-        // '001',
-        // '002',
+        '001',
+        '002',
         '003',
         // '004',
         // 'xxx',

@@ -1,5 +1,6 @@
 const {DEPENDS_ON_USER_IMPLI, POLICIES, XPATH_DEF} = require('../ini');
 const {Button, By} = require('selenium-webdriver');
+const executableScripts = require('../common/executable-scripts');
 
 
 module.exports.func_waitForElementsLocated = async function(obj_webDriver, func_filter, str_xpath){
@@ -65,6 +66,56 @@ module.exports.func_waitForElementsLocated = async function(obj_webDriver, func_
     return objarr_elements;
 }
 
+module.exports.func_waitForStyleApplied = async function(obj_webDriver, func_evaluator, str_xpath){
+
+    var strarr_xpaths = [];
+    var int_startIdxOfXPathInArgs = 2;
+
+    //Argment check
+    if(arguments.length < int_startIdxOfXPathInArgs){
+        return false;
+    }
+    
+    for(let int_i = int_startIdxOfXPathInArgs ; int_i < arguments.length ; int_i++){
+        strarr_xpaths.push(arguments[int_i]);
+    }
+
+    var objarr_styles = await obj_webDriver
+        .wait(async function(){
+
+            var objarr_CSSStyleDeclarationsPerXPath = [];
+            
+            for(let int_i = 0 ; int_i < strarr_xpaths.length ; int_i++){
+                let str_a_xpath = strarr_xpaths[int_i];
+                console.log(`Getting computed styles(s) by XPath:${str_a_xpath}`);
+                let objarr_CSSStyleDeclarations = await obj_webDriver.executeScript(`return (${executableScripts.func_genScript_getComputedStyleByXPath(str_a_xpath)})`);
+                console.log(`Found:${objarr_CSSStyleDeclarations.length}`);
+                objarr_CSSStyleDeclarationsPerXPath.push(objarr_CSSStyleDeclarations);
+            }
+
+            // evaluator に判定させる
+            if(!(await func_evaluator(objarr_CSSStyleDeclarationsPerXPath))){
+                return false;
+            }
+
+            return objarr_CSSStyleDeclarationsPerXPath;
+
+        }, POLICIES.WAIT_MS_FIND_ELEMENTS)
+        .catch(function(e){
+
+            if( (typeof e) === 'object' && e.constructor.name === "TimeoutError"){
+                console.error('Expected SVG node not found.');
+                return undefined;
+            
+            }else{
+                throw e;
+            }
+        })
+    ;
+
+    return objarr_styles;
+}
+
 module.exports.func_isExitInClassList = async function(obj_element, str_className){
     var str_classContent = await obj_element.getAttribute('class');
     var strarr_classNames = str_classContent.split(' ');
@@ -74,6 +125,22 @@ module.exports.func_isExitInClassList = async function(obj_element, str_classNam
         }
     }
     return false;
+}
+
+// click
+module.exports.func_clickElement = async function(obj_webDriver, obj_element){
+
+    // Double click Element
+    await obj_webDriver
+        .actions()
+        .move({
+            origin:obj_element
+        })
+        .press(Button.LEFT)
+        .release(Button.LEFT)
+        .perform()
+    ;
+
 }
 
 // Double click

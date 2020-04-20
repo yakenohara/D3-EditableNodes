@@ -1,5 +1,5 @@
 const {Button, By, logging, until} = require('selenium-webdriver');
-const {DEPENDS_ON_USER_IMPLI, XPATH_DEF} = require('../ini');
+const {DEPENDS_ON_USER_IMPLI, POLICIES, XPATH_DEF} = require('../ini');
 const typicals = require('../common/typicals');
 
 module.exports.func_doTest = async function(obj_webDriver){
@@ -23,9 +23,7 @@ module.exports.func_doTest = async function(obj_webDriver){
     // [CHECK]   <text> の 表示の右寄せが解除されたまま
     // [EXECUTE] get history
     // [CHECK]   最後のhistory が text_anchor:end -> null になる
-    // [EXECUTE] getCloneOfHistory
-    // [CHECK]   最後の Transaction の Previous object で前回値を保存できてていること
-
+    
 
     // <settings>------------------------------------------------------------
 
@@ -147,17 +145,77 @@ module.exports.func_doTest = async function(obj_webDriver){
     await typicals.func_hoverElement(obj_webDriver, objarr_propEditor[2][0]);
     
     // [CHECK]   <text> の 表示の右寄せが解除される
-    // [PERFORM] text_anchor の `default` ボタンを　click
-    // [CHECK]   history に `text/text_anchor:default` が追加される
-    // [CHECK]   <text> の 表示の右寄せが解除されたまま
-    // [EXECUTE] get history
-    // [CHECK]   最後のhistory が text_anchor:end -> null になる
+    var objarr_CSSStyleDeclarationsPerXPath = await typicals.func_waitForStyleApplied(
+        obj_webDriver, 
+        function(objarr_foundStyles){
+            console.log(`text-anchor:${objarr_foundStyles[0][0]['text-anchor'].value}`);
+            if(objarr_foundStyles[0][0]['text-anchor'].value != 'start'){
+                return false;
+            }
+            return true;
+        },
+        XPATH_DEF.NODE_TEXT
+    );
+    if(!objarr_CSSStyleDeclarationsPerXPath){
+        console.error('The `text-anchor` setting did not change to` start`');
+        bl_testResult = false;
+        return bl_testResult;
+    }
 
-    // [EXECUTE] getCloneOfHistory
+    // [PERFORM] text_anchor の `default` ボタンを　click
+    await typicals.func_clickElement(obj_webDriver, objarr_propEditor[2][0]);
+
+    // [CHECK]   history に `text/text_anchor:default` が追加される
+    var obj_lastHistory = await typicals.func_waitForElementsLocated(
+        obj_webDriver,
+        async function(obj_results){
+            var int_lastIdx = obj_results[0].length-1;
+            if(obj_results[0].length!=2){
+                return false;
+            }
+            if(!(await typicals.func_isExitInClassList(obj_results[0][int_lastIdx], 'selected'))){
+                console.log('Last history is not selected.');
+                return false;
+            }
+            var str_HistoryTitle = await obj_results[0][int_lastIdx].getText();
+            console.log(`str_HistoryTitle:${str_HistoryTitle}`);
+            if(str_HistoryTitle !== 'text/text_anchor:default'){
+                return false;
+            }
+
+            return true;
+        },
+        XPATH_DEF.HISTORY_LAST_AND_SELECTED
+    );
+    if(!obj_lastHistory){
+        console.error('Expected history not found.');
+        bl_testResult = false;
+        return bl_testResult;
+    }
+
+    // [CHECK]   <text> の 表示の右寄せが解除されたまま
+    var objarr_CSSStyleDeclarationsPerXPath = await typicals.func_waitForStyleApplied(
+        obj_webDriver,
+        function(objarr_foundStyles){
+            console.log(`text-anchor:${objarr_foundStyles[0][0]['text-anchor'].value}`);
+            if(objarr_foundStyles[0][0]['text-anchor'].value != 'start'){
+                return true;
+            }
+            return false;
+        },
+        XPATH_DEF.NODE_TEXT
+    );
+    if(objarr_CSSStyleDeclarationsPerXPath){
+        console.error('text-anchor:start changed.');
+        bl_testResult = false;
+        return bl_testResult;
+    }
+    
+    // [EXECUTE] get history
     var objarr_expectedAsHistries = await obj_webDriver.executeScript(str_toExecScript_2);
     console.log(`objarr_expectedAsHistries:${objarr_expectedAsHistries}`);
 
-    // [CHECK]   最後の Transaction の Previous object で前回値を保存できてていること
+    // [CHECK]   最後のhistory が text_anchor:end -> null になる
     var str_expectedAsPrevText = objarr_expectedAsHistries[objarr_expectedAsHistries.length-1]['reportsArr']['datas'][0]['PrevObj']['text']['text_anchor'];
     console.log(`str_expectedAsPrevText:${str_expectedAsPrevText}`);
     if(str_expectedAsPrevText !== 'end'){
